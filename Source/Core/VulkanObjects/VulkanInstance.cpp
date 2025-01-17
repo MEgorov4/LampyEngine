@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cstring>
 
-#include "../Logger/Logger.h"
+#include "../../LoggerModule/Logger.h"
 
 VulkanInstance::VulkanInstance(std::vector<const char*> requiredExtensions, bool enableValidationLayers)
     : m_enableValidationLayers(enableValidationLayers)

@@ -2,10 +2,10 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-#include "VulkanApplication.h"
+#include "Application.h"
 int main() {
 
-    VulkanApplication vulkanApplication;
+    Application vulkanApplication;
     try {
         vulkanApplication.run();
     }

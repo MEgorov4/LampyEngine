@@ -21,7 +21,7 @@ class VulkanRenderer;
 class ShaderManager;
 class Mesh;
 
-class VulkanApplication
+class Application
 {
 	std::unique_ptr<Window> m_window;
 
@@ -44,10 +44,10 @@ class VulkanApplication
 	uint32_t m_currentFrame = 0;
 	bool m_framebufferResized = false;
 public:
-	VulkanApplication();
-	VulkanApplication(const VulkanApplication& vapp) = delete;
-	~VulkanApplication();
-	const VulkanApplication& operator=(const VulkanApplication vapp) = delete;
+	Application();
+	Application(const Application& app) = delete;
+	~Application();
+	const Application& operator=(const Application rhs) = delete;
 
 	void run();
 	void initEngine();

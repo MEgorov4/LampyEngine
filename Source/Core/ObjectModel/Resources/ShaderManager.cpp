@@ -1,5 +1,5 @@
 #include "ShaderManager.h"
-#include "../../Logger/Logger.h"
+#include "../../../LoggerModule/Logger.h"
 #include "format"
 #include "../../VulkanObjects/VulkanGraphicsPipeline.h"
 ShaderManager& ShaderManager::getShaderManager()

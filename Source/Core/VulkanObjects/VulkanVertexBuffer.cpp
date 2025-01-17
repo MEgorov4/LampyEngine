@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <cstring>
 
-#include "../Logger/Logger.h"
+#include "../../LoggerModule/Logger.h"
 
 VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
     const std::vector<Vertex>& vertexData,

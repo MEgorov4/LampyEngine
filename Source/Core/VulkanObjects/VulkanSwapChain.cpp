@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include "../VulkanApplicationConfig.h"
-#include "../Logger/Logger.h"
+#include "../../LoggerModule/Logger.h"
 #include "format"
 
 VulkanSwapChain::~VulkanSwapChain()

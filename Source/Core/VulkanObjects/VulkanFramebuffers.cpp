@@ -1,7 +1,7 @@
 #include "VulkanFramebuffers.h"
 #include <stdexcept>
 #include <iostream>
-#include "../Logger/Logger.h"
+#include "../../LoggerModule/Logger.h"
 #include "format"
 
 VulkanFramebuffers::VulkanFramebuffers(VkDevice device, VkRenderPass renderPass, VkExtent2D extent, std::vector<VkImageView> imageViews) : m_device(device)

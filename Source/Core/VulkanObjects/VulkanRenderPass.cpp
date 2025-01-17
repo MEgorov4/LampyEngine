@@ -1,6 +1,6 @@
 #include "VulkanRenderPass.h"
 #include <stdexcept>
-#include "../Logger/Logger.h"
+#include "../../LoggerModule/Logger.h"
 
 VulkanRenderPass::VulkanRenderPass(VkDevice device, VkFormat imageFormat) : m_vk_device(device)
 {

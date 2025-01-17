@@ -10,10 +10,10 @@ TEST(WindowTest, CreateWindow)
 
     Window window(width, height, title);
 
-    EXPECT_FALSE(window.shouldClose()) << "Окно не должно быть закрыто сразу после создания";
+    EXPECT_FALSE(window.shouldClose()) << "Window should do not closed on start";
 
     auto extensions = window.getRequiredInstanceExtensions();
-    EXPECT_FALSE(extensions.empty()) << "Список расширений не должен быть пустым";
+    EXPECT_FALSE(extensions.empty()) << "Extensions cannot be empty";
 }
 
 TEST(WindowTest, ResizeWindow) 

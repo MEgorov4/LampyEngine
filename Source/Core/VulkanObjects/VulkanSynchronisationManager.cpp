@@ -1,6 +1,6 @@
 #include "VulkanSynchronizationManager.h"
 #include <stdexcept>
-#include "../Logger/Logger.h"
+#include "../../LoggerModule/Logger.h"
 
 VulkanSynchronizationManager::VulkanSynchronizationManager(VkDevice device, uint32_t maxFramesInFlight)
     : m_device(device)

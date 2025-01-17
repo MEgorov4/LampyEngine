@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
-static class ShaderLoader
+class ShaderLoader
 {
 	ShaderLoader() {};
 public:

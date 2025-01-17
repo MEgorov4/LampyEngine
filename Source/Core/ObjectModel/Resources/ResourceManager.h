@@ -1,9 +1,9 @@
 #pragma once
 #include "vulkan/vulkan.h"
-#include "../../VulkanApplication.h"
+#include "../../Application.h"
 #include "../../VulkanObjects/VulkanCommandPool.h"
 #include "../../VulkanObjects/VulkanLogicalDevice.h"
-#include "../../Logger/Logger.h"
+#include "../../../LoggerModule/Logger.h"
 #include "Shader.h"
 #include "ShaderManager.h"
 #include <format>
@@ -11,7 +11,7 @@
 #include "Mesh.h"
 class ResourceManager
 {
-	VulkanApplication* m_application;
+	Application* m_application;
 
 private:
 	ResourceManager() {};
@@ -26,7 +26,7 @@ public:
 		return resourceManager;
 	}
 	
-	void setApplication(VulkanApplication* application)
+	void setApplication(Application* application)
 	{
 		m_application = application;
 	}

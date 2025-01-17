@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 #include "format"
-#include "../Logger/Logger.h"
+#include "../../LoggerModule/Logger.h"
 
 Window::Window(int width, int height, const char* title)
 {	

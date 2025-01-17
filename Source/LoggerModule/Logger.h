@@ -36,19 +36,7 @@ private:
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
 
-    std::string ToString(LogVerbosity verbosity) const
-    {
-        switch (verbosity)
-        {
-        case LogVerbosity::Verbose:  return "Verbose";
-        case LogVerbosity::Debug:    return "Debug";
-        case LogVerbosity::Info:     return "Info";
-        case LogVerbosity::Warning:  return "Warning";
-        case LogVerbosity::Error:    return "Error";
-        case LogVerbosity::Fatal:    return "Fatal";
-        }
-        return "Unknown";
-    }
+    std::string ToString(LogVerbosity verbosity) const;
 
     std::mutex m_mutex; 
 };
@@ -59,4 +47,5 @@ private:
 #define LOG_WARNING(Message)   Logger::Get().Log(LogVerbosity::Warning,  (Message))
 #define LOG_ERROR(Message)     Logger::Get().Log(LogVerbosity::Error,    (Message))
 #define LOG_FATAL(Message)     Logger::Get().Log(LogVerbosity::Fatal,    (Message))
+
 

@@ -1,7 +1,7 @@
 #include "VulkanGraphicsPipeline.h"
 #include "../Utils/ShaderLoader.h"
 
-#include "../Logger/Logger.h"
+#include "../../LoggerModule/Logger.h"
 
 #include <stdexcept>
 
@@ -9,6 +9,7 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkDevice device, VkRenderPass ren
 {
     static uint32_t ID = 0;
     uniqueID = ID++;
+
     LOG_INFO("VulkanGraphicsPipeline: Start create graphics pipeline");
     auto vertShaderCode = ShaderLoader::readShaderFile(vertPath);
     auto fragShaderCode = ShaderLoader::readShaderFile(fragPath);

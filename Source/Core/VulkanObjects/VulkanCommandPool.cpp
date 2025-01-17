@@ -1,6 +1,6 @@
 #include "VulkanCommandPool.h"
 #include <stdexcept>
-#include "../Logger/Logger.h"
+#include "../../LoggerModule/Logger.h"
 
 VulkanCommandPool::VulkanCommandPool(VkDevice device, uint32_t queueFamilyIndex) : m_device(device)
 {

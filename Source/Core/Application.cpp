@@ -1,4 +1,4 @@
-#include "VulkanApplication.h"
+#include "Application.h"
 #include <stdexcept>
 #include "Window/Window.h"
 
@@ -21,22 +21,22 @@
 #include "VulkanApplicationConfig.h"
 
 #include <iostream>
-#include "Logger/Logger.h"
+#include "../LoggerModule/Logger.h"
 #include "ObjectModel/Resources/ResourceManager.h"
 
 #include "ObjectModel/Resources/Mesh.h"
 #include "Utils/ShaderLoader.h"
 
 
-VulkanApplication::VulkanApplication()
+Application::Application()
 {
 }
 
-VulkanApplication::~VulkanApplication()
+Application::~Application()
 {	
 }
 
-void VulkanApplication::run()
+void Application::run()
 {
 	initWindow();
 	initVulkan();
@@ -45,26 +45,19 @@ void VulkanApplication::run()
 	mainLoop();
 }
 
-void VulkanApplication::initEngine()
+void Application::initEngine()
 {
 	RM_SET_APPLICATION(this);
 	
 	m_scene = new Scene();
-
-	//const std::vector<Vertex> vertices {
-	//	{{0.0f, -0.9f}, { 1.0f, 0.0f, 0.0f }},
-	//	{ {0.9f, 0.9f}, {0.0f, 1.0f, 0.0f} },
-	//	{ {-0.9f, 0.9f}, {0.0f, 0.0f, 1.0f} }};
-
-	//m_mesh = new MeshInstance(nullptr, RM_CREATE_MESH(vertices), RM_CREATE_SHADER("vert.spv", "frag.spv"));
 }
 
-void VulkanApplication::initWindow()
+void Application::initWindow()
 {
 	m_window = std::make_unique<Window>(800, 600, "Lampy Engine");
 }
 
-void VulkanApplication::initVulkan()
+void Application::initVulkan()
 {
 	m_instance = std::make_unique<VulkanInstance>(m_window->getRequiredInstanceExtensions(), true);
 	
@@ -79,8 +72,6 @@ void VulkanApplication::initVulkan()
 													m_logicalDevice->getDeviceFamilyIndices());
 	m_renderPass = std::make_unique<VulkanRenderPass>(m_logicalDevice->getLogicalDevice(), 
 													  m_swapChain->getSurfaceFormat().format);
-	//m_graphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(m_logicalDevice->getLogicalDevice(),
-	//															  m_renderPass->getRenderPass(), "vert.spv", "frag.spv");
 	
 	m_framebuffers = std::make_unique<VulkanFramebuffers>(m_logicalDevice->getLogicalDevice(), 
 														  m_renderPass->getRenderPass(), 
@@ -99,7 +90,7 @@ void VulkanApplication::initVulkan()
 	m_syncManager = std::make_unique<VulkanSynchronizationManager>(m_logicalDevice->getLogicalDevice(), VulkanApplicationConfig::getInstance().getMaxFramesInFlight());
 }
 
-void VulkanApplication::mainLoop()
+void Application::mainLoop()
 {
 	while (!m_window->shouldClose())
 	{
@@ -110,7 +101,7 @@ void VulkanApplication::mainLoop()
 	m_logicalDevice->deviceWaitIdle();
 }
 
-void VulkanApplication::drawFrame()
+void Application::drawFrame()
 {
 	VkExtent2D extent = m_window->getExtent();
 	if (extent.width <= 0 || extent.height <= 0)
@@ -214,7 +205,7 @@ void VulkanApplication::drawFrame()
 	m_currentFrame = (m_currentFrame + 1) % VulkanApplicationConfig::getInstance().getMaxFramesInFlight();
 }
 
-void VulkanApplication::recordCommandBuffer(
+void Application::recordCommandBuffer(
 	VkCommandBuffer commandBuffer,
 	uint32_t imageIndex
 ) {
@@ -263,7 +254,7 @@ void VulkanApplication::recordCommandBuffer(
 	}
 }
 
-void VulkanApplication::createSwapChainAndDependentResources()
+void Application::createSwapChainAndDependentResources()
 {
 	m_swapChain = std::make_unique<VulkanSwapChain>(m_logicalDevice->getLogicalDevice(),
 		m_surface->getSurface(),
@@ -288,7 +279,7 @@ void VulkanApplication::createSwapChainAndDependentResources()
 	);
 }
 
-void VulkanApplication::cleanupSwapChainAndDependentResources()
+void Application::cleanupSwapChainAndDependentResources()
 {
 	m_commandBuffers.reset();     
 	m_framebuffers.reset();       
@@ -296,7 +287,7 @@ void VulkanApplication::cleanupSwapChainAndDependentResources()
 	m_swapChain.reset();          
 }
 
-void VulkanApplication::recreateSwapChain() 
+void Application::recreateSwapChain() 
 {
 	m_logicalDevice->deviceWaitIdle();
 
