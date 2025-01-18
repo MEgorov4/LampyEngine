@@ -25,20 +25,39 @@ function(format_source_group files)
     endforeach()
 endfunction()
 
-# Automatically find all source and header files
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS 
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/*.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/*.h
+# Engine executable
+file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Engine/*.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Engine/*.h
 )
-
+# Shader files
 file(GLOB_RECURSE SHADER_FILES CONFIGURE_DEPENDS 
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/Shaders/*.glsl
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Shaders/*.glsl
 )
 
 # ImGui backends
 file(GLOB IMGUI_BACKENDS_SRC 
     external/imgui/backends/imgui_impl_glfw.cpp 
     external/imgui/backends/imgui_impl_opengl3.cpp
+)
+
+# Window module
+file(GLOB_RECURSE WINDOW_MODULE_SOURCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/WindowModule/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/WindowModule/*.h
+)
+
+# Resource module
+
+file(GLOB_RECURSE RESOURCE_MODULE_SOURCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/ResourceModule/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/ResourceModule/*.h
+)
+
+# Object core module
+file(GLOB_RECURSE OBJECT_CORE_MODULE_SOURCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/ObjectCoreModule/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/ObjectCoreModule/*.h
 )
 
 # Logger module
@@ -53,28 +72,22 @@ file(GLOB_RECURSE RENDER_MODULE_SOURCE
 )
 
 # Test sources
-file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS 
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Tests/*.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Tests/*.h
+file(GLOB_RECURSE TEST_SOURCES 
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Test/*.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Test/*.h
 )
 
 # Format source groups
-format_source_group(SOURCES)
+format_source_group(ENGINE_SOURCES)
 format_source_group(SHADER_FILES)
+format_source_group(WINDOW_MODULE_SOURCE)
+format_source_group(RESOURCE_MODULE_SOURCE)
+format_source_group(OBJECT_CORE_MODULE_SOURCE)
 format_source_group(LOGGER_MODULE_SOURCE)
 format_source_group(RENDER_MODULE_SOURCE)
 format_source_group(TEST_SOURCES)
 
-# Add logger module
-add_library(LoggerModule STATIC ${LOGGER_MODULE_SOURCE})
-
-# Add render module
-add_library(RenderModule STATIC ${RENDER_MODULE_SOURCE})
-
-# Add all files to the executable
-add_executable(${PROJECT_NAME} ${SOURCES} ${SHADER_FILES} ${IMGUI_BACKENDS_SRC})
-
-# Find libraries
+# Find external libraries
 find_package(glfw3 REQUIRED)
 find_package(VulkanLoader REQUIRED)
 find_package(glm REQUIRED)
@@ -83,47 +96,74 @@ find_package(tinyobjloader REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(GTest REQUIRED)
 
+# Add window module
+add_library(WindowModule STATIC ${WINDOW_MODULE_SOURCE})
+
+# Add resource module
+add_library(ResourceModule STATIC ${RESOURCE_MODULE_SOURCE})
+
+# Add object core module
+add_library(ObjectCoreModule STATIC ${OBJECT_CORE_MODULE_SOURCE})
+# Add logger module
+add_library(LoggerModule STATIC ${LOGGER_MODULE_SOURCE})
+
+# Add render module
+add_library(RenderModule STATIC ${RENDER_MODULE_SOURCE})
+
+# Add all files to the executable
+add_executable(${PROJECT_NAME} ${ENGINE_SOURCES} ${SHADER_FILES} ${IMGUI_BACKENDS_SRC})
+
+# window module link dependent
+target_link_libraries(WindowModule PUBLIC
+    glfw
+    Vulkan::Loader
+    LoggerModule
+)
+
+# resource module link dependent
+target_link_libraries(ResourceModule PUBLIC
+    glm::glm
+)
+
+# object core module link dependent
+target_link_libraries(ObjectCoreModule PUBLIC
+    nlohmann_json::nlohmann_json
+    glm::glm
+    LoggerModule
+)
+
+# Render module link dependent
+target_link_libraries(RenderModule PUBLIC
+    glfw
+    Vulkan::Loader
+    glm::glm
+    ObjectCoreModule
+    LoggerModule
+)
+
 # Link libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+target_link_libraries(${PROJECT_NAME} PUBLIC
+    WindowModule
+    ObjectCoreModule
     LoggerModule 
     RenderModule
-    glfw 
-    glm::glm 
-    imgui::imgui
-    tinyobjloader::tinyobjloader
+    ResourceModule
     Vulkan::Loader
     nlohmann_json::nlohmann_json
     GTest::GTest
 )
 
-# Core library
-set(FILES_WITHOUT_MAIN ${SOURCES})
-list(REMOVE_ITEM FILES_WITHOUT_MAIN "${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/main.cpp")
-
-add_library(Core STATIC ${FILES_WITHOUT_MAIN})
-target_link_libraries(Core 
-    glfw 
-    glm::glm 
-    imgui::imgui
-    tinyobjloader::tinyobjloader
-    Vulkan::Loader
-    nlohmann_json::nlohmann_json
-    GTest::GTest
-)
 
 # Test project
 add_executable(${TEST_PROJECT_NAME} ${TEST_SOURCES})
 
-target_link_libraries(${TEST_PROJECT_NAME}
+target_link_libraries(${TEST_PROJECT_NAME} PUBLIC
+    WindowModule
     LoggerModule
+    ResourceModule
     RenderModule
-    Core
-    glfw 
+    ObjectCoreModule
     glm::glm 
-    imgui::imgui
-    tinyobjloader::tinyobjloader
-    Vulkan::Loader
-    nlohmann_json::nlohmann_json
     GTest::GTest
     GTest::Main
 )
