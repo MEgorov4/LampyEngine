@@ -50,4 +50,9 @@ jobs:
     - name: Run Tests
       working-directory: build
       run: ctest --output-on-failure
+
+    # Optional: Add a specific step for running build scripts on Windows
     - name: Run build script on Windows
+      if: runner.os == 'Windows'
+      run: |
+        ./buildDebug.bat
