@@ -29,20 +29,20 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.conan
-          key: ${{ runner.os }}-conan-${{ hashFiles('conan_profiles/conanProfileDebugLinux') }}
+          key: ${{ runner.os }}-conan-${{ hashFiles('conanProfileDebugLinux') }}
           restore-keys: |
             ${{ runner.os }}-conan-
 
       - name: Install Dependencies with Conan
         run: |
-          conan install . --output-folder=build --build=missing --profile=conan_profiles/conanProfileDebugLinux
+          conan install . --output-folder=build --build=missing --profile=./conanProfileDebugLinux --profile:build=./conanProfileDebugLinux
 
       - name: Install CMake
         uses: jwlawson/actions-setup-cmake@v1
         with:
           cmake-version: '3.29.2'
 
-      - name: Install Vulkan SDK (for glslc)
+      - name: Install Vulkan SDK and Shaderc (for glslc)
         run: |
           sudo apt-get update
           sudo apt-get install -y vulkan-sdk shaderc
@@ -89,22 +89,21 @@ jobs:
         uses: actions/cache@v3
         with:
           path: C:\Users\runneradmin\.conan
-          key: ${{ runner.os }}-conan-${{ hashFiles('conan_profiles/conanProfileDebugWindows') }}
+          key: ${{ runner.os }}-conan-${{ hashFiles('conanProfileDebugWindows') }}
           restore-keys: |
             ${{ runner.os }}-conan-
 
       - name: Install CMake
         uses: lukka/get-cmake@v3.26.4
 
-      - name: Install Vulkan SDK (for glslc)
-        run: choco install vulkan-sdk -y
-
-      - name: Install Shaderc (glslc)
-        run: choco install shaderc -y
+      - name: Install Vulkan SDK and Shaderc (for glslc)
+        run: |
+          choco install vulkan-sdk -y
+          choco install shaderc -y
 
       - name: Install Dependencies with Conan
         run: |
-          conan install . --output-folder=build --build=missing --profile=conan_profiles/conanProfileDebugWindows --profile:b=conan_profiles/conanProfileDebugWindows
+          conan install . --output-folder=build --build=missing --profile=./conanProfileDebugWindows --profile:build=./conanProfileDebugWindows
 
       - name: Generate Project Files with CMake
         run: |
@@ -114,8 +113,8 @@ jobs:
 
       - name: Precompile Shaders
         run: |
-          glslc.exe Source/Shaders/shader.vert -o build/vert.spv
-          glslc.exe Source/Shaders/shader.frag -o build/frag.spv
+          glslc.exe Source/Shaders/shader.vert -o build\vert.spv
+          glslc.exe Source/Shaders/shader.frag -o build\frag.spv
 
       - name: Build Project
         run: |
