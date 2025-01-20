@@ -37,42 +37,49 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-conan-
 
-      # 5. Установка зависимостей через Conan
+      # 5. Установка системных пакетов
+      #    Теперь, благодаря [conf], Conan будет устанавливать необходимые системные пакеты.
+      #    Однако, некоторые пакеты могут требовать явной установки.
+      #    В данном случае, Conan должен сам установить 'libgl1-mesa-dev'.
+      #    Если это не происходит, можно добавить шаг для явной установки.
+      #    Но сначала попробуем позволить Conan установить необходимые пакеты.
+
+      # 6. Установка зависимостей через Conan
       - name: Install Dependencies with Conan
         run: |
           conan install . --output-folder=build --build=missing --profile=./conanProfileDebugLinux --profile:build=./conanProfileDebugLinux
 
-      # 6. Установка CMake
+      # 7. Установка CMake
       - name: Install CMake
         uses: jwlawson/actions-setup-cmake@v1
         with:
           cmake-version: '3.29.2'
 
-      # 7. Установка Vulkan SDK и Shaderc (для glslc)
+      # 8. Установка Vulkan SDK и Shaderc (для glslc)
       - name: Install Vulkan SDK and Shaderc
         run: |
           sudo apt-get update
           sudo apt-get install -y vulkan-sdk shaderc
 
-      # 8. Генерация файлов проекта с помощью CMake
+      # 9. Генерация файлов проекта с помощью CMake
       - name: Generate Project Files with CMake
         run: |
           mkdir -p build
           cd build
           cmake .. -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Debug
 
-      # 9. Предварительная компиляция шейдеров
+      # 10. Предварительная компиляция шейдеров
       - name: Precompile Shaders
         run: |
           glslc Source/Shaders/shader.vert -o build/vert.spv
           glslc Source/Shaders/shader.frag -o build/frag.spv
 
-      # 10. Сборка проекта
+      # 11. Сборка проекта
       - name: Build Project
         run: |
           cmake --build build --preset conan-debug
 
-      # 11. Запуск тестов
+      # 12. Запуск тестов
       - name: Run Tests
         run: |
           cd build
