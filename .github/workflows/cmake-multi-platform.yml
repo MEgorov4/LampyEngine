@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        build_type: [Debug]  # Вы указали, что релиз пока не собираете
+        build_type: [Debug]  # Вы указали, что пока работаете только с Debug
 
     steps:
     - name: Checkout repository
@@ -40,8 +40,8 @@ jobs:
     - name: Build project
       run: |
         cd build
-        cmake --build --preset conan-debug
+        cmake --build . --preset conan-debug
 
     - name: Run Tests
-      working-directory: build
-      run: ctest --output-on-failure
+      run: |
+        ctest --test-dir ./build/ --output-on-failure -C Debug
