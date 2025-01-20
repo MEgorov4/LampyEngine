@@ -35,7 +35,7 @@ jobs:
 
       - name: Install Dependencies with Conan
         run: |
-          conan install . --output-folder=build --build=missing --profile=./conanProfileDebugLinux
+          conan install . --output-folder=build --build=missing --profile=./conanProfileDebugLinux --profile:build=./conanProfileDebugLinux
 
       - name: Install CMake
         uses: jwlawson/actions-setup-cmake@v1
@@ -103,7 +103,7 @@ jobs:
 
       - name: Install Dependencies with Conan
         run: |
-          conan install . --output-folder=build --build=missing --profile=./conanProfileDebugWindows --profile:b=./conanProfileDebugWindows
+          conan install . --output-folder=build --build=missing --profile=./conanProfileDebugWindows --profile:build=./conanProfileDebugWindows
 
       - name: Generate Project Files with CMake
         run: |
