@@ -30,7 +30,7 @@ jobs:
 
     - name: Install dependencies with Conan
       run: |
-        conan profile new default --detect --force
+        conan profile detect --force
         conan profile update settings.compiler.libcxx=libstdc++11 default
         mkdir conan_build
         cd conan_build
