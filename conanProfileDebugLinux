@@ -1,0 +1,19 @@
+# conan_profiles/conanProfileDebugLinux
+
+[settings]
+arch=x86_64
+build_type=Debug
+compiler=gcc
+compiler.version=11
+compiler.libcxx=libstdc++11
+compiler.cppstd=20
+os=Linux
+
+[options]
+# Добавьте здесь специфичные опции для Linux, если необходимо
+
+[build_requires]
+# Добавьте build-требования, если необходимо
+
+[env]
+# Добавьте переменные окружения, если необходимо
