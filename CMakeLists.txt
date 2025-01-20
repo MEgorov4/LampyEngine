@@ -17,6 +17,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 # Function to format and group source files
 function(format_source_group files)
+
     foreach(FILE ${${files}})
         get_filename_component(PATH "${FILE}" PATH)
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" GROUP "${PATH}")
