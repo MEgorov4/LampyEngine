@@ -14,7 +14,7 @@ class Mesh
 	std::vector<MeshVertex> m_vertexData;
 	uint32_t m_uniqueID;
 public:
-	Mesh(const std::vector<MeshVertex>& vertexData);
+	explicit Mesh(const std::vector<MeshVertex>& vertexData);
 
 	const std::vector<MeshVertex>& getVertexData();
 };

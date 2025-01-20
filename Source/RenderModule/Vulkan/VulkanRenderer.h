@@ -7,6 +7,7 @@
 #include "../IRenderer.h"
 #include "VulkanObjects/VulkanPipelineCache.h"
 #include "VulkanObjects/VulkanVertexBuffer.h"
+#include "VulkanObjects/VulkanGraphicsPipeline.h"
 
 class Window;
 class VulkanInstance;
@@ -29,6 +30,7 @@ class VulkanRenderer : public IRenderer
 	std::unique_ptr<VulkanFramebuffers> m_framebuffers;
 	std::unique_ptr<VulkanCommandPool> m_commandPool;
 	std::unique_ptr<VulkanCommandBuffers> m_commandBuffers;
+	std::unique_ptr<VulkanGraphicsPipeline> m_graphicsPipeline;
 	std::unique_ptr<VulkanSynchronizationManager> m_syncManager;
 
     std::unique_ptr<VulkanPipelineCache> m_pipelineCache;
@@ -37,10 +39,15 @@ class VulkanRenderer : public IRenderer
     uint32_t m_currentFrame = 0;
 
 	Window* m_window;
+	
+	inline static std::vector<Vertex> vertex = { {{0.5, 0.0}, {1,0,0}}, 	
+		{{-0.5, 0.5}, {0,1,0}}, 
+		{{-0.5, -0.5}, {0,0,1}}};
 
+	std::unique_ptr<VulkanVertexBuffer> m_vertexBuffer;
 public:
-    VulkanRenderer(Window* window);
-    ~VulkanRenderer();
+    explicit VulkanRenderer(Window* window);
+    ~VulkanRenderer() override;
 
 	virtual void render() override;
 

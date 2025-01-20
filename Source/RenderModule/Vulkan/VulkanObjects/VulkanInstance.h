@@ -11,7 +11,7 @@ class VulkanInstance
     std::vector<const char*> m_validationLayers;
 
 public:
-    VulkanInstance(std::vector<const char*> requiredExtensions, bool enableValidationLayers = false);
+    explicit VulkanInstance(std::vector<const char*> requiredExtensions, bool enableValidationLayers = false);
     ~VulkanInstance();
 
     VkInstance getInstance() const { return m_vk_instance; }

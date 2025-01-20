@@ -16,5 +16,5 @@ public:
 	VulkanPipelineCache& operator=(const VulkanPipelineCache&) = delete;
 
 	void clearCache();
-	VulkanGraphicsPipeline* getOrCreatePipeline(const std::string fragPath, const std::string vertPath, VkDevice device, VkRenderPass renderPass);
+	VulkanGraphicsPipeline* getOrCreatePipeline(const std::string& fragPath, const std::string& vertPath, VkDevice device, VkRenderPass renderPass);
 };

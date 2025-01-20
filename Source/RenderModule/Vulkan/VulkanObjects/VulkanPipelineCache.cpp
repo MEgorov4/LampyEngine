@@ -16,7 +16,7 @@ void VulkanPipelineCache::clearCache()
 	m_pipelines.clear();
 }
 
-VulkanGraphicsPipeline* VulkanPipelineCache::getOrCreatePipeline(const std::string fragPath, const std::string vertPath, VkDevice device, VkRenderPass renderPass)
+VulkanGraphicsPipeline* VulkanPipelineCache::getOrCreatePipeline(const std::string& fragPath, const std::string& vertPath, VkDevice device, VkRenderPass renderPass)
 {
 	std::string key = vertPath + '|' + fragPath;
 	auto it = m_pipelines.find(key);

@@ -45,7 +45,9 @@ void VulkanRenderer::initVulkan()
 
 
 	m_syncManager = std::make_unique<VulkanSynchronizationManager>(m_logicalDevice->getLogicalDevice(),
-																   EngineApplicationConfig::getInstance().getMaxFramesInFlight());
+														   EngineApplicationConfig::getInstance().getMaxFramesInFlight());
+
+	m_vertexBuffer = std::make_unique<VulkanVertexBuffer>(m_logicalDevice->getLogicalDevice(), m_logicalDevice->getPhysicalDevice(), vertex, m_logicalDevice->getGraphicsQueue(), m_commandPool->getCommandPool());
 }
 
 void VulkanRenderer::cleanupVulkan()
@@ -56,6 +58,7 @@ void VulkanRenderer::cleanupVulkan()
 	m_logicalDevice.reset();
 	m_surface.reset();
 	m_instance.reset();
+
 }
 
 void VulkanRenderer::recreateSwapChainAndDependent()
@@ -70,6 +73,7 @@ void VulkanRenderer::recreateSwapChainAndDependent()
 void VulkanRenderer::cleanSwapChainAndDependent()
 {
 	m_commandBuffers.reset();     
+	m_graphicsPipeline.reset();
 	m_framebuffers.reset();       
 	m_renderPass.reset();         
 	m_swapChain.reset();          
@@ -85,6 +89,8 @@ void VulkanRenderer::createSwapChainAndDependent()
 
 	m_renderPass = std::make_unique<VulkanRenderPass>(m_logicalDevice->getLogicalDevice(),
 		m_swapChain->getSurfaceFormat().format);
+	
+	m_graphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(m_logicalDevice->getLogicalDevice(), m_renderPass->getRenderPass(), "vert.spv", "frag.spv");
 
 	m_framebuffers = std::make_unique<VulkanFramebuffers>(m_logicalDevice->getLogicalDevice(),
 		m_renderPass->getRenderPass(),
@@ -257,7 +263,12 @@ void VulkanRenderer::createSceneRenderCommands(VkCommandBuffer commandBuffer)
 {
 	if (m_rendererScene)
 	{
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->getPipeline());
 		
+		VkBuffer vertexBuffers[] = { m_vertexBuffer->getBuffer() };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+		vkCmdDraw(commandBuffer, static_cast<uint32_t>(m_vertexBuffer->getVerticesCount()), 1, 0, 0);
 	}
 }
 

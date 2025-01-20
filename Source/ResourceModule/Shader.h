@@ -10,6 +10,6 @@ public:
 	Shader(const std::string& vertPath, const std::string& fragPath);
 	
 	std::string getShaderHash();
-	std::string getVertPath();
-	std::string getFragPath();
+	const std::string& getVertPath();
+	const std::string& getFragPath();
 };

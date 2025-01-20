@@ -5,7 +5,7 @@
 class TestableNode : public Node 
 {
 public:
-    TestableNode(Node* parentNode = nullptr) : Node(parentNode) {}
+    explicit TestableNode(Node* parentNode = nullptr) : Node(parentNode) {}
 
     using Node::serialize;
     using Node::deserialize;

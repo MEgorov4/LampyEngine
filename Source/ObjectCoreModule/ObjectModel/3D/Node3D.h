@@ -13,7 +13,7 @@ protected:
     glm::vec3 m_scale;    
 
 public:
-    Node3D(Node* parentNode = nullptr);
+    explicit Node3D(Node* parentNode = nullptr);
    
     void setPosition(const glm::vec3& position);
     void setRotation(const glm::vec3& rotation);

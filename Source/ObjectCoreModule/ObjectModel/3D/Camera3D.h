@@ -14,7 +14,7 @@ protected:
 	float m_farPlane;
 
 public:
-	Camera3D(Node* parentNode = nullptr);
+	explicit Camera3D(Node* parentNode = nullptr);
 
 	void setPerspective(float fov, float aspect, float nearPlane, float farPlane);
 	glm::mat4 getViewMatrix();

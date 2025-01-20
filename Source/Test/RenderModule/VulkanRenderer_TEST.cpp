@@ -23,7 +23,7 @@ TEST(VulkanObjectsTest, SetupVulkanObjects)
 	EXPECT_FALSE(window->shouldClose()) << "Window cannot be close on start";
 
 	std::vector<const char*> extensions = window->getRequiredInstanceExtensions();
-	EXPECT_FALSE(extensions.size() <= 0) << "Window extensions cannot be empty";
+	EXPECT_FALSE(extensions.empty()) << "Window extensions cannot be empty";
 
 	VulkanInstance* instance = new VulkanInstance(extensions, false);
 

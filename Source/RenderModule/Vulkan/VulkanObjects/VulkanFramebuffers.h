@@ -8,12 +8,12 @@ class VulkanFramebuffers
 	VkDevice m_device;
 
 public:
-	VulkanFramebuffers(VkDevice device, VkRenderPass renderPass, VkExtent2D extent, std::vector<VkImageView> imageViews);
+	VulkanFramebuffers(VkDevice device, VkRenderPass renderPass, VkExtent2D extent, const std::vector<VkImageView>& imageViews);
 	~VulkanFramebuffers();
 	
-	std::vector<VkFramebuffer> getFramebuffers() const { return m_framebuffers; }
+	const std::vector<VkFramebuffer>& getFramebuffers() const { return m_framebuffers; }
 private:
-	void recreateFramebuffers(VkRenderPass renderPass, VkExtent2D extent, std::vector<VkImageView> imageViews);
+	void recreateFramebuffers(VkRenderPass renderPass, VkExtent2D extent, const std::vector<VkImageView>& imageViews);
 	void createFramebuffers(VkRenderPass renderPass, VkExtent2D extent, std::vector<VkImageView> imageViews);
 	void clearFramebuffers();
 };

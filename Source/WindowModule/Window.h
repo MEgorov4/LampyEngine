@@ -1,5 +1,4 @@
 #pragma once 
-
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vector>
@@ -15,20 +14,18 @@ public:
 
 	bool glfwWindowIsValid() { return m_window != nullptr; }
 
-	void pollEvents(){glfwPollEvents();}
-	bool shouldClose() const { return glfwWindowShouldClose(m_window);}
-
-	std::vector<const char*> getRequiredInstanceExtensions();
 	VkExtent2D getExtent();
-
 	VkSurfaceKHR getWindowSurface(VkInstance instance);
-	
-	bool wasResized() const { return m_framebufferResized; }
-
-	void resetResizedFlag() { m_framebufferResized = false; }
-
+	std::vector<const char*> getRequiredInstanceExtensions();
 	GLFWwindow* getGLFWWindow() { return m_window; }
 
+	void setKeyCallback(GLFWkeyfun keyCallback);
+	void setCursorPositionCallback(GLFWcursorposfun cursorPosCallback);
+	void setScrollCallback(GLFWscrollfun scrollCallback);
 
+	bool wasResized() const { return m_framebufferResized; }
+	void resetResizedFlag() { m_framebufferResized = false; }
+	void pollEvents(){glfwPollEvents();}
+	bool shouldClose() const { return glfwWindowShouldClose(m_window);}
 };
 

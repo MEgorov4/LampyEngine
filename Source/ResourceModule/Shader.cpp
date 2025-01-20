@@ -10,12 +10,12 @@ std::string Shader::getShaderHash()
 	return m_vertPath + '|' + m_fragPath;
 }
 
-std::string Shader::getVertPath()
+const std::string& Shader::getVertPath()
 {
 	return m_vertPath;
 }
 
-std::string Shader::getFragPath()
+const std::string& Shader::getFragPath()
 {
 	return m_fragPath;
 }

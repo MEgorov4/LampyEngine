@@ -4,7 +4,7 @@
 #include "../../../LoggerModule/Logger.h"
 #include "format"
 
-VulkanFramebuffers::VulkanFramebuffers(VkDevice device, VkRenderPass renderPass, VkExtent2D extent, std::vector<VkImageView> imageViews) : m_device(device)
+VulkanFramebuffers::VulkanFramebuffers(VkDevice device, VkRenderPass renderPass, VkExtent2D extent, const std::vector<VkImageView>& imageViews) : m_device(device)
 {
     recreateFramebuffers(renderPass, extent, imageViews);
 }
@@ -14,7 +14,7 @@ VulkanFramebuffers::~VulkanFramebuffers()
     clearFramebuffers();
 }
 
-void VulkanFramebuffers::recreateFramebuffers(VkRenderPass renderPass, VkExtent2D extent, std::vector<VkImageView> imageViews)
+void VulkanFramebuffers::recreateFramebuffers(VkRenderPass renderPass, VkExtent2D extent, const std::vector<VkImageView>& imageViews)
 {
     clearFramebuffers();
     createFramebuffers(renderPass, extent, imageViews);

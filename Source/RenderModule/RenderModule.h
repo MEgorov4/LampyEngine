@@ -19,7 +19,7 @@ public:
 
 	void startUp(Window* window)
 	{
-		RenderConfig& config = RenderConfig::getInstance();
+		const RenderConfig& config = RenderConfig::getInstance();
 		switch (config.getGraphicsAPI())
 		{
 			case(GraphicsAPI::Vulkan):
@@ -29,7 +29,12 @@ public:
 		}
 	}
 
-	IRenderer* getRenderer() { return m_renderer.get(); }
+	IRenderer* getRenderer() 
+	{
+		IRenderer* renderer = m_renderer.get();
+		assert(renderer);
+		return renderer; 
+	}
 
 	void shutDown()
 	{

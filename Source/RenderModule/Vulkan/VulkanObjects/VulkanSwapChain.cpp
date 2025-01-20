@@ -49,8 +49,7 @@ void VulkanSwapChain::buildSwapChain()
     {
         if (imageCount >= RenderConfig::getInstance().getMaxFramesInFlight())
         {
-            //imageCount = VulkanApplicationConfig::getInstance().getMaxFramesInFlight();
-            imageCount = 2;
+            imageCount = RenderConfig::getInstance().getMaxFramesInFlight();
         }
     }
 

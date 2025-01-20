@@ -1,1 +1,4 @@
 /build
+/LampyEngine-cppcheck-build-dir
+/.vscode
+/.vs

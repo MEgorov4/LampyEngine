@@ -12,7 +12,7 @@ Window::Window(int width, int height, const char* title)
 
 	if (!glfwInit())
 	{
-		std::runtime_error("failed to initialise glfw");
+		throw std::runtime_error("failed to initialise glfw");
 	}
 	
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -62,6 +62,21 @@ std::vector<const char*> Window::getRequiredInstanceExtensions()
 	}
 
 	return std::vector<const char*>(extensionsNames, extensionsNames + extensionsCount);
+}
+
+void Window::setKeyCallback(GLFWkeyfun keyCallback)
+{
+	glfwSetKeyCallback(m_window, keyCallback);
+}
+
+void Window::setCursorPositionCallback(GLFWcursorposfun cursorPosCallback)
+{
+	glfwSetCursorPosCallback(m_window, cursorPosCallback);
+}
+
+void Window::setScrollCallback(GLFWscrollfun scrollCallback)
+{
+	glfwSetScrollCallback(m_window, scrollCallback);
 }
 
 VkExtent2D Window::getExtent()

@@ -1,5 +1,4 @@
 #pragma once
-#include <vector>
 #include <nlohmann/json.hpp>
 
 class Node
@@ -10,7 +9,7 @@ protected:
 	uint32_t uniqueID;
 
 public:
-	Node(Node* parentNode = nullptr);
+	explicit Node(Node* parentNode = nullptr);
 	virtual ~Node();
 	Node(const Node& n) = delete;
 	const Node& operator=(const Node& n) = delete;

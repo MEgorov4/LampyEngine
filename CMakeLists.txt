@@ -30,6 +30,7 @@ file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/Source/Engine/*.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/Source/Engine/*.h
 )
+
 # Shader files
 file(GLOB_RECURSE SHADER_FILES CONFIGURE_DEPENDS 
     ${CMAKE_CURRENT_SOURCE_DIR}/Source/Shaders/*.glsl
@@ -47,11 +48,22 @@ file(GLOB_RECURSE WINDOW_MODULE_SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/Source/WindowModule/*.h
 )
 
-# Resource module
+# Window module
+file(GLOB_RECURSE INPUT_MODULE_SOURCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/InputModule/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/InputModule/*.h
+)
 
+# Resource module
 file(GLOB_RECURSE RESOURCE_MODULE_SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/Source/ResourceModule/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Source/ResourceModule/*.h
+)
+
+# Audio module
+file(GLOB_RECURSE AUDIO_MODULE_SOURCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/AudioModule/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/AudioModule/*.h
 )
 
 # Object core module
@@ -81,7 +93,9 @@ file(GLOB_RECURSE TEST_SOURCES
 format_source_group(ENGINE_SOURCES)
 format_source_group(SHADER_FILES)
 format_source_group(WINDOW_MODULE_SOURCE)
+format_source_group(INPUT_MODULE_SOURCE)
 format_source_group(RESOURCE_MODULE_SOURCE)
+format_source_group(AUDIO_MODULE_SOURCE)
 format_source_group(OBJECT_CORE_MODULE_SOURCE)
 format_source_group(LOGGER_MODULE_SOURCE)
 format_source_group(RENDER_MODULE_SOURCE)
@@ -92,6 +106,7 @@ find_package(glfw3 REQUIRED)
 find_package(VulkanLoader REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
+find_package(OpenAL)
 find_package(tinyobjloader REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(GTest REQUIRED)
@@ -102,8 +117,15 @@ add_library(WindowModule STATIC ${WINDOW_MODULE_SOURCE})
 # Add resource module
 add_library(ResourceModule STATIC ${RESOURCE_MODULE_SOURCE})
 
+# Add input module
+add_library(InputModule STATIC ${INPUT_MODULE_SOURCE})
+
+# Add audio module
+add_library(AudioModule STATIC ${AUDIO_MODULE_SOURCE})
+
 # Add object core module
 add_library(ObjectCoreModule STATIC ${OBJECT_CORE_MODULE_SOURCE})
+
 # Add logger module
 add_library(LoggerModule STATIC ${LOGGER_MODULE_SOURCE})
 
@@ -120,9 +142,23 @@ target_link_libraries(WindowModule PUBLIC
     LoggerModule
 )
 
+# input module lik dependent
+target_link_libraries(InputModule PUBLIC
+    glfw
+    WindowModule
+    LoggerModule
+)
+
 # resource module link dependent
 target_link_libraries(ResourceModule PUBLIC
     glm::glm
+    LoggerModule
+)
+
+# audio module link dependent
+target_link_libraries(AudioModule PUBLIC
+    OpenAL::OpenAL
+    LoggerModule
 )
 
 # object core module link dependent
@@ -143,6 +179,8 @@ target_link_libraries(RenderModule PUBLIC
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC
+    InputModule
+    AudioModule
     WindowModule
     ObjectCoreModule
     LoggerModule 
@@ -158,6 +196,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 add_executable(${TEST_PROJECT_NAME} ${TEST_SOURCES})
 
 target_link_libraries(${TEST_PROJECT_NAME} PUBLIC
+    InputModule
+    AudioModule
     WindowModule
     LoggerModule
     ResourceModule

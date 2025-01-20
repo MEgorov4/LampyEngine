@@ -16,7 +16,7 @@ public:
         VkQueue transferQueue, VkCommandPool commandPool);
     ~VulkanVertexBuffer();
 
-    VkBuffer getBuffer() const;
+    VkBuffer getBuffer();
 
     uint32_t getVerticesCount() { return m_verticesCount; };
 

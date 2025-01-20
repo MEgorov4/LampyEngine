@@ -10,5 +10,7 @@ class Scene
 
 public:
 	Scene();
+	Scene(const Scene&) = delete;
 	~Scene();
+	Scene& operator=(const Scene& rhs) = delete;
 };

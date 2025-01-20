@@ -17,7 +17,7 @@ VulkanVertexBuffer::~VulkanVertexBuffer() {
     vkFreeMemory(m_device, m_memory, nullptr);
 }
 
-VkBuffer VulkanVertexBuffer::getBuffer() const {
+VkBuffer VulkanVertexBuffer::getBuffer(){
     return m_buffer;
 }
 
