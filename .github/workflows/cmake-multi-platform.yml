@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        build_type: [Release, Debug]
+        build_type: [Debug]  # Вы указали, что релиз пока не собираете
 
     steps:
     - name: Checkout repository
@@ -30,29 +30,18 @@ jobs:
 
     - name: Install dependencies with Conan
       run: |
-        conan profile detect --force
-        conan profile update settings.compiler.libcxx=libstdc++11 default
-        mkdir conan_build
-        cd conan_build
-        conan install .. --build=missing -s build_type=${{ matrix.build_type }}
+        conan install . --output-folder=build --build=missing --profile=conanProfileDebug --profile:b=conanProfileDebug
 
     - name: Configure CMake
       run: |
-        mkdir build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+        cmake .. --fresh -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake"
 
     - name: Build project
       run: |
         cd build
-        cmake --build . --config ${{ matrix.build_type }}
+        cmake --build --preset conan-debug
 
     - name: Run Tests
       working-directory: build
       run: ctest --output-on-failure
-
-    # Optional: Add a specific step for running build scripts on Windows
-    - name: Run build script on Windows
-      if: runner.os == 'Windows'
-      run: |
-        ./buildDebug.bat
