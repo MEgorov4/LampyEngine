@@ -41,8 +41,14 @@ jobs:
       - name: Install Dependencies with Conan
         run: |
           sudo apt-get update
-          sudo apt-get install -y xorg openbox xauth libx11-xcb-dev libx11-xcb-dev libfontenc-dev libxaw7-dev libxkbfile-dev libxmu-dev libxmuu-dev libxpm-dev libxres-dev libxss-dev libxt-dev libxtst-dev libxv-dev libxvmc-dev libxxf86vm-dev
-          sudo apt-get install libx11-dev
+          sudo rm -rf /var/lib/apt/lists/lock
+          sudo rm -rf /var/cache/apt/archives/lock
+          sudo rm -rf /var/lib/dpkg/lock*
+          sudo apt-get clean
+          sudo apt-get update
+          sudo apt-get install libgl1-mesa-dev
+          ps aux | grep apt
+          sudo kill -9 <PID>
           conan install . --output-folder=Engine/ThirdParty --build=missing --profile=./conanProfileDebugLinux --profile:build=./conanProfileDebugLinux
           sudo mkdir build
           
