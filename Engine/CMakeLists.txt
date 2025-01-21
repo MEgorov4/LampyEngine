@@ -1,0 +1,5 @@
+add_subdirectory(ThirdParty)
+add_subdirectory(Modules)
+add_subdirectory(Core)
+add_subdirectory(Editor)
+add_subdirectory(Test)

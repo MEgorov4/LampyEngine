@@ -14,7 +14,7 @@ def CleanUp():
     print(f"Created folder: {folder_path}")
 
 def Format():
-    input_folder = os.path.abspath(os.path.dirname(__file__)) + "\\..\\Source"
+    input_folder = os.path.abspath(os.path.dirname(__file__)) + "\\..\\Engine"
     output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "build", "all_code.txt")
 
     with open(output_file, 'w') as txt_file:

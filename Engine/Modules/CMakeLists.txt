@@ -1,0 +1,7 @@
+add_subdirectory(LoggerModule)
+add_subdirectory(ObjectCoreModule)
+add_subdirectory(ResourceModule)
+add_subdirectory(WindowModule)
+add_subdirectory(AudioModule)
+add_subdirectory(InputModule)
+add_subdirectory(RenderModule)
