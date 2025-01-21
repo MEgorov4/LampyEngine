@@ -19,7 +19,11 @@ jobs:
           sudo rm -rf /var/lib/dpkg/lock
           sudo rm -rf /var/cache/apt/archives/lock
           sudo rm -rf /var/lib/apt/lists/lock
-
+    
+      - name: Enable i386 Architecture
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
       # 2. Обновление репозиториев
 #      - name: Update APT and Install System Dependencies
 #        run: |
