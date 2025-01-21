@@ -47,8 +47,6 @@ jobs:
           sudo apt-get clean
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev
-          ps aux | grep apt
-          sudo kill -9 <PID>
           conan install . --output-folder=Engine/ThirdParty --build=missing --profile=./conanProfileDebugLinux --profile:build=./conanProfileDebugLinux
           sudo mkdir build
           
