@@ -37,19 +37,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-conan-
 
-      # 5. Установка зависимостей APT
+      # 5. Установка Vulkan SDK и Shaderc
+      - name: Install Vulkan SDK and Shaderc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget -qO vulkan-sdk.tar.gz https://vulkan.lunarg.com/sdk/home/latest/linux/vulkan-sdk.tar.gz
+          tar -xvf vulkan-sdk.tar.gz -C /opt/
+          export VULKAN_SDK=/opt/vulkan-sdk-*/x86_64
+          export PATH=$VULKAN_SDK/bin:$PATH
+          export LD_LIBRARY_PATH=$VULKAN_SDK/lib:$LD_LIBRARY_PATH
+          export VK_ICD_FILENAMES=$VULKAN_SDK/etc/vulkan/icd.d
+          export VK_LAYER_PATH=$VULKAN_SDK/etc/vulkan/layer.d
+
+      # 6. Установка системных зависимостей
       - name: Install System Dependencies
         run: |
-          sudo rm -rf /var/lib/apt/lists/lock
-          sudo rm -rf /var/cache/apt/archives/lock
-          sudo rm -rf /var/lib/dpkg/lock*
-          sudo apt-get clean
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
             libgl1-mesa-dev \
-            vulkan-sdk \
-            shaderc \
             libx11-dev \
             libx11-xcb-dev \
             libxcb-dri3-dev \
@@ -61,7 +68,7 @@ jobs:
             libice-dev \
             libsm-dev
 
-      # 6. Установка зависимостей через Conan
+      # 7. Установка зависимостей через Conan
       - name: Install Dependencies with Conan
         run: |
           conan install . \
@@ -70,31 +77,31 @@ jobs:
             --profile=./conanProfileDebugLinux \
             --profile:build=./conanProfileDebugLinux
 
-      # 7. Установка CMake
+      # 8. Установка CMake
       - name: Install CMake
         uses: jwlawson/actions-setup-cmake@v1
         with:
           cmake-version: '3.29.2'
 
-      # 8. Генерация файлов проекта с помощью CMake
+      # 9. Генерация файлов проекта с помощью CMake
       - name: Generate Project Files with CMake
         run: |
           mkdir -p build
           cd build
           cmake .. -DCMAKE_TOOLCHAIN_FILE="Engine/ThirdParty/conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Debug
 
-      # 9. Предварительная компиляция шейдеров
+      # 10. Предварительная компиляция шейдеров
       - name: Precompile Shaders
         run: |
           glslc Engine/Core/Shaders/shader.vert -o build/vert.spv
           glslc Engine/Core/Shaders/shader.frag -o build/frag.spv
 
-      # 10. Сборка проекта
+      # 11. Сборка проекта
       - name: Build Project
         run: |
           cmake --build build --preset conan-debug
 
-      # 11. Запуск тестов
+      # 12. Запуск тестов
       - name: Run Tests
         run: |
           cd build
