@@ -48,7 +48,7 @@ jobs:
       - name: Install Dependencies with Conan
         run: |
           sudo apt-get install libegl1-mesa-dev
-          sudo conan install . --output-folder=Engine/ThirdParty --build=missing --profile=./conanProfileDebugLinux --profile:build=./conanProfileDebugLinux
+          conan install . --output-folder=Engine/ThirdParty --build=missing --profile=./conanProfileDebugLinux --profile:build=./conanProfileDebugLinux
           sudo mkdir build
           
       # 7. Установка CMake
