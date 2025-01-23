@@ -9,7 +9,7 @@ add_executable(${TEST_PROJECT_NAME} ${TEST_SOURCES})
 
 
 find_package(glm)
-find_package(gtest)
+find_package(GTest)
 target_link_libraries(${TEST_PROJECT_NAME} PUBLIC
     InputModule
     AudioModule
