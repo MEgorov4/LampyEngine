@@ -1,0 +1,7 @@
+file(GLOB_RECURSE ENGINE_CONTEXT_SOURCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.h
+)
+
+format_source_group(${ENGINE_CONTEXT_SOURCE})
+add_library(EngineContext STATIC ${ENGINE_CONTEXT_SOURCE})

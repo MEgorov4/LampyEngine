@@ -7,6 +7,7 @@ class IRenderer
 {
 protected:
 	Scene* m_rendererScene;
+
 public:
 	IRenderer() : m_rendererScene(nullptr) {};
 	virtual ~IRenderer() {};
@@ -15,10 +16,8 @@ public:
 
 	virtual void registerShader(const std::string& vertPath, const std::string& fragPath) = 0;
 	virtual void removeShader(const std::string& vertPath, const std::string& fragPath) = 0;
-
 	virtual void registerVertexData(const std::vector<Vertex>& vertexData) = 0;
 	virtual void removeVertexData(const std::vector<Vertex>& vertexData) = 0;
-
 	virtual void setSceneToRender(Scene* scene) { m_rendererScene = scene; };
 	
 

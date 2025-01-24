@@ -12,7 +12,7 @@ public:
 	Window(int width, int height, const char* title);
 	~Window();
 
-	bool glfwWindowIsValid() { return m_window != nullptr; }
+	bool glfwWindowIsValid() const { return m_window != nullptr; }
 
 	VkExtent2D getExtent();
 	VkSurfaceKHR getWindowSurface(VkInstance instance);
@@ -27,5 +27,7 @@ public:
 	void resetResizedFlag() { m_framebufferResized = false; }
 	void pollEvents(){glfwPollEvents();}
 	bool shouldClose() const { return glfwWindowShouldClose(m_window);}
+
+	float currentTimeInSeconds();
 };
 

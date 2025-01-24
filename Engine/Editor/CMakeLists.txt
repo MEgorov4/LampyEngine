@@ -1,15 +1,12 @@
-set(EDITOR_PROJECT_NAME Editor)
-
-file(GLOB_RECURSE EDITOR_SOURCE
+file(GLOB_RECURSE EDITOR_MODULE_SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/*.h
 )
 
-format_source_group(${EDITOR_SOURCE})
-
-add_executable(${EDITOR_PROJECT_NAME} ${EDITOR_SOURCE})
-
-target_link_libraries(${EDITOR_PROJECT_NAME} PUBLIC
+format_source_group(${EDITOR_MODULE_SOURCE})
+add_library(EditorModule ${EDITOR_MODULE_SOURCE})
+find_package(portable-file-dialogs)
+target_link_libraries(EditorModule PUBLIC
     InputModule
     AudioModule
     WindowModule
@@ -17,4 +14,7 @@ target_link_libraries(${EDITOR_PROJECT_NAME} PUBLIC
     LoggerModule
     RenderModule
     ResourceModule
+    EngineContext
+    ImGuiModule
+    portable-file-dialogs::portable-file-dialogs
 )

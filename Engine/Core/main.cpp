@@ -1,13 +1,11 @@
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 #include <iostream>
 
-#include "Application.h"
+#include "Engine.h"
 int main() {
 
-    Application vulkanApplication;
+    Engine engine;
     try {
-        vulkanApplication.run();
+        engine.run();
     }
     catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;

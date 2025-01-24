@@ -6,6 +6,24 @@
 
 #include "../IRenderer.h"
 #include "VulkanObjects/VulkanGraphicsPipeline.h"
+
+
+struct DeletionQueue {
+	std::vector<std::function<void()>> deletors;
+
+	void push_function(std::function<void()>&& function) {
+		deletors.push_back(function);
+	}
+
+	void flush() {
+		for (auto it = deletors.rbegin(); it != deletors.rend(); ++it) {
+			(*it)();
+		}
+		deletors.clear();
+	}
+};
+
+
 class Window;
 class VulkanInstance;
 class VulkanSurface;
@@ -39,6 +57,8 @@ class VulkanRenderer : public IRenderer
     uint32_t m_currentFrame = 0;
 
 	Window* m_window;
+
+	DeletionQueue m_mainDeletionQueue;
 public:
     explicit VulkanRenderer(Window* window);
     ~VulkanRenderer() override;
@@ -56,6 +76,8 @@ public:
 
 private:
 	void initVulkan();
+	void initImGui();
+	void immediate_submit(std::function<void(VkCommandBuffer)>&& function);
 	void cleanupVulkan();
 
 	void drawFrame();

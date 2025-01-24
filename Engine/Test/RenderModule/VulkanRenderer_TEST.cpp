@@ -12,7 +12,7 @@
 #include "../../Modules/RenderModule/Vulkan/VulkanObjects/VulkanFramebuffers.h"
 #include "../../Modules/RenderModule/Vulkan/VulkanObjects/VulkanCommandBuffers.h"
 #include "../../Modules/RenderModule/Vulkan/VulkanObjects/VulkanSynchronizationManager.h"
-#include "../../Editor/VulkanApplicationConfig.h"
+#include "../../Core/EngineConfig.h"
 
 
 
@@ -57,7 +57,7 @@ TEST(VulkanObjectsTest, SetupVulkanObjects)
 
 	std::vector<VkImageView> imageViews = swapChain->getImageViews();
 
-	EXPECT_EQ(imageViews.size(), EngineApplicationConfig::getInstance().getMaxFramesInFlight()) << "Image views wrong count";
+	EXPECT_EQ(imageViews.size(), EngineConfig::getInstance().getMaxFramesInFlight()) << "Image views wrong count";
 	
 	for (VkImageView view : imageViews)
 	{
@@ -79,7 +79,7 @@ TEST(VulkanObjectsTest, SetupVulkanObjects)
 
 	std::vector<VkFramebuffer> v_framebuffers = framebuffers->getFramebuffers();
 
-	EXPECT_EQ(v_framebuffers.size(), EngineApplicationConfig::getInstance().getMaxFramesInFlight()) << "Framebuffers wrong count";
+	EXPECT_EQ(v_framebuffers.size(), EngineConfig::getInstance().getMaxFramesInFlight()) << "Framebuffers wrong count";
 
 	for (VkFramebuffer framebuffer : v_framebuffers)
 	{
@@ -88,11 +88,11 @@ TEST(VulkanObjectsTest, SetupVulkanObjects)
 
 	VulkanCommandBuffers* commandBuffers = new VulkanCommandBuffers(logicalDevice->getLogicalDevice(), 
 																	commandPool->getCommandPool(), 
-																	EngineApplicationConfig::getInstance().getMaxFramesInFlight());
+																	EngineConfig::getInstance().getMaxFramesInFlight());
 	std::vector<VkCommandBuffer> v_commandBuffers = commandBuffers->getCommandBuffers();
 
 
-	EXPECT_EQ(v_commandBuffers.size(), EngineApplicationConfig::getInstance().getMaxFramesInFlight()) << "Command wrong count";
+	EXPECT_EQ(v_commandBuffers.size(), EngineConfig::getInstance().getMaxFramesInFlight()) << "Command wrong count";
 
 	for (VkCommandBuffer commandBuffer : v_commandBuffers)
 	{
@@ -100,9 +100,9 @@ TEST(VulkanObjectsTest, SetupVulkanObjects)
 	}
 
 	VulkanSynchronizationManager* syncManager = new VulkanSynchronizationManager(logicalDevice->getLogicalDevice(),
-																				 EngineApplicationConfig::getInstance().getMaxFramesInFlight());
+																				 EngineConfig::getInstance().getMaxFramesInFlight());
 	
-	for (uint32_t i = 0; i < EngineApplicationConfig::getInstance().getMaxFramesInFlight(); i++)
+	for (uint32_t i = 0; i < EngineConfig::getInstance().getMaxFramesInFlight(); i++)
 	{
 		EXPECT_NE(syncManager->getInFlightFence(i), VK_NULL_HANDLE) << "In flight fence non valid";
 		EXPECT_NE(syncManager->getImageAvailableSemaphore(i), VK_NULL_HANDLE) << "Image avaliable semaphore non valid";

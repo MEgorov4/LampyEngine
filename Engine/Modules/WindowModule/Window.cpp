@@ -79,6 +79,11 @@ void Window::setScrollCallback(GLFWscrollfun scrollCallback)
 	glfwSetScrollCallback(m_window, scrollCallback);
 }
 
+float Window::currentTimeInSeconds()
+{
+	return glfwGetTime();
+}
+
 VkExtent2D Window::getExtent()
 {
 	int width, height;

@@ -10,10 +10,14 @@ find_package(glfw3)
 find_package(VulkanLoader)
 find_package(glm)
 find_package(nlohmann_json)
+find_package(imgui)
 target_link_libraries( RenderModule PUBLIC
     ObjectCoreModule
     ResourceModule
     LoggerModule
+    ImGuiModule
+    ImGuiBackends
+    imgui::imgui
     glfw
     Vulkan::Loader
     glm::glm

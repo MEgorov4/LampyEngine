@@ -16,13 +16,22 @@
 #include "VulkanObjects/VulkanVertexBufferCache.h"
 #include "VulkanObjects/VulkanPipelineCache.h"
 #include "../RenderConfig.h"
+#include "imgui.h"
+#include "../../WindowModule/WindowModule.h"
+#include "../../../ThirdParty/ImGui_backends/imgui_impl_glfw.h"
+#include "../../../ThirdParty/ImGui_backends/imgui_impl_vulkan.h"
 
 VulkanRenderer::VulkanRenderer(Window* window) : m_window(window)
 {
 	initVulkan();
+	if (RenderConfig::getInstance().getImGuiEnabled())
+	{
+		initImGui();
+	}
 }
 VulkanRenderer::~VulkanRenderer() 
 {
+	m_mainDeletionQueue.flush();
 	cleanupVulkan();
 }
 
@@ -48,6 +57,94 @@ void VulkanRenderer::initVulkan()
 
 	m_syncManager = std::make_unique<VulkanSynchronizationManager>(m_logicalDevice->getLogicalDevice(),
 														   RenderConfig::getInstance().getMaxFramesInFlight());
+}
+
+void VulkanRenderer::initImGui() {
+	VkDescriptorPoolSize pool_sizes[] = {
+		{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+	};
+
+	VkDescriptorPoolCreateInfo poolInfo = {};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	poolInfo.maxSets = 1000;
+	poolInfo.poolSizeCount = static_cast<uint32_t>(std::size(pool_sizes));
+	poolInfo.pPoolSizes = pool_sizes;
+
+	VkDescriptorPool imguiPool;
+	if (vkCreateDescriptorPool(m_logicalDevice->getLogicalDevice(), &poolInfo, nullptr, &imguiPool) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create ImGui descriptor pool!");
+	}
+
+	ImGui::CreateContext();
+	assert(ImGui::GetCurrentContext() != nullptr && "Failed to create ImGui context!");
+
+	ImGui_ImplGlfw_InitForVulkan(WindowModule::getInstance().getWindow()->getGLFWWindow(), true);
+
+	ImGui_ImplVulkan_InitInfo init_info = {};
+	init_info.Instance = m_instance->getInstance();
+	init_info.PhysicalDevice = m_logicalDevice->getPhysicalDevice();
+	init_info.Device = m_logicalDevice->getLogicalDevice();
+	init_info.Queue = m_logicalDevice->getGraphicsQueue();
+	init_info.DescriptorPool = imguiPool;
+	init_info.MinImageCount = RenderConfig::getInstance().getMaxFramesInFlight();
+	init_info.ImageCount = RenderConfig::getInstance().getMaxFramesInFlight();
+	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+	ImGui_ImplVulkan_Init(&init_info, m_renderPass->getRenderPass());
+
+	immediate_submit([&](VkCommandBuffer cmd) {
+		ImGui_ImplVulkan_CreateFontsTexture(cmd);
+		});
+
+	ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+	m_mainDeletionQueue.push_function([=]() {
+		vkDestroyDescriptorPool(m_logicalDevice->getLogicalDevice(), imguiPool, nullptr);
+		ImGui_ImplVulkan_Shutdown();
+		});
+}
+
+
+void VulkanRenderer::immediate_submit(std::function<void(VkCommandBuffer)>&& function) {
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = m_commandPool->getCommandPool(); 
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer cmd;
+	vkAllocateCommandBuffers(m_logicalDevice->getLogicalDevice(), &allocInfo, &cmd);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(cmd, &beginInfo);
+
+	function(cmd);
+
+	vkEndCommandBuffer(cmd);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &cmd;
+
+	vkQueueSubmit(m_logicalDevice->getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(m_logicalDevice->getGraphicsQueue());
+
+	vkFreeCommandBuffers(m_logicalDevice->getLogicalDevice(), m_commandPool->getCommandPool(), 1, &cmd);
 }
 
 void VulkanRenderer::cleanupVulkan()
@@ -261,6 +358,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
@@ -277,6 +375,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 
 	createSceneRenderCommands(commandBuffer);
 
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 	vkCmdEndRenderPass(commandBuffer);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
