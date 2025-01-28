@@ -1,0 +1,8 @@
+file(GLOB_RECURSE EVENT_MODULE_SOURCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+)
+
+format_source_group(${EVENT_MODULE_SOURCE})
+
+add_library(EventModule ${EVENT_MODULE_SOURCE})

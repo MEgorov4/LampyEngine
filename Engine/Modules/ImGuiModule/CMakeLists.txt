@@ -6,11 +6,14 @@ file(GLOB_RECURSE IMGUI_MODULE
 format_source_group(${IMGUI_MODULE})
 
 add_library(ImGuiModule ${IMGUI_MODULE})
-find_package(imgui)
 
+find_package(imgui REQUIRED)
+find_package(VulkanLoader REQUIRED)
+find_package(glfw3 REQUIRED)
+
+target_link_libraries(ImGuiModule PUBLIC imgui::imgui)
 
 target_link_libraries(ImGuiModule PRIVATE
-    imgui::imgui
-    ImGuiBackends
-    WindowModule
+    glfw
+    Vulkan::Loader
 )

@@ -8,6 +8,8 @@ public:
 	virtual ~Editor() {}
 
 	void init() override;
+	void startupEditorModules();
 	void tick(float deltaTime) override;
 	void shutDown() override;
+	void shutDownEditorModules();
 };

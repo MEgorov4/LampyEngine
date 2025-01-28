@@ -9,17 +9,13 @@ add_library(RenderModule STATIC ${RENDER_MODULE_SOURCE})
 find_package(glfw3)
 find_package(VulkanLoader)
 find_package(glm)
-find_package(nlohmann_json)
-find_package(imgui)
 target_link_libraries( RenderModule PUBLIC
     ObjectCoreModule
     ResourceModule
     LoggerModule
+    PRIVATE
     ImGuiModule
-    ImGuiBackends
-    imgui::imgui
     glfw
     Vulkan::Loader
     glm::glm
-    nlohmann_json::nlohmann_json
 )

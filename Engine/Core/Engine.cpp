@@ -16,8 +16,9 @@ Engine::~Engine(){}
 void Engine::run()
 {
 	startupModules();
-	startupEngine();
+	startupEngineContextObject();
 	engineTick();
+	shutDownEngineContextObject();
 	shutDownModules();
 }
 
@@ -35,7 +36,7 @@ void Engine::startupModules()
 	AudioModule::getInstance().startUp();
 }
 
-void Engine::startupEngine()
+void Engine::startupEngineContextObject()
 {
 	m_engineContext = std::make_unique<Editor>();
 	m_engineContext->init();
@@ -60,7 +61,7 @@ void Engine::engineTick()
 }
 
 
-void Engine::shutDownEngine()
+void Engine::shutDownEngineContextObject()
 {
 	m_engineContext->shutDown();
 }

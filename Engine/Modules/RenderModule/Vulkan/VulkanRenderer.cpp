@@ -16,10 +16,10 @@
 #include "VulkanObjects/VulkanVertexBufferCache.h"
 #include "VulkanObjects/VulkanPipelineCache.h"
 #include "../RenderConfig.h"
-#include "imgui.h"
 #include "../../WindowModule/WindowModule.h"
-#include "../../../ThirdParty/ImGui_backends/imgui_impl_glfw.h"
-#include "../../../ThirdParty/ImGui_backends/imgui_impl_vulkan.h"
+#include "../../ImGuiModule/GLFWBackends/imgui_impl_glfw.h"
+#include "../../ImGuiModule/VulkanBackends/imgui_impl_vulkan.h"
+#include "imgui.h"
 
 VulkanRenderer::VulkanRenderer(Window* window) : m_window(window)
 {
@@ -376,6 +376,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 	createSceneRenderCommands(commandBuffer);
 
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+
 	vkCmdEndRenderPass(commandBuffer);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {

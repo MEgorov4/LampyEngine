@@ -14,8 +14,8 @@ public:
 
 private:
 	void startupModules();
-	void startupEngine();
+	void startupEngineContextObject();
 	void engineTick();
-	void shutDownEngine();
+	void shutDownEngineContextObject();
 	void shutDownModules();
 };

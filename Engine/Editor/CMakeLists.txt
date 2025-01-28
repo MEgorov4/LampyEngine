@@ -5,6 +5,7 @@ file(GLOB_RECURSE EDITOR_MODULE_SOURCE
 
 format_source_group(${EDITOR_MODULE_SOURCE})
 add_library(EditorModule ${EDITOR_MODULE_SOURCE})
+
 find_package(portable-file-dialogs)
 target_link_libraries(EditorModule PUBLIC
     InputModule
@@ -15,6 +16,6 @@ target_link_libraries(EditorModule PUBLIC
     RenderModule
     ResourceModule
     EngineContext
-    ImGuiModule
+    EditorGuiModule
     portable-file-dialogs::portable-file-dialogs
 )

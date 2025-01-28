@@ -1,16 +1,29 @@
 #include "Editor.h"
-#include "../Modules/ImGuiModule/ImGuiModule.h"
+
+#include "../Modules/EditorGuiModule/EditorGUIModule.h"
+
 void Editor::init()
 {
-	ImGuiModule::getInstance().startUp();
+	startupEditorModules();
+}
+
+void Editor::startupEditorModules()
+{
+
+	EditorGUIModule::getInstance().startUp();
 }
 
 void Editor::tick(float deltaTime)
 {
-	ImGuiModule::getInstance().renderUI();
+	EditorGUIModule::getInstance().render();
 }
 
 void Editor::shutDown()
 {
-	ImGuiModule::getInstance().shutDown();
+	shutDownEditorModules();
+}
+
+void Editor::shutDownEditorModules()
+{
+	EditorGUIModule::getInstance().shutDown();
 }

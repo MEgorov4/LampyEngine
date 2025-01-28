@@ -6,6 +6,7 @@ enum class GraphicsAPI : uint8_t
 	Vulkan,
 	OpenGL
 };
+
 class RenderConfig
 {
 	uint32_t MAX_FRAMES_IN_FLIGHT = 2;
