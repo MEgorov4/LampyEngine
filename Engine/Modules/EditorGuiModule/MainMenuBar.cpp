@@ -13,7 +13,7 @@ void GUIMainMenuBar::render()
         {
             if (ImGui::MenuItem("Open"))
             {
-                
+                OnOpenClicked("Open button clicked");
             }
             if (ImGui::MenuItem("Save"))
             {

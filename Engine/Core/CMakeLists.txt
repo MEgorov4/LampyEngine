@@ -16,4 +16,6 @@ target_link_libraries(Engine PUBLIC
     ResourceModule
     EditorModule
     EngineContext
+    PRIVATE
+    EventModule
 )

@@ -13,7 +13,7 @@ public:
     Event& operator=(const Event&) = delete;
 
     Event(Event&&) = delete;
-    Event& operator=(Event&&) = deelete;
+    Event& operator=(Event&&) = delete;
 
     Event() = default;
     ~Event() = default;

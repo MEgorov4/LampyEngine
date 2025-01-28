@@ -22,11 +22,16 @@ public:
 		m_toolPanel = std::make_unique<GUIEditorToolPanel>();
 		m_mainMenuBar = std::make_unique<GUIMainMenuBar>();
 	}
-
+	
 	void render()
 	{
 		ImGuiModule::getInstance().renderUI();
 	};
+
+	GUIMainMenuBar* getMenuBar()
+	{
+		return m_mainMenuBar.get();
+	}
 
 	void shutDown()
 	{

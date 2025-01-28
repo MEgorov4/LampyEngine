@@ -18,4 +18,6 @@ target_link_libraries(EditorModule PUBLIC
     EngineContext
     EditorGuiModule
     portable-file-dialogs::portable-file-dialogs
+    PRIVATE
+    EventModule
 )
