@@ -20,7 +20,7 @@ def Format():
     with open(output_file, 'w') as txt_file:
         for root, _, files in os.walk(input_folder):
             for file in files:
-                if file.endswith(".cpp") or file.endswith(".h"):
+                if file.endswith(".cpp") or file.endswith(".h") or file.endswith(".txt"):
                     file_path = os.path.join(root, file)
 
                     txt_file.write(f"=== {file} ===\n\n")

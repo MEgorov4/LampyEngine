@@ -12,6 +12,4 @@ public:
 	void tick(float deltaTime) override;
 	void shutDown() override;
 	void shutDownEditorModules();
-
-	void onClicked(const std::string& string);
 };

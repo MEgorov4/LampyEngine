@@ -24,6 +24,7 @@ public:
 
     void startUp()
     {
+        LOG_INFO("AudioModule: Startup");
         m_device = alcOpenDevice(nullptr); 
         if (!m_device)
         {
@@ -42,6 +43,7 @@ public:
 
     void shutDown()
     {
+        LOG_INFO("AudioModule: Shut down");
         if (m_context)
         {
             alcMakeContextCurrent(nullptr); 

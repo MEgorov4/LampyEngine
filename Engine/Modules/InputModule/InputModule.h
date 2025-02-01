@@ -19,6 +19,7 @@ public:
 
 	void startUp(Window* window)
 	{
+        LOG_INFO("InputModule: Startup");
         window->setKeyCallback([](GLFWwindow* win, int key, int scancode, int action, int mods) {
             auto& instance = getInstance();
             if (instance.keyCallback) {
@@ -43,6 +44,7 @@ public:
 
 	void shutDown()
 	{
+        LOG_INFO("InputModule: Shut down");
         keyCallback = nullptr;
         cursorPositionCallback = nullptr;
         scrollCallback = nullptr;

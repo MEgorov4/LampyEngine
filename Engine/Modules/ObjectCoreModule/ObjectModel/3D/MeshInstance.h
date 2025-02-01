@@ -3,13 +3,13 @@
 
 #include <memory>
 
-class Mesh;
-class Shader;
+class RMesh;
+class RShader;
 
 class MeshInstance : public Node3D
 {
-	std::unique_ptr<Mesh> m_mesh;
-	std::unique_ptr<Shader> m_shader;
+	std::unique_ptr<RMesh> m_mesh;
+	std::unique_ptr<RShader> m_shader;
 public:
-	explicit MeshInstance(Node* parentNode, std::unique_ptr<Mesh> mesh, std::unique_ptr<Shader> shader);
+	explicit MeshInstance(Node* parentNode, std::unique_ptr<RMesh> mesh, std::unique_ptr<RShader> shader);
 };

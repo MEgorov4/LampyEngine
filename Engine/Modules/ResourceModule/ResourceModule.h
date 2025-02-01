@@ -18,12 +18,12 @@ public:
 
 	void startUp()
 	{
-		 
+		LOG_INFO("ResourceModule: Startup");
 	}
 
-	std::unique_ptr<Shader> createAndRegisterShader(const std::string& vertPath, const std::string& fragPath)
+	std::unique_ptr<RShader> createAndRegisterShader(const std::string& vertPath, const std::string& fragPath)
 	{
-		std::unique_ptr<Shader> shader = std::make_unique<Shader>(vertPath, fragPath);
+		std::unique_ptr<RShader> shader = std::make_unique<RShader>(vertPath, fragPath);
 		assert(shader);
 
 		RenderModule::getInstance().registerShader(vertPath, fragPath);
@@ -31,15 +31,15 @@ public:
 		return shader;
 	}
 
-	void removeShader(std::unique_ptr<Shader> shader)
+	void removeShader(std::unique_ptr<RShader> shader)
 	{
 		RenderModule::getInstance().removeShader(shader->getVertPath(), shader->getFragPath());
 	} 
 	
-	std::unique_ptr<Mesh> createAndRegisterMesh(const std::vector<MeshVertex>& vertices)
+	std::unique_ptr<RMesh> createAndRegisterMesh(const std::vector<MeshVertex>& vertices)
 	{
 
-		std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>(vertices);
+		std::unique_ptr<RMesh> mesh = std::make_unique<RMesh>(vertices);
 		assert(mesh);
 
 		std::vector<Vertex> v_vertices(vertices.size());
@@ -54,7 +54,7 @@ public:
 		return mesh;
 	}
 	
-	void removeMesh(std::unique_ptr<Mesh> mesh)
+	void removeMesh(std::unique_ptr<RMesh> mesh)
 	{
 		std::vector<MeshVertex> meshVertices = mesh->getVertexData();
 		std::vector<Vertex> vertices(meshVertices.size());
@@ -75,6 +75,6 @@ public:
 
 	void shutDown()
 	{
-
+		LOG_INFO("ResourceModule: Shut down");
 	}
 };

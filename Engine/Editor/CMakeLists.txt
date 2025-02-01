@@ -12,12 +12,12 @@ target_link_libraries(EditorModule PUBLIC
     AudioModule
     WindowModule
     ObjectCoreModule
-    LoggerModule
     RenderModule
     ResourceModule
     EngineContext
-    EditorGuiModule
-    portable-file-dialogs::portable-file-dialogs
     PRIVATE
+    EditorGuiModule
     EventModule
+    ProjectModule
+    LoggerModule
 )

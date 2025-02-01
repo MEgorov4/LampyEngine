@@ -10,7 +10,6 @@ target_link_libraries(Engine PUBLIC
     InputModule
     AudioModule
     WindowModule
-    ObjectCoreModule
     LoggerModule
     RenderModule
     ResourceModule
@@ -18,4 +17,5 @@ target_link_libraries(Engine PUBLIC
     EngineContext
     PRIVATE
     EventModule
+    ObjectCoreModule
 )

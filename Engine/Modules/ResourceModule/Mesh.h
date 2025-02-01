@@ -9,12 +9,12 @@ struct MeshVertex
 	glm::vec3 normal;
 };
 
-class Mesh 
+class RMesh 
 {
 	std::vector<MeshVertex> m_vertexData;
 	uint32_t m_uniqueID;
 public:
-	explicit Mesh(const std::vector<MeshVertex>& vertexData);
+	explicit RMesh(const std::vector<MeshVertex>& vertexData);
 
 	const std::vector<MeshVertex>& getVertexData();
 };

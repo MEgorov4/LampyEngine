@@ -1,7 +1,11 @@
 #pragma once
 #include <string>
+#include <format>
 #include <iostream>
 #include <mutex>
+
+
+#include "../EventModule/Event.h"
 
 enum class LogVerbosity
 {
@@ -16,6 +20,8 @@ enum class LogVerbosity
 class Logger
 {
 public:
+    Event<std::string> OnMessagePushed;
+
     static Logger& Get()
     {
         static Logger instance;
@@ -25,8 +31,11 @@ public:
     void Log(LogVerbosity verbosity, const std::string& message)
     {
         std::lock_guard<std::mutex> lock(m_mutex);
+        
+        std::string formatedMessage = std::format("[{}] {}", ToString(verbosity), message);
+        std::cout << formatedMessage << std::endl;
 
-        std::cout << "[" << ToString(verbosity) << "] " << message << std::endl;
+        OnMessagePushed(formatedMessage);
     }
 
 private:

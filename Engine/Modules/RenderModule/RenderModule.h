@@ -20,6 +20,7 @@ public:
 	void startUp(Window* window)
 	{
 		const RenderConfig& config = RenderConfig::getInstance();
+		LOG_INFO(std::format("RenderModule: Startup with - {}", config.getGraphicsAPI() == GraphicsAPI::Vulkan ? "Vulkan" : "OpenGL"));
 		switch (config.getGraphicsAPI())
 		{
 			case(GraphicsAPI::Vulkan):
@@ -58,6 +59,7 @@ public:
 
 	void shutDown()
 	{
+		LOG_INFO("RenderModule: Shut down");
 		m_renderer.reset();
 	}
 };

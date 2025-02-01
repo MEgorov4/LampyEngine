@@ -5,6 +5,7 @@
 #include <cassert>
 
 #include "Window.h"
+#include "../LoggerModule/Logger.h"
 
 class WindowModule
 {
@@ -21,11 +22,13 @@ public:
 
     void startUp(int width, int height, const char* title)
     {
+        LOG_INFO("WindowModule: Startup");
         m_window = std::make_unique<Window>(width, height, title);
     }
 
     void shutDown()
     {
+        LOG_INFO("WindowModule: Shut down");
         m_window.reset();
     }
     

@@ -2,12 +2,12 @@
 #include <memory>
 #include <string>
 
-class Shader
+class RShader
 {
 	std::string m_vertPath;
 	std::string m_fragPath;
 public:
-	Shader(const std::string& vertPath, const std::string& fragPath);
+	RShader(const std::string& vertPath, const std::string& fragPath);
 	
 	std::string getShaderHash();
 	const std::string& getVertPath();
