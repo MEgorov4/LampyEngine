@@ -9,7 +9,9 @@ tinyobjloader/2.0.0-rc10
 gtest/1.15.0
 flecs/4.0.4
 pybind11/2.13.6
+
 portable-file-dialogs/0.1.0
+fltk/1.3.9
 [generators]
 CMakeDeps
 CMakeToolchain

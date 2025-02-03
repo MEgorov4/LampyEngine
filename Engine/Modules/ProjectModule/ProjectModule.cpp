@@ -1,5 +1,7 @@
 #include "ProjectModule.h"
 #include <fstream>
+#include <cstdlib>
+#include <cstdio>
 #include <portable-file-dialogs.h>
 #include <nlohmann/json.hpp>
 
@@ -15,15 +17,16 @@ ProjectModule::~ProjectModule()
 
 void ProjectModule::chooseOrCreateProject()
 {
-	pfd::button result = pfd::message("Project Selection", "Do you want to open an existing project?\n(Yes - open project file, No - create new project)",pfd::choice::yes_no).result();
+	system("dir ../ProjectBrowser/");
+	//pfd::button result = pfd::message("Project Selection", "Do you want to open an existing project?\n(Yes - open project file, No - create new project)",pfd::choice::yes_no).result();
 
-	if (result == pfd::button::yes)
-	{
-		openExistingProject();
-		return;
-	}
-	
-	createNewProject();
+	//if (result == pfd::button::yes)
+	//{
+	//	openExistingProject();
+	//	return;
+	//}
+	//
+	//createNewProject();
 }
 
 void ProjectModule::openExistingProject()
