@@ -88,7 +88,6 @@ VkExtent2D Window::getExtent()
 {
 	int width, height;
 	glfwGetWindowSize(m_window, &width, &height);
-	//LOG_INFO("Window: Window size:" + std::format(" width = {}, height = {}", width, height));
 
 	return VkExtent2D{static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
 }

@@ -1,0 +1,12 @@
+digraph "Engine/Modules/ResourceModule"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  compound=true
+  subgraph clusterdir_5730a32ba65843f7d6a4af6f0645845c {
+    graph [ bgcolor="#dadada", pencolor="grey50", label="Modules", fontname=Helvetica,fontsize=10 style="filled,dashed", URL="dir_5730a32ba65843f7d6a4af6f0645845c.html",tooltip=""]
+  dir_31d5380225450f9f4da43bdea4e0d260 [label="ResourceModule", fillcolor="#dadada", color="grey25", style="filled,bold", URL="dir_31d5380225450f9f4da43bdea4e0d260.html",tooltip=""];
+  }
+}

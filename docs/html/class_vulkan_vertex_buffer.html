@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>LampyEngine: Класс VulkanVertexBuffer</title>
+<link rel="icon" href="photo_2024-12-03_01-02-28.jpg" type="image/x-icon" />
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="photo_2024-12-03_01-02-28.jpg"/></td>
+  <td id="projectalign">
+   <div id="projectname">LampyEngine
+   </div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Поиск" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('class_vulkan_vertex_buffer.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Загрузка...</div>
+<div class="SRStatus" id="Searching">Поиск...</div>
+<div class="SRStatus" id="NoMatches">Не найдено</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Открытые члены</a> &#124;
+<a href="class_vulkan_vertex_buffer-members.html">Полный список членов класса</a>  </div>
+  <div class="headertitle"><div class="title">Класс VulkanVertexBuffer</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>Manages a Vulkan vertex buffer for storing vertex data on the GPU.  
+ <a href="#details">Подробнее...</a></p>
+
+<p><code>#include &lt;<a class="el" href="_vulkan_vertex_buffer_8h_source.html">VulkanVertexBuffer.h</a>&gt;</code></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Открытые члены</h2></td></tr>
+<tr class="memitem:a5672aa1159d7fdd095c08cab0edc722a" id="r_a5672aa1159d7fdd095c08cab0edc722a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5672aa1159d7fdd095c08cab0edc722a">VulkanVertexBuffer</a> (VkDevice device, VkPhysicalDevice physicalDevice, const std::vector&lt; <a class="el" href="struct_vertex.html">Vertex</a> &gt; &amp;vertexData, VkQueue transferQueue, VkCommandPool commandPool)</td></tr>
+<tr class="memdesc:a5672aa1159d7fdd095c08cab0edc722a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a vertex buffer and uploads vertex data to the GPU.  <br /></td></tr>
+<tr class="separator:a5672aa1159d7fdd095c08cab0edc722a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f7776e49edaf1ac5ce38ff99d90b859" id="r_a7f7776e49edaf1ac5ce38ff99d90b859"><td class="memItemLeft" align="right" valign="top"><a id="a7f7776e49edaf1ac5ce38ff99d90b859" name="a7f7776e49edaf1ac5ce38ff99d90b859"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>~VulkanVertexBuffer</b> ()</td></tr>
+<tr class="memdesc:a7f7776e49edaf1ac5ce38ff99d90b859"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroys the vertex buffer and releases allocated memory. <br /></td></tr>
+<tr class="separator:a7f7776e49edaf1ac5ce38ff99d90b859"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a441e28dd807386251245c4f3b5b00a9b" id="r_a441e28dd807386251245c4f3b5b00a9b"><td class="memItemLeft" align="right" valign="top">VkBuffer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a441e28dd807386251245c4f3b5b00a9b">getBuffer</a> ()</td></tr>
+<tr class="memdesc:a441e28dd807386251245c4f3b5b00a9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the Vulkan buffer handle.  <br /></td></tr>
+<tr class="separator:a441e28dd807386251245c4f3b5b00a9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afac1a5d643d0b292baee3b387a2b5f85" id="r_afac1a5d643d0b292baee3b387a2b5f85"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afac1a5d643d0b292baee3b387a2b5f85">getVerticesCount</a> ()</td></tr>
+<tr class="memdesc:afac1a5d643d0b292baee3b387a2b5f85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the number of vertices stored in the buffer.  <br /></td></tr>
+<tr class="separator:afac1a5d643d0b292baee3b387a2b5f85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Подробное описание</h2>
+<div class="textblock"><p>Manages a Vulkan vertex buffer for storing vertex data on the GPU. </p>
+</div><h2 class="groupheader">Конструктор(ы)</h2>
+<a id="a5672aa1159d7fdd095c08cab0edc722a" name="a5672aa1159d7fdd095c08cab0edc722a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5672aa1159d7fdd095c08cab0edc722a">&#9670;&#160;</a></span>VulkanVertexBuffer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VulkanVertexBuffer::VulkanVertexBuffer </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice</td>          <td class="paramname"><span class="paramname"><em>device</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkPhysicalDevice</td>          <td class="paramname"><span class="paramname"><em>physicalDevice</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="struct_vertex.html">Vertex</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>vertexData</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkQueue</td>          <td class="paramname"><span class="paramname"><em>transferQueue</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandPool</td>          <td class="paramname"><span class="paramname"><em>commandPool</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Constructs a vertex buffer and uploads vertex data to the GPU. </p>
+<dl class="params"><dt>Аргументы</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">device</td><td>The Vulkan logical device.</td></tr>
+    <tr><td class="paramname">physicalDevice</td><td>The Vulkan physical device.</td></tr>
+    <tr><td class="paramname">vertexData</td><td>The vertex data to upload.</td></tr>
+    <tr><td class="paramname">transferQueue</td><td>The queue used for buffer transfers.</td></tr>
+    <tr><td class="paramname">commandPool</td><td>The command pool used for temporary command buffers.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Методы</h2>
+<a id="a441e28dd807386251245c4f3b5b00a9b" name="a441e28dd807386251245c4f3b5b00a9b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a441e28dd807386251245c4f3b5b00a9b">&#9670;&#160;</a></span>getBuffer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkBuffer VulkanVertexBuffer::getBuffer </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Retrieves the Vulkan buffer handle. </p>
+<dl class="section return"><dt>Возвращает</dt><dd>Handle to the Vulkan buffer.</dd></dl>
+
+</div>
+</div>
+<a id="afac1a5d643d0b292baee3b387a2b5f85" name="afac1a5d643d0b292baee3b387a2b5f85"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afac1a5d643d0b292baee3b387a2b5f85">&#9670;&#160;</a></span>getVerticesCount()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t VulkanVertexBuffer::getVerticesCount </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Retrieves the number of vertices stored in the buffer. </p>
+<dl class="section return"><dt>Возвращает</dt><dd>The number of vertices in the buffer.</dd></dl>
+
+</div>
+</div>
+<hr/>Объявления и описания членов классов находятся в файлах:<ul>
+<li>Engine/Modules/RenderModule/Vulkan/VulkanObjects/<a class="el" href="_vulkan_vertex_buffer_8h_source.html">VulkanVertexBuffer.h</a></li>
+<li>Engine/Modules/RenderModule/Vulkan/VulkanObjects/<b>VulkanVertexBuffer.cpp</b></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="class_vulkan_vertex_buffer.html">VulkanVertexBuffer</a></li>
+    <li class="footer">Создано системой <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

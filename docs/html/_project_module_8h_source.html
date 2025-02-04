@@ -1,0 +1,198 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>LampyEngine: Исходный файл Engine/Modules/ProjectModule/ProjectModule.h</title>
+<link rel="icon" href="photo_2024-12-03_01-02-28.jpg" type="image/x-icon" />
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="photo_2024-12-03_01-02-28.jpg"/></td>
+  <td id="projectalign">
+   <div id="projectname">LampyEngine
+   </div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Поиск" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('_project_module_8h_source.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Загрузка...</div>
+<div class="SRStatus" id="Searching">Поиск...</div>
+<div class="SRStatus" id="NoMatches">Не найдено</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">ProjectModule.h</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once </span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;../LoggerModule/Logger.h&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span></div>
+<div class="foldopen" id="foldopen00009" data-start="{" data-end="};">
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno"><a class="line" href="struct_project_config.html">    9</a></span><span class="keyword">struct </span><a class="code hl_function" href="struct_project_config.html#a03ab74b8b2b0c77b34cde1bf3477b5a1">ProjectConfig</a></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>{</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="struct_project_config.html#aa7b4d5f1469be0da81479d63290b285c">   11</a></span>    std::string <a class="code hl_variable" href="struct_project_config.html#aa7b4d5f1469be0da81479d63290b285c">projectPath</a>; </div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="struct_project_config.html#ab5deeef1b44e50fd3fdd0203e7839482">   12</a></span>    std::string <a class="code hl_variable" href="struct_project_config.html#ab5deeef1b44e50fd3fdd0203e7839482">projectName</a>; </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="struct_project_config.html#abee3b0380ff9e8b6331d7fc0ad0de7f8">   14</a></span>    std::string <a class="code hl_variable" href="struct_project_config.html#abee3b0380ff9e8b6331d7fc0ad0de7f8">resourcesPath</a>; </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="struct_project_config.html#a70ecf92a28081b23cb2346b800af1c2e">   15</a></span>    std::string <a class="code hl_variable" href="struct_project_config.html#a70ecf92a28081b23cb2346b800af1c2e">configPath</a>; </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="struct_project_config.html#ad988f105627da46837c6e1a055b8c05f">   16</a></span>    std::string <a class="code hl_variable" href="struct_project_config.html#ad988f105627da46837c6e1a055b8c05f">logsPath</a>; </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="struct_project_config.html#a9bda31636b6407817dcdecf2c75d5ae1">   17</a></span>    std::string <a class="code hl_variable" href="struct_project_config.html#a9bda31636b6407817dcdecf2c75d5ae1">buildPath</a>; </div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="struct_project_config.html#aa978ca862098b4d7ca106f3b1f920727">   19</a></span>    std::string <a class="code hl_variable" href="struct_project_config.html#aa978ca862098b4d7ca106f3b1f920727">editorStartWorld</a>; </div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="struct_project_config.html#adfb141f48fdba79e6a2592a355717504">   20</a></span>    std::string <a class="code hl_variable" href="struct_project_config.html#adfb141f48fdba79e6a2592a355717504">gameStartWorld</a>; </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="struct_project_config.html#a03ab74b8b2b0c77b34cde1bf3477b5a1">   25</a></span>    <a class="code hl_function" href="struct_project_config.html#a03ab74b8b2b0c77b34cde1bf3477b5a1">ProjectConfig</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <a class="code hl_function" href="struct_project_config.html#a03ab74b8b2b0c77b34cde1bf3477b5a1">ProjectConfig</a>(std::string data);</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>};</div>
+</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span></div>
+<div class="foldopen" id="foldopen00037" data-start="{" data-end="};">
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="class_project_module.html">   37</a></span><span class="keyword">class </span><a class="code hl_class" href="class_project_module.html">ProjectModule</a></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>{</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <a class="code hl_struct" href="struct_project_config.html">ProjectConfig</a> m_projectConfig; </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="keyword">public</span>:</div>
+<div class="foldopen" id="foldopen00046" data-start="{" data-end="}">
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="class_project_module.html#abb45ea736265e3e5308f15f652b9404c">   46</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="class_project_module.html">ProjectModule</a>&amp; <a class="code hl_function" href="class_project_module.html#abb45ea736265e3e5308f15f652b9404c">getInstance</a>()</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    {</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        <span class="keyword">static</span> <a class="code hl_class" href="class_project_module.html">ProjectModule</a> <a class="code hl_class" href="class_project_module.html">ProjectModule</a>;</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>        <span class="keywordflow">return</span> <a class="code hl_class" href="class_project_module.html">ProjectModule</a>;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    }</div>
+</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span></div>
+<div class="foldopen" id="foldopen00055" data-start="{" data-end="}">
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="class_project_module.html#aa92d9a55848b2817adb6be79c619136b">   55</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_project_module.html#aa92d9a55848b2817adb6be79c619136b">startUp</a>()</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    {</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        LOG_INFO(<span class="stringliteral">&quot;ProjectModule: Startup&quot;</span>);</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>        setupProjectEnvironment();</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    }</div>
+</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="class_project_module.html#a4b557ded3411991f1797d57e6938cc98">   65</a></span>    <a class="code hl_struct" href="struct_project_config.html">ProjectConfig</a>&amp; <a class="code hl_function" href="class_project_module.html#a4b557ded3411991f1797d57e6938cc98">getProjectConfig</a>() { <span class="keywordflow">return</span> m_projectConfig; }</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span></div>
+<div class="foldopen" id="foldopen00070" data-start="{" data-end="}">
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno"><a class="line" href="class_project_module.html#a4af40e32303e186b88ca82cb93cee436">   70</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_project_module.html#a4af40e32303e186b88ca82cb93cee436">shutDown</a>()</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    {</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        LOG_INFO(<span class="stringliteral">&quot;ProjectModule: Shut down&quot;</span>);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        saveProjectConfig();</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    }</div>
+</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <span class="keywordtype">void</span> setupProjectEnvironment();</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <span class="keywordtype">void</span> saveProjectConfig();</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>};</div>
+</div>
+<div class="ttc" id="aclass_project_module_html"><div class="ttname"><a href="class_project_module.html">ProjectModule</a></div><div class="ttdoc">Singleton module responsible for managing project settings, environment, and configuration.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:38</div></div>
+<div class="ttc" id="aclass_project_module_html_a4af40e32303e186b88ca82cb93cee436"><div class="ttname"><a href="class_project_module.html#a4af40e32303e186b88ca82cb93cee436">ProjectModule::shutDown</a></div><div class="ttdeci">void shutDown()</div><div class="ttdoc">Shuts down the project module and saves the project configuration.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:70</div></div>
+<div class="ttc" id="aclass_project_module_html_a4b557ded3411991f1797d57e6938cc98"><div class="ttname"><a href="class_project_module.html#a4b557ded3411991f1797d57e6938cc98">ProjectModule::getProjectConfig</a></div><div class="ttdeci">ProjectConfig &amp; getProjectConfig()</div><div class="ttdoc">Retrieves the project configuration.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:65</div></div>
+<div class="ttc" id="aclass_project_module_html_aa92d9a55848b2817adb6be79c619136b"><div class="ttname"><a href="class_project_module.html#aa92d9a55848b2817adb6be79c619136b">ProjectModule::startUp</a></div><div class="ttdeci">void startUp()</div><div class="ttdoc">Initializes the project module and sets up the project environment.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:55</div></div>
+<div class="ttc" id="aclass_project_module_html_abb45ea736265e3e5308f15f652b9404c"><div class="ttname"><a href="class_project_module.html#abb45ea736265e3e5308f15f652b9404c">ProjectModule::getInstance</a></div><div class="ttdeci">static ProjectModule &amp; getInstance()</div><div class="ttdoc">Retrieves the singleton instance of the ProjectModule.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:46</div></div>
+<div class="ttc" id="astruct_project_config_html"><div class="ttname"><a href="struct_project_config.html">ProjectConfig</a></div><div class="ttdoc">Represents the configuration settings of a project, including file paths and world settings.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:10</div></div>
+<div class="ttc" id="astruct_project_config_html_a03ab74b8b2b0c77b34cde1bf3477b5a1"><div class="ttname"><a href="struct_project_config.html#a03ab74b8b2b0c77b34cde1bf3477b5a1">ProjectConfig::ProjectConfig</a></div><div class="ttdeci">ProjectConfig()=default</div><div class="ttdoc">Default constructor.</div></div>
+<div class="ttc" id="astruct_project_config_html_a70ecf92a28081b23cb2346b800af1c2e"><div class="ttname"><a href="struct_project_config.html#a70ecf92a28081b23cb2346b800af1c2e">ProjectConfig::configPath</a></div><div class="ttdeci">std::string configPath</div><div class="ttdoc">Path to the project&#39;s configuration files.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:15</div></div>
+<div class="ttc" id="astruct_project_config_html_a9bda31636b6407817dcdecf2c75d5ae1"><div class="ttname"><a href="struct_project_config.html#a9bda31636b6407817dcdecf2c75d5ae1">ProjectConfig::buildPath</a></div><div class="ttdeci">std::string buildPath</div><div class="ttdoc">Path to the project&#39;s build directory.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:17</div></div>
+<div class="ttc" id="astruct_project_config_html_aa7b4d5f1469be0da81479d63290b285c"><div class="ttname"><a href="struct_project_config.html#aa7b4d5f1469be0da81479d63290b285c">ProjectConfig::projectPath</a></div><div class="ttdeci">std::string projectPath</div><div class="ttdoc">Path to the project directory.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:11</div></div>
+<div class="ttc" id="astruct_project_config_html_aa978ca862098b4d7ca106f3b1f920727"><div class="ttname"><a href="struct_project_config.html#aa978ca862098b4d7ca106f3b1f920727">ProjectConfig::editorStartWorld</a></div><div class="ttdeci">std::string editorStartWorld</div><div class="ttdoc">The default world loaded in the editor.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:19</div></div>
+<div class="ttc" id="astruct_project_config_html_ab5deeef1b44e50fd3fdd0203e7839482"><div class="ttname"><a href="struct_project_config.html#ab5deeef1b44e50fd3fdd0203e7839482">ProjectConfig::projectName</a></div><div class="ttdeci">std::string projectName</div><div class="ttdoc">Name of the project.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:12</div></div>
+<div class="ttc" id="astruct_project_config_html_abee3b0380ff9e8b6331d7fc0ad0de7f8"><div class="ttname"><a href="struct_project_config.html#abee3b0380ff9e8b6331d7fc0ad0de7f8">ProjectConfig::resourcesPath</a></div><div class="ttdeci">std::string resourcesPath</div><div class="ttdoc">Path to the project&#39;s resources directory.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:14</div></div>
+<div class="ttc" id="astruct_project_config_html_ad988f105627da46837c6e1a055b8c05f"><div class="ttname"><a href="struct_project_config.html#ad988f105627da46837c6e1a055b8c05f">ProjectConfig::logsPath</a></div><div class="ttdeci">std::string logsPath</div><div class="ttdoc">Path to the project&#39;s log files.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:16</div></div>
+<div class="ttc" id="astruct_project_config_html_adfb141f48fdba79e6a2592a355717504"><div class="ttname"><a href="struct_project_config.html#adfb141f48fdba79e6a2592a355717504">ProjectConfig::gameStartWorld</a></div><div class="ttdeci">std::string gameStartWorld</div><div class="ttdoc">The default world loaded in the game.</div><div class="ttdef"><b>Определения</b> ProjectModule.h:20</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_0b6ee6e7e9547e675db4add2e5de97da.html">Engine</a></li><li class="navelem"><a class="el" href="dir_5730a32ba65843f7d6a4af6f0645845c.html">Modules</a></li><li class="navelem"><a class="el" href="dir_dd212b4d24fdb12677e68105577ec808.html">ProjectModule</a></li><li class="navelem"><b>ProjectModule.h</b></li>
+    <li class="footer">Создано системой <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

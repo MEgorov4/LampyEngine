@@ -4,113 +4,47 @@
 #include <cstdio>
 #include <portable-file-dialogs.h>
 #include <nlohmann/json.hpp>
-
+#include <boost/process.hpp>
 #include "../LoggerModule/Logger.h"
 
-ProjectModule::ProjectModule()
+ProjectConfig::ProjectConfig(std::string data)
 {
+	nlohmann::json jsonData = nlohmann::json::parse(data);
+
+	projectPath = jsonData["projectPath"];
+	projectName = jsonData["projectName"];
+
+	resourcesPath = jsonData["resourcesPath"];
+	configPath = jsonData["configPath"];
+	logsPath = jsonData["logsPath"];
+	buildPath = jsonData["buildPath"];
+
+	editorStartWorld = jsonData["editorStartWorld"];
+	gameStartWorld = jsonData["gameStartWorld"];
 }
 
-ProjectModule::~ProjectModule()
-{
-}
-
-void ProjectModule::chooseOrCreateProject()
-{
-	system("dir ../ProjectBrowser/");
-	//pfd::button result = pfd::message("Project Selection", "Do you want to open an existing project?\n(Yes - open project file, No - create new project)",pfd::choice::yes_no).result();
-
-	//if (result == pfd::button::yes)
-	//{
-	//	openExistingProject();
-	//	return;
-	//}
-	//
-	//createNewProject();
-}
-
-void ProjectModule::openExistingProject()
-{
-	std::vector<std::string> paths = pfd::open_file("Select project file", "", { "Project Files", "*.lproj" }).result();
-
-	if (paths.empty())
-	{
-		LOG_ERROR("ProjectModule: Can`t open project file");
-		chooseOrCreateProject();
-		return;
-	}
-	std::fstream projecFile = std::fstream(paths[0]);
+void ProjectModule::setupProjectEnvironment()
+{	
+	LOG_INFO("ProjectModule: Run project browser");
+	namespace bp = boost::process;
 	
-	nlohmann::json jsonData = nlohmann::json::parse(projecFile);
-	if (jsonData.empty())
-	{
-		LOG_ERROR("ProjectModule: Invalid project file data");
-		chooseOrCreateProject();
-		return;
-	}
-
-	m_projectConfig.projectPath = jsonData["projectPath"];
-	m_projectConfig.projectName = jsonData["projectName"];
-
-	m_projectConfig.resourcesPath = jsonData["resourcesPath"];
-	m_projectConfig.buildPath = jsonData["buildPath"];
-	m_projectConfig.configPath =  jsonData["configPath"];
-	m_projectConfig.logsPath = jsonData["logsPath"];
-
-	m_projectConfig.editorStartWorld = jsonData["gameStartWorld"];
-	m_projectConfig.gameStartWorld = jsonData["gameStartWorld"];
-}
-
-void ProjectModule::createNewProject()
-{
-	std::string folderPath = pfd::select_folder("Select a folder for the new project").result();
-
-	if (folderPath.empty())
-	{
-		chooseOrCreateProject();
-		return;
-	}
-
-	if (!std::filesystem::exists(folderPath))
-	{
-		std::filesystem::create_directory(folderPath);
-	}
+	bp::ipstream out_stream;
+	bp::child projectBrowserProcess("../../build/bin/debug/ProjectBrowser.exe", bp::std_out > out_stream);
 	
-	std::filesystem::create_directory(folderPath + "/Resources");
-	std::filesystem::create_directory(folderPath + "/Saved");
-	std::filesystem::create_directory(folderPath + "/Config");
-	std::filesystem::create_directory(folderPath + "/Build");
-
-	nlohmann::json jsonData;
-
-	m_projectConfig.projectPath = folderPath + "/project.lproj";
-	m_projectConfig.projectName = "project";
-	jsonData["projectPath"] = m_projectConfig.projectPath;
-	jsonData["projectName"] = m_projectConfig.projectName;
-
-	m_projectConfig.resourcesPath = folderPath + "/Resources";
-	m_projectConfig.buildPath = folderPath + "/Build";
-	m_projectConfig.configPath = folderPath + "/Config";
-	m_projectConfig.logsPath = folderPath + "/Build";
-
-	jsonData["resourcesPath"] = m_projectConfig.resourcesPath;
-	jsonData["buildPath"] = m_projectConfig.buildPath;
-	jsonData["configPath"] = m_projectConfig.configPath;
-	jsonData["logsPath"] = m_projectConfig.logsPath;
-	
-	m_projectConfig.editorStartWorld = "default";
-	m_projectConfig.gameStartWorld = "default";
-	jsonData["editorStartWorld"] = m_projectConfig.editorStartWorld;
-	jsonData["gameStartWorld"] = m_projectConfig.gameStartWorld;
-
-	std::ofstream outFile(folderPath + "/project.lproj");
-	if (outFile.is_open())
+	std::string line;
+	while (std::getline(out_stream, line))
 	{
-		outFile << jsonData;
-		outFile.close();
+		LOG_INFO(line);
+		m_projectConfig = ProjectConfig(line);
 	}
-}
+	int exitCode = projectBrowserProcess.exit_code();
+	if (exitCode != 0)
+	{
+		throw std::runtime_error("project browser process error");
+	}
+	projectBrowserProcess.wait();
 
+}
 void ProjectModule::saveProjectConfig()
 {
 	nlohmann::json jsonData;

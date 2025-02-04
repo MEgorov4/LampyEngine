@@ -1,0 +1,359 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>LampyEngine: Класс VulkanSwapChain</title>
+<link rel="icon" href="photo_2024-12-03_01-02-28.jpg" type="image/x-icon" />
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="photo_2024-12-03_01-02-28.jpg"/></td>
+  <td id="projectalign">
+   <div id="projectname">LampyEngine
+   </div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Поиск" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('class_vulkan_swap_chain.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Загрузка...</div>
+<div class="SRStatus" id="Searching">Поиск...</div>
+<div class="SRStatus" id="NoMatches">Не найдено</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Открытые члены</a> &#124;
+<a href="class_vulkan_swap_chain-members.html">Полный список членов класса</a>  </div>
+  <div class="headertitle"><div class="title">Класс VulkanSwapChain</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>Manages the Vulkan swap chain, which handles image presentation and synchronization.  
+ <a href="#details">Подробнее...</a></p>
+
+<p><code>#include &lt;<a class="el" href="_vulkan_swap_chain_8h_source.html">VulkanSwapChain.h</a>&gt;</code></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Открытые члены</h2></td></tr>
+<tr class="memitem:a9b6b4202e0af33c740b0a30e56ba40f4" id="r_a9b6b4202e0af33c740b0a30e56ba40f4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9b6b4202e0af33c740b0a30e56ba40f4">VulkanSwapChain</a> (VkDevice device, VkSurfaceKHR surface, VkExtent2D extent, <a class="el" href="struct_swap_chain_support_details.html">SwapChainSupportDetails</a> swapChainSupportDetails, <a class="el" href="struct_queue_family_indices.html">QueueFamilyIndices</a> queueFamilyIndices)</td></tr>
+<tr class="memdesc:a9b6b4202e0af33c740b0a30e56ba40f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a Vulkan swap chain.  <br /></td></tr>
+<tr class="separator:a9b6b4202e0af33c740b0a30e56ba40f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d921ab224266e5df86894515e3d66b4" id="r_a7d921ab224266e5df86894515e3d66b4"><td class="memItemLeft" align="right" valign="top"><a id="a7d921ab224266e5df86894515e3d66b4" name="a7d921ab224266e5df86894515e3d66b4"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>~VulkanSwapChain</b> ()</td></tr>
+<tr class="memdesc:a7d921ab224266e5df86894515e3d66b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroys the swap chain and its associated resources. <br /></td></tr>
+<tr class="separator:a7d921ab224266e5df86894515e3d66b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a870167f55074181525cc5d9f1fa8c7b2" id="r_a870167f55074181525cc5d9f1fa8c7b2"><td class="memItemLeft" align="right" valign="top"><a id="a870167f55074181525cc5d9f1fa8c7b2" name="a870167f55074181525cc5d9f1fa8c7b2"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>recreateSwapChain</b> ()</td></tr>
+<tr class="memdesc:a870167f55074181525cc5d9f1fa8c7b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Recreates the swap chain in case of window resizing or other changes. <br /></td></tr>
+<tr class="separator:a870167f55074181525cc5d9f1fa8c7b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a111ba2460d52076f7957c4263f6511d8" id="r_a111ba2460d52076f7957c4263f6511d8"><td class="memItemLeft" align="right" valign="top">VkSwapchainKHR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a111ba2460d52076f7957c4263f6511d8">getSwapChain</a> () const</td></tr>
+<tr class="memdesc:a111ba2460d52076f7957c4263f6511d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the Vulkan swap chain handle.  <br /></td></tr>
+<tr class="separator:a111ba2460d52076f7957c4263f6511d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a901ef838f1e5e0668220a92cc67752eb" id="r_a901ef838f1e5e0668220a92cc67752eb"><td class="memItemLeft" align="right" valign="top">VkSurfaceFormatKHR&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a901ef838f1e5e0668220a92cc67752eb">getSurfaceFormat</a> () const</td></tr>
+<tr class="memdesc:a901ef838f1e5e0668220a92cc67752eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the surface format of the swap chain images.  <br /></td></tr>
+<tr class="separator:a901ef838f1e5e0668220a92cc67752eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c2c517ae8f90eb4e93289dbe4d0d165" id="r_a4c2c517ae8f90eb4e93289dbe4d0d165"><td class="memItemLeft" align="right" valign="top">VkExtent2D&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4c2c517ae8f90eb4e93289dbe4d0d165">getExtent</a> () const</td></tr>
+<tr class="memdesc:a4c2c517ae8f90eb4e93289dbe4d0d165"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the swap chain image extent (dimensions).  <br /></td></tr>
+<tr class="separator:a4c2c517ae8f90eb4e93289dbe4d0d165"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af49a19a5ff58eddcecd1b09cb300839f" id="r_af49a19a5ff58eddcecd1b09cb300839f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af49a19a5ff58eddcecd1b09cb300839f">setExtent</a> (const VkExtent2D &amp;extent)</td></tr>
+<tr class="memdesc:af49a19a5ff58eddcecd1b09cb300839f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the swap chain extent (dimensions).  <br /></td></tr>
+<tr class="separator:af49a19a5ff58eddcecd1b09cb300839f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab5c913163b16eadb761cbc243f6f23a1" id="r_ab5c913163b16eadb761cbc243f6f23a1"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; VkImageView &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab5c913163b16eadb761cbc243f6f23a1">getImageViews</a> () const</td></tr>
+<tr class="memdesc:ab5c913163b16eadb761cbc243f6f23a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the list of image views associated with the swap chain images.  <br /></td></tr>
+<tr class="separator:ab5c913163b16eadb761cbc243f6f23a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Подробное описание</h2>
+<div class="textblock"><p>Manages the Vulkan swap chain, which handles image presentation and synchronization. </p>
+</div><h2 class="groupheader">Конструктор(ы)</h2>
+<a id="a9b6b4202e0af33c740b0a30e56ba40f4" name="a9b6b4202e0af33c740b0a30e56ba40f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b6b4202e0af33c740b0a30e56ba40f4">&#9670;&#160;</a></span>VulkanSwapChain()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VulkanSwapChain::VulkanSwapChain </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice</td>          <td class="paramname"><span class="paramname"><em>device</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkSurfaceKHR</td>          <td class="paramname"><span class="paramname"><em>surface</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkExtent2D</td>          <td class="paramname"><span class="paramname"><em>extent</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_swap_chain_support_details.html">SwapChainSupportDetails</a></td>          <td class="paramname"><span class="paramname"><em>swapChainSupportDetails</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_queue_family_indices.html">QueueFamilyIndices</a></td>          <td class="paramname"><span class="paramname"><em>queueFamilyIndices</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Constructs a Vulkan swap chain. </p>
+<dl class="params"><dt>Аргументы</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">device</td><td>Vulkan logical device.</td></tr>
+    <tr><td class="paramname">surface</td><td>Vulkan rendering surface.</td></tr>
+    <tr><td class="paramname">extent</td><td>Desired swap chain extent.</td></tr>
+    <tr><td class="paramname">swapChainSupportDetails</td><td>Details of swap chain support capabilities.</td></tr>
+    <tr><td class="paramname">queueFamilyIndices</td><td>Queue family indices for the device.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Методы</h2>
+<a id="a4c2c517ae8f90eb4e93289dbe4d0d165" name="a4c2c517ae8f90eb4e93289dbe4d0d165"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c2c517ae8f90eb4e93289dbe4d0d165">&#9670;&#160;</a></span>getExtent()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkExtent2D VulkanSwapChain::getExtent </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Retrieves the swap chain image extent (dimensions). </p>
+<dl class="section return"><dt>Возвращает</dt><dd>Extent (width and height) of swap chain images.</dd></dl>
+
+</div>
+</div>
+<a id="ab5c913163b16eadb761cbc243f6f23a1" name="ab5c913163b16eadb761cbc243f6f23a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab5c913163b16eadb761cbc243f6f23a1">&#9670;&#160;</a></span>getImageViews()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt; VkImageView &gt; &amp; VulkanSwapChain::getImageViews </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Retrieves the list of image views associated with the swap chain images. </p>
+<dl class="section return"><dt>Возвращает</dt><dd>Reference to a vector of image views.</dd></dl>
+
+</div>
+</div>
+<a id="a901ef838f1e5e0668220a92cc67752eb" name="a901ef838f1e5e0668220a92cc67752eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a901ef838f1e5e0668220a92cc67752eb">&#9670;&#160;</a></span>getSurfaceFormat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkSurfaceFormatKHR VulkanSwapChain::getSurfaceFormat </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Retrieves the surface format of the swap chain images. </p>
+<dl class="section return"><dt>Возвращает</dt><dd>Surface format used by the swap chain.</dd></dl>
+
+</div>
+</div>
+<a id="a111ba2460d52076f7957c4263f6511d8" name="a111ba2460d52076f7957c4263f6511d8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a111ba2460d52076f7957c4263f6511d8">&#9670;&#160;</a></span>getSwapChain()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkSwapchainKHR VulkanSwapChain::getSwapChain </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Retrieves the Vulkan swap chain handle. </p>
+<dl class="section return"><dt>Возвращает</dt><dd>Handle to the Vulkan swap chain.</dd></dl>
+
+</div>
+</div>
+<a id="af49a19a5ff58eddcecd1b09cb300839f" name="af49a19a5ff58eddcecd1b09cb300839f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af49a19a5ff58eddcecd1b09cb300839f">&#9670;&#160;</a></span>setExtent()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void VulkanSwapChain::setExtent </td>
+          <td>(</td>
+          <td class="paramtype">const VkExtent2D &amp;</td>          <td class="paramname"><span class="paramname"><em>extent</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Sets the swap chain extent (dimensions). </p>
+<dl class="params"><dt>Аргументы</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">extent</td><td>New extent to set.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>Объявления и описания членов классов находятся в файлах:<ul>
+<li>Engine/Modules/RenderModule/Vulkan/VulkanObjects/<a class="el" href="_vulkan_swap_chain_8h_source.html">VulkanSwapChain.h</a></li>
+<li>Engine/Modules/RenderModule/Vulkan/VulkanObjects/<b>VulkanSwapChain.cpp</b></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="class_vulkan_swap_chain.html">VulkanSwapChain</a></li>
+    <li class="footer">Создано системой <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

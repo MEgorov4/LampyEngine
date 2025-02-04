@@ -9,6 +9,17 @@
 #include "../../../LoggerModule/Logger.h"
 
 
+VulkanSwapChain::VulkanSwapChain(VkDevice device, VkSurfaceKHR surface, VkExtent2D extent,
+    SwapChainSupportDetails swapChainSupportDetails, QueueFamilyIndices queueFamilyIndices)
+    : m_vk_device(device),
+    m_vk_surface(surface),
+    m_vk_extent(extent),
+    m_swapChainSupportDetails(swapChainSupportDetails),
+    m_queueFamilyIndices(queueFamilyIndices)
+{
+    buildSwapChain();
+}
+
 VulkanSwapChain::~VulkanSwapChain()
 {
     cleanupSwapChain();

@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>LampyEngine: Исходный файл Engine/Modules/RenderModule/RenderConfig.h</title>
+<link rel="icon" href="photo_2024-12-03_01-02-28.jpg" type="image/x-icon" />
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="photo_2024-12-03_01-02-28.jpg"/></td>
+  <td id="projectalign">
+   <div id="projectname">LampyEngine
+   </div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Поиск" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('_render_config_8h_source.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Загрузка...</div>
+<div class="SRStatus" id="Searching">Поиск...</div>
+<div class="SRStatus" id="NoMatches">Не найдено</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">RenderConfig.h</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &lt;cstdint&gt;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="keyword">enum class</span> GraphicsAPI : uint8_t</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>{</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>    Vulkan, </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    OpenGL  </div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>};</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span></div>
+<div class="foldopen" id="foldopen00016" data-start="{" data-end="};">
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="class_render_config.html">   16</a></span><span class="keyword">class </span>RenderConfig</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>{</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    uint32_t MAX_FRAMES_IN_FLIGHT = 2; </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    GraphicsAPI GRAPHICS_API = GraphicsAPI::Vulkan; </div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <span class="keywordtype">bool</span> IMGUI_ENABLED = <span class="keyword">true</span>; </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keyword">public</span>:</div>
+<div class="foldopen" id="foldopen00027" data-start="{" data-end="}">
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="class_render_config.html#a6685d7d42eab14aef3debc5e48fe1b20">   27</a></span>    <span class="keyword">static</span> RenderConfig&amp; <a class="code hl_function" href="class_render_config.html#a6685d7d42eab14aef3debc5e48fe1b20">getInstance</a>()</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    {</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        <span class="keyword">static</span> RenderConfig config;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        <span class="keywordflow">return</span> config;</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    }</div>
+</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="class_render_config.html#a40d3de9d1710964d8c08bb2ca6e03bfa">   37</a></span>    uint32_t <a class="code hl_function" href="class_render_config.html#a40d3de9d1710964d8c08bb2ca6e03bfa">getMaxFramesInFlight</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> MAX_FRAMES_IN_FLIGHT; }</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span></div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="class_render_config.html#a3f13108f4c3fc6267d8d9ad4391eab62">   43</a></span>    GraphicsAPI <a class="code hl_function" href="class_render_config.html#a3f13108f4c3fc6267d8d9ad4391eab62">getGraphicsAPI</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> GRAPHICS_API; }</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="class_render_config.html#a0a11f473bcdc543d96d9839b2f0d2277">   49</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="class_render_config.html#a0a11f473bcdc543d96d9839b2f0d2277">getImGuiEnabled</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> IMGUI_ENABLED; }</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="class_render_config.html#a1073b7129a2821c365f2be436c3c9079">   55</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_render_config.html#a1073b7129a2821c365f2be436c3c9079">setMaxFramesInFlight</a>(<span class="keyword">const</span> uint32_t framesInFlight) { MAX_FRAMES_IN_FLIGHT = framesInFlight; }</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="class_render_config.html#a8c7aeff8b989cb78240697d0b9f81f6f">   61</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_render_config.html#a8c7aeff8b989cb78240697d0b9f81f6f">setGraphicsAPI</a>(GraphicsAPI graphicsAPI) { GRAPHICS_API = graphicsAPI; }</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno"><a class="line" href="class_render_config.html#a155580bf27f46f3e526648382f4ddc5e">   67</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_render_config.html#a155580bf27f46f3e526648382f4ddc5e">setImGuiEnabled</a>(<span class="keywordtype">bool</span> state) { IMGUI_ENABLED = state; }</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <a class="code hl_class" href="class_render_config.html">RenderConfig</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <a class="code hl_class" href="class_render_config.html">~RenderConfig</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    <a class="code hl_class" href="class_render_config.html">RenderConfig</a>(<span class="keyword">const</span> <a class="code hl_class" href="class_render_config.html">RenderConfig</a>&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <a class="code hl_class" href="class_render_config.html">RenderConfig</a>&amp; operator=(<span class="keyword">const</span> <a class="code hl_class" href="class_render_config.html">RenderConfig</a>&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>};</div>
+</div>
+<div class="ttc" id="aclass_render_config_html"><div class="ttname"><a href="class_render_config.html">RenderConfig</a></div><div class="ttdoc">Singleton class that manages rendering configuration settings.</div><div class="ttdef"><b>Определения</b> RenderConfig.h:17</div></div>
+<div class="ttc" id="aclass_render_config_html_a0a11f473bcdc543d96d9839b2f0d2277"><div class="ttname"><a href="class_render_config.html#a0a11f473bcdc543d96d9839b2f0d2277">RenderConfig::getImGuiEnabled</a></div><div class="ttdeci">bool getImGuiEnabled() const</div><div class="ttdoc">Checks whether ImGui rendering is enabled.</div><div class="ttdef"><b>Определения</b> RenderConfig.h:49</div></div>
+<div class="ttc" id="aclass_render_config_html_a1073b7129a2821c365f2be436c3c9079"><div class="ttname"><a href="class_render_config.html#a1073b7129a2821c365f2be436c3c9079">RenderConfig::setMaxFramesInFlight</a></div><div class="ttdeci">void setMaxFramesInFlight(const uint32_t framesInFlight)</div><div class="ttdoc">Sets the maximum number of frames in flight.</div><div class="ttdef"><b>Определения</b> RenderConfig.h:55</div></div>
+<div class="ttc" id="aclass_render_config_html_a155580bf27f46f3e526648382f4ddc5e"><div class="ttname"><a href="class_render_config.html#a155580bf27f46f3e526648382f4ddc5e">RenderConfig::setImGuiEnabled</a></div><div class="ttdeci">void setImGuiEnabled(bool state)</div><div class="ttdoc">Enables or disables ImGui rendering.</div><div class="ttdef"><b>Определения</b> RenderConfig.h:67</div></div>
+<div class="ttc" id="aclass_render_config_html_a3f13108f4c3fc6267d8d9ad4391eab62"><div class="ttname"><a href="class_render_config.html#a3f13108f4c3fc6267d8d9ad4391eab62">RenderConfig::getGraphicsAPI</a></div><div class="ttdeci">GraphicsAPI getGraphicsAPI() const</div><div class="ttdoc">Gets the currently selected graphics API.</div><div class="ttdef"><b>Определения</b> RenderConfig.h:43</div></div>
+<div class="ttc" id="aclass_render_config_html_a40d3de9d1710964d8c08bb2ca6e03bfa"><div class="ttname"><a href="class_render_config.html#a40d3de9d1710964d8c08bb2ca6e03bfa">RenderConfig::getMaxFramesInFlight</a></div><div class="ttdeci">uint32_t getMaxFramesInFlight() const</div><div class="ttdoc">Gets the maximum number of frames that can be in flight simultaneously.</div><div class="ttdef"><b>Определения</b> RenderConfig.h:37</div></div>
+<div class="ttc" id="aclass_render_config_html_a6685d7d42eab14aef3debc5e48fe1b20"><div class="ttname"><a href="class_render_config.html#a6685d7d42eab14aef3debc5e48fe1b20">RenderConfig::getInstance</a></div><div class="ttdeci">static RenderConfig &amp; getInstance()</div><div class="ttdoc">Retrieves the singleton instance of the RenderConfig class.</div><div class="ttdef"><b>Определения</b> RenderConfig.h:27</div></div>
+<div class="ttc" id="aclass_render_config_html_a8c7aeff8b989cb78240697d0b9f81f6f"><div class="ttname"><a href="class_render_config.html#a8c7aeff8b989cb78240697d0b9f81f6f">RenderConfig::setGraphicsAPI</a></div><div class="ttdeci">void setGraphicsAPI(GraphicsAPI graphicsAPI)</div><div class="ttdoc">Sets the graphics API to be used.</div><div class="ttdef"><b>Определения</b> RenderConfig.h:61</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_0b6ee6e7e9547e675db4add2e5de97da.html">Engine</a></li><li class="navelem"><a class="el" href="dir_5730a32ba65843f7d6a4af6f0645845c.html">Modules</a></li><li class="navelem"><a class="el" href="dir_f7a9cc2c9fe230fec82132bf79c989c5.html">RenderModule</a></li><li class="navelem"><b>RenderConfig.h</b></li>
+    <li class="footer">Создано системой <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

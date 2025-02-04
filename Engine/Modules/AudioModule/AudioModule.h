@@ -6,64 +6,81 @@
 #include <thread>
 #include <iostream>
 
+/// <summary>
+/// Manages OpenAL audio operations, including device/context setup and sound playback.
+/// Implements a singleton pattern to ensure a single instance.
+/// </summary>
 class AudioModule
 {
-    ALCdevice* m_device = nullptr;
-    ALCcontext* m_context = nullptr;
+    ALCdevice* m_device = nullptr; ///< OpenAL audio device handle.
+    ALCcontext* m_context = nullptr; ///< OpenAL audio context.
+    std::thread m_audioThread; ///< Thread for playing audio asynchronously.
 
-    std::thread m_audioThread;
 public:
-    AudioModule() {}
-    ~AudioModule() {}
-
+    /// <summary>
+    /// Retrieves the singleton instance of the AudioModule.
+    /// </summary>
+    /// <returns>Reference to the singleton AudioModule instance.</returns>
     static AudioModule& getInstance()
     {
         static AudioModule audioModule;
         return audioModule;
     }
 
+    /// <summary>
+    /// Initializes the OpenAL audio system by opening a device and creating a context.
+    /// </summary>
+    /// <exception cref="std::runtime_error">Thrown if the audio device or context cannot be initialized.</exception>
     void startUp()
     {
         LOG_INFO("AudioModule: Startup");
-        m_device = alcOpenDevice(nullptr); 
+
+        m_device = alcOpenDevice(nullptr);
         if (!m_device)
         {
             throw std::runtime_error("Failed to open OpenAL device.");
         }
 
-        m_context = alcCreateContext(m_device, nullptr); 
+        m_context = alcCreateContext(m_device, nullptr);
         if (!m_context)
         {
             alcCloseDevice(m_device);
             throw std::runtime_error("Failed to create OpenAL context.");
         }
 
-        alcMakeContextCurrent(m_context); 
+        alcMakeContextCurrent(m_context);
     }
 
+    /// <summary>
+    /// Shuts down the OpenAL audio system by destroying the context and closing the device.
+    /// </summary>
     void shutDown()
     {
         LOG_INFO("AudioModule: Shut down");
+
         if (m_context)
         {
-            alcMakeContextCurrent(nullptr); 
-            alcDestroyContext(m_context); 
+            alcMakeContextCurrent(nullptr);
+            alcDestroyContext(m_context);
             m_context = nullptr;
         }
 
         if (m_device)
         {
-            alcCloseDevice(m_device); 
+            alcCloseDevice(m_device);
             m_device = nullptr;
         }
     }
 
+    /// <summary>
+    /// Plays a generated sound asynchronously on a separate thread.
+    /// </summary>
     void playSoundAsync()
     {
         m_audioThread = std::thread([]() {
             int sampleRate = 44100;
-            float duration = 0.05f;
-            float frequency = 50.f;
+            float duration = 0.05f; // Duration of the sound in seconds.
+            float frequency = 50.f; // Frequency of the generated tone.
             int numSamples = static_cast<int>(sampleRate * duration);
             short* samples = new short[numSamples];
 
@@ -71,7 +88,7 @@ public:
             {
                 float time = i / static_cast<float>(sampleRate);
                 float value = sin(2 * 3.14 * frequency * time);
-                samples[i] = static_cast<short>(value * 32767); 
+                samples[i] = static_cast<short>(value * 32767);
             }
 
             ALuint buffer;
@@ -94,7 +111,7 @@ public:
             alDeleteSources(1, &source);
             alDeleteBuffers(1, &buffer);
             });
+
         m_audioThread.detach();
     }
 };
-

@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>LampyEngine: Исходный файл Engine/Modules/WindowModule/Window.h</title>
+<link rel="icon" href="photo_2024-12-03_01-02-28.jpg" type="image/x-icon" />
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="photo_2024-12-03_01-02-28.jpg"/></td>
+  <td id="projectalign">
+   <div id="projectname">LampyEngine
+   </div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Поиск" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('_window_8h_source.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Загрузка...</div>
+<div class="SRStatus" id="Searching">Поиск...</div>
+<div class="SRStatus" id="NoMatches">Не найдено</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">Window.h</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define GLFW_INCLUDE_VULKAN</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;GLFW/glfw3.h&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span></div>
+<div class="foldopen" id="foldopen00009" data-start="{" data-end="};">
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno"><a class="line" href="class_window.html">    9</a></span><span class="keyword">class </span><a class="code hl_function" href="class_window.html#ae89eca69609390f224bdd9e37cb91b2c">Window</a></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>{</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    GLFWwindow* m_window; </div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    <span class="keywordtype">bool</span> m_framebufferResized = <span class="keyword">false</span>; </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <a class="code hl_function" href="class_window.html#ae89eca69609390f224bdd9e37cb91b2c">Window</a>(<span class="keywordtype">int</span> width, <span class="keywordtype">int</span> height, <span class="keyword">const</span> <span class="keywordtype">char</span>* title);</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <a class="code hl_function" href="class_window.html#a245d821e6016fa1f6970ccbbedd635f6">~Window</a>();</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="class_window.html#ab862953bab73f932bf723cf343a3d9cb">   33</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="class_window.html#ab862953bab73f932bf723cf343a3d9cb">glfwWindowIsValid</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> m_window != <span class="keyword">nullptr</span>; }</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    VkExtent2D <a class="code hl_function" href="class_window.html#a5f87014e44ac5a57b4790d4e8b1526d1">getExtent</a>();</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    VkSurfaceKHR <a class="code hl_function" href="class_window.html#a9974000ce7089475de59460a0c6cc913">getWindowSurface</a>(VkInstance instance);</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    std::vector&lt;const char*&gt; <a class="code hl_function" href="class_window.html#aa33c474075b05f3e4dc95daefde43cbb">getRequiredInstanceExtensions</a>();</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="class_window.html#adf381ca5564751f6ba5ebe65a79f31e4">   60</a></span>    GLFWwindow* <a class="code hl_function" href="class_window.html#adf381ca5564751f6ba5ebe65a79f31e4">getGLFWWindow</a>() { <span class="keywordflow">return</span> m_window; }</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_window.html#ab92dd526e7424ef5c7546f1a694e7554">setKeyCallback</a>(GLFWkeyfun keyCallback);</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_window.html#a4e0757d2c45c77618c8b31e7faa0856f">setCursorPositionCallback</a>(GLFWcursorposfun cursorPosCallback);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_window.html#aafa6f8c2bb645120c8100dbf1e68ed11">setScrollCallback</a>(GLFWscrollfun scrollCallback);</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span></div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno"><a class="line" href="class_window.html#adef13147e6338f9327f6bd7ac3168e8d">   84</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="class_window.html#adef13147e6338f9327f6bd7ac3168e8d">wasResized</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> m_framebufferResized; }</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno"><a class="line" href="class_window.html#a3c8b1184f874345bf57d27306fc6cb56">   89</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_window.html#a3c8b1184f874345bf57d27306fc6cb56">resetResizedFlag</a>() { m_framebufferResized = <span class="keyword">false</span>; }</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span></div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno"><a class="line" href="class_window.html#aa5e409ecd45b4430ed72f4872a8f667f">   94</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_window.html#aa5e409ecd45b4430ed72f4872a8f667f">pollEvents</a>() { glfwPollEvents(); }</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span></div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno"><a class="line" href="class_window.html#a1caaf150558c0c35a8811f19ccac817d">  100</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="class_window.html#a1caaf150558c0c35a8811f19ccac817d">shouldClose</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> glfwWindowShouldClose(m_window); }</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span></div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_window.html#ae803915bd2bf2b401949c9052ae3ba34">currentTimeInSeconds</a>();</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>};</div>
+</div>
+<div class="ttc" id="aclass_window_html_a1caaf150558c0c35a8811f19ccac817d"><div class="ttname"><a href="class_window.html#a1caaf150558c0c35a8811f19ccac817d">Window::shouldClose</a></div><div class="ttdeci">bool shouldClose() const</div><div class="ttdoc">Checks if the window should close.</div><div class="ttdef"><b>Определения</b> Window.h:100</div></div>
+<div class="ttc" id="aclass_window_html_a245d821e6016fa1f6970ccbbedd635f6"><div class="ttname"><a href="class_window.html#a245d821e6016fa1f6970ccbbedd635f6">Window::~Window</a></div><div class="ttdeci">~Window()</div><div class="ttdoc">Destroys the GLFW window and terminates GLFW.</div><div class="ttdef"><b>Определения</b> Window.cpp:36</div></div>
+<div class="ttc" id="aclass_window_html_a3c8b1184f874345bf57d27306fc6cb56"><div class="ttname"><a href="class_window.html#a3c8b1184f874345bf57d27306fc6cb56">Window::resetResizedFlag</a></div><div class="ttdeci">void resetResizedFlag()</div><div class="ttdoc">Resets the window resize flag.</div><div class="ttdef"><b>Определения</b> Window.h:89</div></div>
+<div class="ttc" id="aclass_window_html_a4e0757d2c45c77618c8b31e7faa0856f"><div class="ttname"><a href="class_window.html#a4e0757d2c45c77618c8b31e7faa0856f">Window::setCursorPositionCallback</a></div><div class="ttdeci">void setCursorPositionCallback(GLFWcursorposfun cursorPosCallback)</div><div class="ttdoc">Sets the cursor position callback function.</div><div class="ttdef"><b>Определения</b> Window.cpp:72</div></div>
+<div class="ttc" id="aclass_window_html_a5f87014e44ac5a57b4790d4e8b1526d1"><div class="ttname"><a href="class_window.html#a5f87014e44ac5a57b4790d4e8b1526d1">Window::getExtent</a></div><div class="ttdeci">VkExtent2D getExtent()</div><div class="ttdoc">Retrieves the current window extent (width and height).</div><div class="ttdef"><b>Определения</b> Window.cpp:87</div></div>
+<div class="ttc" id="aclass_window_html_a9974000ce7089475de59460a0c6cc913"><div class="ttname"><a href="class_window.html#a9974000ce7089475de59460a0c6cc913">Window::getWindowSurface</a></div><div class="ttdeci">VkSurfaceKHR getWindowSurface(VkInstance instance)</div><div class="ttdoc">Creates and retrieves the Vulkan surface associated with the window.</div><div class="ttdef"><b>Определения</b> Window.cpp:95</div></div>
+<div class="ttc" id="aclass_window_html_aa33c474075b05f3e4dc95daefde43cbb"><div class="ttname"><a href="class_window.html#aa33c474075b05f3e4dc95daefde43cbb">Window::getRequiredInstanceExtensions</a></div><div class="ttdeci">std::vector&lt; const char * &gt; getRequiredInstanceExtensions()</div><div class="ttdoc">Retrieves the required instance extensions for Vulkan.</div><div class="ttdef"><b>Определения</b> Window.cpp:47</div></div>
+<div class="ttc" id="aclass_window_html_aa5e409ecd45b4430ed72f4872a8f667f"><div class="ttname"><a href="class_window.html#aa5e409ecd45b4430ed72f4872a8f667f">Window::pollEvents</a></div><div class="ttdeci">void pollEvents()</div><div class="ttdoc">Polls for GLFW window events.</div><div class="ttdef"><b>Определения</b> Window.h:94</div></div>
+<div class="ttc" id="aclass_window_html_aafa6f8c2bb645120c8100dbf1e68ed11"><div class="ttname"><a href="class_window.html#aafa6f8c2bb645120c8100dbf1e68ed11">Window::setScrollCallback</a></div><div class="ttdeci">void setScrollCallback(GLFWscrollfun scrollCallback)</div><div class="ttdoc">Sets the scroll callback function.</div><div class="ttdef"><b>Определения</b> Window.cpp:77</div></div>
+<div class="ttc" id="aclass_window_html_ab862953bab73f932bf723cf343a3d9cb"><div class="ttname"><a href="class_window.html#ab862953bab73f932bf723cf343a3d9cb">Window::glfwWindowIsValid</a></div><div class="ttdeci">bool glfwWindowIsValid() const</div><div class="ttdoc">Checks if the GLFW window is valid.</div><div class="ttdef"><b>Определения</b> Window.h:33</div></div>
+<div class="ttc" id="aclass_window_html_ab92dd526e7424ef5c7546f1a694e7554"><div class="ttname"><a href="class_window.html#ab92dd526e7424ef5c7546f1a694e7554">Window::setKeyCallback</a></div><div class="ttdeci">void setKeyCallback(GLFWkeyfun keyCallback)</div><div class="ttdoc">Sets the key callback function.</div><div class="ttdef"><b>Определения</b> Window.cpp:67</div></div>
+<div class="ttc" id="aclass_window_html_adef13147e6338f9327f6bd7ac3168e8d"><div class="ttname"><a href="class_window.html#adef13147e6338f9327f6bd7ac3168e8d">Window::wasResized</a></div><div class="ttdeci">bool wasResized() const</div><div class="ttdoc">Checks if the window was resized.</div><div class="ttdef"><b>Определения</b> Window.h:84</div></div>
+<div class="ttc" id="aclass_window_html_adf381ca5564751f6ba5ebe65a79f31e4"><div class="ttname"><a href="class_window.html#adf381ca5564751f6ba5ebe65a79f31e4">Window::getGLFWWindow</a></div><div class="ttdeci">GLFWwindow * getGLFWWindow()</div><div class="ttdoc">Retrieves the raw GLFW window handle.</div><div class="ttdef"><b>Определения</b> Window.h:60</div></div>
+<div class="ttc" id="aclass_window_html_ae803915bd2bf2b401949c9052ae3ba34"><div class="ttname"><a href="class_window.html#ae803915bd2bf2b401949c9052ae3ba34">Window::currentTimeInSeconds</a></div><div class="ttdeci">float currentTimeInSeconds()</div><div class="ttdoc">Retrieves the current time since GLFW initialization.</div><div class="ttdef"><b>Определения</b> Window.cpp:82</div></div>
+<div class="ttc" id="aclass_window_html_ae89eca69609390f224bdd9e37cb91b2c"><div class="ttname"><a href="class_window.html#ae89eca69609390f224bdd9e37cb91b2c">Window::Window</a></div><div class="ttdeci">Window(int width, int height, const char *title)</div><div class="ttdoc">Constructs a new GLFW window.</div><div class="ttdef"><b>Определения</b> Window.cpp:8</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_0b6ee6e7e9547e675db4add2e5de97da.html">Engine</a></li><li class="navelem"><a class="el" href="dir_5730a32ba65843f7d6a4af6f0645845c.html">Modules</a></li><li class="navelem"><a class="el" href="dir_4e2e7e75048854c6b09c70260c017a38.html">WindowModule</a></li><li class="navelem"><b>Window.h</b></li>
+    <li class="footer">Создано системой <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

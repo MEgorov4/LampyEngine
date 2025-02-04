@@ -1,0 +1,223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ru">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>LampyEngine: Класс Logger</title>
+<link rel="icon" href="photo_2024-12-03_01-02-28.jpg" type="image/x-icon" />
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="photo_2024-12-03_01-02-28.jpg"/></td>
+  <td id="projectalign">
+   <div id="projectname">LampyEngine
+   </div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Поиск" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Создано системой Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('class_logger.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Загрузка...</div>
+<div class="SRStatus" id="Searching">Поиск...</div>
+<div class="SRStatus" id="NoMatches">Не найдено</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Открытые члены</a> &#124;
+<a href="#pub-static-methods">Открытые статические члены</a> &#124;
+<a href="#pub-attribs">Открытые атрибуты</a> &#124;
+<a href="class_logger-members.html">Полный список членов класса</a>  </div>
+  <div class="headertitle"><div class="title">Класс Logger</div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>Singleton class for logging messages with different verbosity levels. Supports event-based logging via the OnMessagePushed event.  
+ <a href="#details">Подробнее...</a></p>
+
+<p><code>#include &lt;<a class="el" href="_logger_8h_source.html">Logger.h</a>&gt;</code></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Открытые члены</h2></td></tr>
+<tr class="memitem:a934a0e2d3ccb654aa6327a572f61e06c" id="r_a934a0e2d3ccb654aa6327a572f61e06c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a934a0e2d3ccb654aa6327a572f61e06c">Log</a> (LogVerbosity verbosity, const std::string &amp;message)</td></tr>
+<tr class="memdesc:a934a0e2d3ccb654aa6327a572f61e06c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Logs a message with a specified verbosity level.  <br /></td></tr>
+<tr class="separator:a934a0e2d3ccb654aa6327a572f61e06c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
+Открытые статические члены</h2></td></tr>
+<tr class="memitem:a08e3e1b899767a6d833136c9fb4f15c2" id="r_a08e3e1b899767a6d833136c9fb4f15c2"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_logger.html">Logger</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a08e3e1b899767a6d833136c9fb4f15c2">Get</a> ()</td></tr>
+<tr class="memdesc:a08e3e1b899767a6d833136c9fb4f15c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the singleton instance of the <a class="el" href="class_logger.html" title="Singleton class for logging messages with different verbosity levels. Supports event-based logging vi...">Logger</a>.  <br /></td></tr>
+<tr class="separator:a08e3e1b899767a6d833136c9fb4f15c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Открытые атрибуты</h2></td></tr>
+<tr class="memitem:a28d39128f44ab1d60f692b5685a9fb9b" id="r_a28d39128f44ab1d60f692b5685a9fb9b"><td class="memItemLeft" align="right" valign="top"><a id="a28d39128f44ab1d60f692b5685a9fb9b" name="a28d39128f44ab1d60f692b5685a9fb9b"></a>
+<a class="el" href="class_event.html">Event</a>&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>OnMessagePushed</b></td></tr>
+<tr class="memdesc:a28d39128f44ab1d60f692b5685a9fb9b"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="class_event.html" title="A thread-safe, generic event system that allows subscribing, unsubscribing, and invoking event handle...">Event</a> that triggers when a new log message is pushed. Subscribers receive the formatted log message. <br /></td></tr>
+<tr class="separator:a28d39128f44ab1d60f692b5685a9fb9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Подробное описание</h2>
+<div class="textblock"><p>Singleton class for logging messages with different verbosity levels. Supports event-based logging via the OnMessagePushed event. </p>
+</div><h2 class="groupheader">Методы</h2>
+<a id="a08e3e1b899767a6d833136c9fb4f15c2" name="a08e3e1b899767a6d833136c9fb4f15c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08e3e1b899767a6d833136c9fb4f15c2">&#9670;&#160;</a></span>Get()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="class_logger.html">Logger</a> &amp; Logger::Get </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Retrieves the singleton instance of the <a class="el" href="class_logger.html" title="Singleton class for logging messages with different verbosity levels. Supports event-based logging vi...">Logger</a>. </p>
+<dl class="section return"><dt>Возвращает</dt><dd>Reference to the <a class="el" href="class_logger.html" title="Singleton class for logging messages with different verbosity levels. Supports event-based logging vi...">Logger</a> instance.</dd></dl>
+
+</div>
+</div>
+<a id="a934a0e2d3ccb654aa6327a572f61e06c" name="a934a0e2d3ccb654aa6327a572f61e06c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a934a0e2d3ccb654aa6327a572f61e06c">&#9670;&#160;</a></span>Log()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Logger::Log </td>
+          <td>(</td>
+          <td class="paramtype">LogVerbosity</td>          <td class="paramname"><span class="paramname"><em>verbosity</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>message</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Logs a message with a specified verbosity level. </p>
+<dl class="params"><dt>Аргументы</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">verbosity</td><td>The verbosity level of the log.</td></tr>
+    <tr><td class="paramname">message</td><td>The message to be logged.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>Объявления и описания членов классов находятся в файлах:<ul>
+<li>Engine/Modules/LoggerModule/<a class="el" href="_logger_8h_source.html">Logger.h</a></li>
+<li>Engine/Modules/LoggerModule/<b>Logger.cpp</b></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="class_logger.html">Logger</a></li>
+    <li class="footer">Создано системой <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>
