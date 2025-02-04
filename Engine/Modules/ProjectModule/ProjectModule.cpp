@@ -37,34 +37,29 @@ void ProjectModule::setupProjectEnvironment()
 		LOG_INFO(line);
 		m_projectConfig = ProjectConfig(line);
 	}
-	int exitCode = projectBrowserProcess.exit_code();
-	if (exitCode != 0)
-	{
-		throw std::runtime_error("project browser process error");
-	}
 	projectBrowserProcess.wait();
 
 }
 void ProjectModule::saveProjectConfig()
 {
-	nlohmann::json jsonData;
+	//nlohmann::json jsonData;
 
-	jsonData["projectPath"] = m_projectConfig.projectPath;
-	jsonData["projectName"] = m_projectConfig.projectName;
+	//jsonData["projectPath"] = m_projectConfig.getProjectPath();
+	//jsonData["projectName"] = m_projectConfig.getProjectName();
 
-	jsonData["resourcesPath"] = m_projectConfig.resourcesPath;
-	jsonData["buildPath"] = m_projectConfig.buildPath;
-	jsonData["configPath"] = m_projectConfig.configPath;
-	jsonData["logsPath"] = m_projectConfig.logsPath;
+	//jsonData["resourcesPath"] = m_projectConfig.getResourcesPath();
+	//jsonData["buildPath"] = m_projectConfig.getBuildPath();
+	//jsonData["configPath"] = m_projectConfig.getConfigPath();
+	//jsonData["logsPath"] = m_projectConfig.getLogsPath();
 
-	jsonData["editorStartWorld"] = m_projectConfig.editorStartWorld;
-	jsonData["gameStartWorld"] = m_projectConfig.gameStartWorld;
+	//jsonData["editorStartWorld"] = m_projectConfig.getEditorStartWorld();
+	//jsonData["gameStartWorld"] = m_projectConfig.getGameStartWorld();
 
-	std::ofstream outFile(m_projectConfig.projectPath);
-	if (outFile.is_open())
-	{
-		outFile.clear();
-		outFile << jsonData;
-		outFile.close();
-	}
+	//std::ofstream outFile(m_projectConfig.getProjectPath());
+	//if (outFile.is_open())
+	//{
+	//	outFile.clear();
+	//	outFile << jsonData;
+	//	outFile.close();
+	//}
 }

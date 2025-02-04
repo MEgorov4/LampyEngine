@@ -93,7 +93,7 @@ void onFolderSelect(Fl_Widget*, void*) {
             jsonData["editorStartWorld"] = "default";
             jsonData["gameStartWorld"] = "default";
             jsonData["result"] = "success";
-
+            file << jsonData;
             sendDataOnOutStream(jsonData);
             file.close();
         }

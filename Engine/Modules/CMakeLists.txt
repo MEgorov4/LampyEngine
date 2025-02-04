@@ -9,7 +9,7 @@ add_subdirectory(AudioModule)
 add_subdirectory(InputModule)
 add_subdirectory(RenderModule)
 
+add_subdirectory(ProjectModule)
 add_subdirectory(ImGuiModule)
 add_subdirectory(EditorGuiModule)
 
-add_subdirectory(ProjectModule)

@@ -8,6 +8,7 @@
 /// </summary>
 struct ProjectConfig
 {
+private:
     std::string projectPath; ///< Path to the project directory.
     std::string projectName; ///< Name of the project.
 
@@ -19,16 +20,24 @@ struct ProjectConfig
     std::string editorStartWorld; ///< The default world loaded in the editor.
     std::string gameStartWorld; ///< The default world loaded in the game.
 
-    /// <summary>
-    /// Default constructor.
-    /// </summary>
+public:
     ProjectConfig() = default;
 
-    /// <summary>
     /// Constructs a ProjectConfig from JSON data.
     /// </summary>
     /// <param name="data">String containing JSON-formatted project configuration data.</param>
     ProjectConfig(std::string data);
+
+    std::string getProjectPath() const { return projectPath; }
+    std::string getProjectName() const { return projectName; }
+
+    std::string getResourcesPath() const { return resourcesPath; }
+    std::string getConfigPath() const { return configPath; }
+    std::string getLogsPath() const { return configPath; }
+    std::string getBuildPath() const { return buildPath; }
+
+    std::string getEditorStartWorld() const { return editorStartWorld; }
+    std::string getGameStartWorld() const { return gameStartWorld; }
 };
 
 /// <summary>
