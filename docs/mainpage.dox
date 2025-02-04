@@ -2,5 +2,5 @@
  * @mainpage LampyEngine
  *
  * @section intro Introduction
- * LampyEngine - cross-platform game engine.
+ * LampyEngine - cross-platform game engine with OpenGL/Vulkan support.
  */
