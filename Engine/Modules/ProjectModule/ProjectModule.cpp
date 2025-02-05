@@ -24,7 +24,7 @@ ProjectConfig::ProjectConfig(std::string data)
 }
 
 void ProjectModule::setupProjectEnvironment()
-{	
+{
 	LOG_INFO("ProjectModule: Run project browser");
 	namespace bp = boost::process;
 	

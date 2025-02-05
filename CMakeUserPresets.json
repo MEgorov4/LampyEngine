@@ -4,7 +4,6 @@
         "conan": {}
     },
     "include": [
-        "Engine/ThirdParty/CMakePresets.json",
         "Engine\\ThirdParty\\CMakePresets.json"
     ]
 }

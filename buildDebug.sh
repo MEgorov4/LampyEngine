@@ -1,2 +1,3 @@
-cd build 
+cd build
 make
+

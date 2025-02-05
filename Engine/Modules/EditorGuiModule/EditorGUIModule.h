@@ -5,9 +5,7 @@
 #include "MainMenuBar.h"
 #include "OutputLog.h"
 #include "ContentBrowser.h"
-
-#include "../ImGuiModule/ImGuiModule.h"
-
+#include "WorldInspector.h"
 /// <summary>
 /// Manages the graphical user interface (GUI) of the editor, including tool panels, menu bars, logs, and content browsers.
 /// Implements a singleton pattern to ensure a single instance.
@@ -18,6 +16,7 @@ class EditorGUIModule
     std::unique_ptr<GUIMainMenuBar> m_mainMenuBar; ///< Unique pointer to the main menu bar.
     std::unique_ptr<GUIOutputLog> m_outputLog; ///< Unique pointer to the output log.
     std::unique_ptr<GUIContentBrowser> m_contentBrowser; ///< Unique pointer to the content browser.
+    std::unique_ptr<GUIWorldInspector> m_worldInspector; ///< Unique pointer to the world inspector.
 
 public:
     /// <summary>
@@ -33,42 +32,21 @@ public:
     /// <summary>
     /// Initializes the editor GUI by creating tool panels, menus, logs, and content browsers.
     /// </summary>
-    void startUp()
-    {
-        LOG_INFO("EditorGUIModule: Startup");
-        m_toolPanel = std::make_unique<GUIEditorToolPanel>();
-        m_mainMenuBar = std::make_unique<GUIMainMenuBar>();
-        m_outputLog = std::make_unique<GUIOutputLog>();
-        m_contentBrowser = std::make_unique<GUIContentBrowser>();
-    }
 
+    void startUp();
     /// <summary>
     /// Renders the GUI elements using the ImGui module.
     /// </summary>
-    void render()
-    {
-        ImGuiModule::getInstance().renderUI();
-    }
+    void render();
 
     /// <summary>
     /// Retrieves a pointer to the main menu bar instance.
     /// </summary>
     /// <returns>Pointer to the GUIMainMenuBar instance.</returns>
-    GUIMainMenuBar* getMenuBar()
-    {
-        return m_mainMenuBar.get();
-    }
+    GUIMainMenuBar* getMenuBar();
 
     /// <summary>
     /// Shuts down the editor GUI by releasing all GUI components.
     /// </summary>
-    void shutDown()
-    {
-        LOG_INFO("EditorGUIModule: Shut down");
-
-        m_toolPanel.reset();
-        m_mainMenuBar.reset();
-        m_outputLog.reset();
-        m_contentBrowser.reset();
-    }
+    void shutDown();
 };

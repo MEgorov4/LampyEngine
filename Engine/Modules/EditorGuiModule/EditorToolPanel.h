@@ -1,5 +1,4 @@
 #pragma once
-#include <imgui.h>
 
 #include "../ImGuiModule/GUIObject.h"
 

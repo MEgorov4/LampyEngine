@@ -20,7 +20,7 @@ public:
     }
 
     /// <summary>
-    /// Gets the maximum number of frames that can be processed concurrently.
+    /// Gets the maximum number of frames that can be processed concurrentl.
     /// </summary>
     /// <returns>The maximum number of frames in flight.</returns>
     uint32_t getMaxFramesInFlight() const { return MAX_FRAMES_IN_FLIGHT; }

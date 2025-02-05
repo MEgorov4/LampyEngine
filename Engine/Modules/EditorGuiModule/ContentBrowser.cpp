@@ -6,8 +6,9 @@
 namespace fs = std::filesystem;
 
 GUIContentBrowser::GUIContentBrowser()
-    : m_rootPath(ProjectModule::getInstance().getProjectConfig().getResourcesPath()),
-    m_currentPath(m_rootPath)
+        : GUIObject()
+        , m_rootPath(ProjectModule::getInstance().getProjectConfig().getResourcesPath())
+        , m_currentPath(m_rootPath)
 {
     updateDirectoryContents();
 }
@@ -67,11 +68,19 @@ void GUIContentBrowser::render()
 
         for (size_t i = 0; i < m_files.size(); ++i)
         {
+
             std::string label = m_files[i] + "##file" + std::to_string(i);
-            if (ImGui::Selectable(label.c_str()))
+            const char* clabel = label.c_str();
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
             {
-                // Логика при выборе файла
+                ImGui::SetDragDropPayload("TestDrag", &clabel, sizeof(clabel));
+                ImGui::EndDragDropSource();
             }
+                if (ImGui::Selectable(label.c_str()))
+                {
+                    // Логика при выборе файла
+                }
+
         }
 
         ImGui::EndChild();

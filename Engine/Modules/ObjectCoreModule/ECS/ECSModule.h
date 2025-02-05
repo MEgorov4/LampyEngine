@@ -1,45 +1,29 @@
 #pragma once
-
 #include <memory>
-
 #include <flecs.h>
-#define FLECS_SYSTEM
 
-struct ecs_world_deleter
+struct Position
 {
-	void operator()(ecs_world_t* world) const
-	{
-		if (world) 
-		{
-			ecs_fini(world);
-		}
-	}
+	float x;
+	float y;
+	float z;
 };
 
 class ECSModule
 {
-	std::unique_ptr<ecs_world_t, ecs_world_deleter> m_world;
+	flecs::world m_world;
 public:
-	ECSModule() {}
-	~ECSModule() {}
 	static ECSModule& getInstance()
 	{
 		static ECSModule ECSModule;
 		return ECSModule;
 	}
 
-	void startUp()
-	{
-		m_world.reset(ecs_init());
-	}
+	void startUp();
 
-	void shutDown()
-	{
-		m_world.reset();
-	}
+	flecs::world& getCurrentWorld();
 
-	void ecsTick(float deltaTime)
-	{
-	
-	}
+	void ecsTick(float deltaTime);
+
+	void shutDown();
 };

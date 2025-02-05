@@ -6,4 +6,5 @@ format_source_group(${EDITOR_GUI_MODULE_SOURCE})
 add_library(EditorGuiModule STATIC ${EDITOR_GUI_MODULE_SOURCE})
 
 
-target_link_libraries(EditorGuiModule PRIVATE EventModule ProjectModule PUBLIC ImGuiModule)
+target_link_libraries(EditorGuiModule PRIVATE EventModule ProjectModule ObjectCoreModule ImGuiModule)
+# target_link_libraries(EditorGuiModule PUBLIC ImGuiModule)

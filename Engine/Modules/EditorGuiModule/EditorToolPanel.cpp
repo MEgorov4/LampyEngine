@@ -1,4 +1,5 @@
 #include "EditorToolPanel.h"
+#include <imgui.h>
 
 GUIEditorToolPanel::GUIEditorToolPanel() : GUIObject()
 {
@@ -13,7 +14,15 @@ void GUIEditorToolPanel::render()
 	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar;
 	if (ImGui::Begin("Tool panel", nullptr, windowFlags))
 	{
-		ImGui::Text("hello");
+		if (ImGui::Button("PlayButton"))
+		{
+
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("StopButton"))
+		{
+
+		}
 	}
 	ImGui::End();
 }
