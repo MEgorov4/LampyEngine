@@ -30,6 +30,7 @@ private:
   /// Initializes the engine context object (e.g., Editor or Game mode).
   /// </summary>
   void startupEngineContextObject();
+  void initMajorEngineContext();
 
   /// <summary>
   /// Runs the main game loop, handling delta time updates, rendering, and ECS

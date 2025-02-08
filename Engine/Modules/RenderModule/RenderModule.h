@@ -81,7 +81,8 @@ public:
     {
         m_renderer->removeVertexData(vertexData);
     }
-
+    
+    VkDescriptorSet getVulkanOffscreenImageView();
     /// <summary>
     /// Retrieves a pointer to the active renderer.
     /// </summary>

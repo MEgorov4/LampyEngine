@@ -29,12 +29,7 @@ void GUIContentBrowser::updateDirectoryContents()
 
 void GUIContentBrowser::render()
 {
-    ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetIO().DisplaySize.y / 3 * 2));
-    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 3));
-
-    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
-
-    if (ImGui::Begin("Content Browser", nullptr, windowFlags))
+    if (ImGui::Begin("Content Browser", nullptr, 0))
     {
         // Левый блок: папки
         ImGui::BeginChild("FoldersPane", ImVec2(ImGui::GetWindowWidth() * 0.3f, 0), true);

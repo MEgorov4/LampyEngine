@@ -2,17 +2,21 @@
 #include "../Modules/EditorGuiModule/EditorGUIModule.h"
 #include "../Modules/ProjectModule/ProjectModule.h"
 
-void Editor::init()
+void Editor::initMinor()
 {
 	LOG_INFO("Editor: Init");
 	LOG_INFO("Editor: startup editor modules");
+	ProjectModule::getInstance().startUp();
+}
+
+void Editor::initMajor()
+{
 	startupEditorModules();
 }
 
 
 void Editor::startupEditorModules()
 {
-	ProjectModule::getInstance().startUp();
 	EditorGUIModule::getInstance().startUp();
 }
 

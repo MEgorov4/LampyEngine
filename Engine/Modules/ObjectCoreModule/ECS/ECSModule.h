@@ -11,6 +11,7 @@ struct Position
 
 class ECSModule
 {
+	bool m_tickEnabled = false;
 	flecs::world m_world;
 public:
 	static ECSModule& getInstance()
@@ -20,6 +21,11 @@ public:
 	}
 
 	void startUp();
+	
+	void loadInitialWorldState();
+	void clearWorld();
+	void startSystems();
+	void stopSystems();
 
 	flecs::world& getCurrentWorld();
 

@@ -1,27 +1,23 @@
 #include "EditorToolPanel.h"
 #include <imgui.h>
+#include "../ObjectCoreModule/ECS/ECSModule.h"
 
-GUIEditorToolPanel::GUIEditorToolPanel() : GUIObject()
+GUIEditorToolPanel::GUIEditorToolPanel() : GUIObject(), m_ecsModule(ECSModule::getInstance())
 {
-
 }
 
 void GUIEditorToolPanel::render()
 {
-	ImGui::SetNextWindowPos(ImVec2(0, 18));
-	ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 18));
-
-	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar;
-	if (ImGui::Begin("Tool panel", nullptr, windowFlags))
+	if (ImGui::Begin("Tool panel", nullptr, 0))
 	{
 		if (ImGui::Button("PlayButton"))
 		{
-
+			m_ecsModule.startSystems();
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("StopButton"))
 		{
-
+			m_ecsModule.stopSystems();
 		}
 	}
 	ImGui::End();

@@ -14,8 +14,9 @@ public:
     /// Initializes the engine context.
     /// This method should set up any necessary resources and configurations.
     /// </summary>
-    virtual void init() = 0;
+    virtual void initMinor() = 0;
 
+    virtual void initMajor() = 0;
     /// <summary>
     /// Called every frame to update the engine context.
     /// </summary>

@@ -10,17 +10,33 @@
 
 #include "../LoggerModule/Logger.h"
 
+void ImGuiModule::startUp()
+{
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+}
+
+void ImGuiModule::shutDown()
+{
+}
+
 void ImGuiModule::renderUI() const
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-
+    
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
     for (auto& object : m_GuiObjects)
     {
         assert(object);
         object->render();
     }
+    //Optional logic for update multi-viewport system
+    //if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    //{
+    //    ImGui::UpdatePlatformWindows();
+    //    ImGui::RenderPlatformWindowsDefault();
+    //}
     ImGui::Render();
     ImGui::EndFrame();
 }

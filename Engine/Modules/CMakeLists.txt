@@ -1,5 +1,6 @@
 add_subdirectory(EventModule)
 add_subdirectory(LoggerModule)
+add_subdirectory(LuaScriptModule)
 
 add_subdirectory(ObjectCoreModule)
 

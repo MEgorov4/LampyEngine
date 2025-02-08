@@ -45,6 +45,8 @@ class VulkanCommandBuffers;
 class VulkanSynchronizationManager;
 class VulkanPipelineCache;
 class VulkanVertexBufferCache;
+class VulkanOffscreenRenderer;
+class VulkanDescriptorPool;
 
 /// <summary>
 /// Handles Vulkan rendering, resource management, and pipeline execution.
@@ -63,10 +65,15 @@ class VulkanRenderer : public IRenderer
     std::unique_ptr<VulkanPipelineCache> m_pipelineCache;
     std::unique_ptr<VulkanVertexBufferCache> m_vertexBufferCache;
 
+    std::unique_ptr<VulkanDescriptorPool> m_descriptorPool;
+    std::unique_ptr<VulkanOffscreenRenderer> m_offscreenRenderer;
+    
+
     uint32_t m_currentFrame = 0; ///< Tracks the current frame in flight.
     Window* m_window; ///< Pointer to the application window.
     DeletionQueue m_mainDeletionQueue; ///< Queue for deferred cleanup tasks.
-
+    
+    bool m_imguiEnabled = false;
 public:
     /// <summary>
     /// Constructs the Vulkan renderer and initializes Vulkan.
@@ -114,6 +121,7 @@ public:
     /// </summary>
     /// <param name="vertexData">Vertex data to remove.</param>
     virtual void removeVertexData(const std::vector<Vertex>& vertexData) override;
+    virtual VkDescriptorSet getVulkanOffscreenImageView() override;
 
     /// <summary>
     /// Recreates the swap chain and all dependent resources.

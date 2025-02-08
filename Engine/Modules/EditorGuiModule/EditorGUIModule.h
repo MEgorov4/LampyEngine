@@ -5,6 +5,7 @@
 #include "MainMenuBar.h"
 #include "OutputLog.h"
 #include "ContentBrowser.h"
+#include "EditorViewport.h"
 #include "WorldInspector.h"
 /// <summary>
 /// Manages the graphical user interface (GUI) of the editor, including tool panels, menu bars, logs, and content browsers.
@@ -17,6 +18,7 @@ class EditorGUIModule
     std::unique_ptr<GUIOutputLog> m_outputLog; ///< Unique pointer to the output log.
     std::unique_ptr<GUIContentBrowser> m_contentBrowser; ///< Unique pointer to the content browser.
     std::unique_ptr<GUIWorldInspector> m_worldInspector; ///< Unique pointer to the world inspector.
+    std::unique_ptr<GUIEditorViewport> m_editorViewport; ///< Unique pointer to the viewport.
 
 public:
     /// <summary>

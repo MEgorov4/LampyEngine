@@ -14,8 +14,9 @@ public:
     /// <summary>
     /// Initializes the Editor context and starts necessary modules.
     /// </summary>
-    void init() override;
-
+    void initMinor() override;
+    
+    void initMajor() override;
     /// <summary>
     /// Starts up editor-specific modules (e.g., GUI, Project Management).
     /// </summary>

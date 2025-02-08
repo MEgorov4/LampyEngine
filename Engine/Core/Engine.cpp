@@ -10,6 +10,7 @@
 #include "../Modules/AudioModule/AudioModule.h"
 #include "../Modules/ObjectCoreModule/ECS/ECSModule.h"
 #include "../Modules/LoggerModule/Logger.h"
+#include "../Modules/LuaScriptModule/LuaScriptModule.h"
 
 Engine::Engine(){}
 
@@ -17,10 +18,11 @@ Engine::~Engine(){}
 
 void Engine::run()
 {
-	LOG_INFO("Engine: Startup modules");
-	startupModules();
 	LOG_INFO("Engine: Startup engine context");
 	startupEngineContextObject();
+	LOG_INFO("Engine: Startup modules");
+	startupModules();
+	initMajorEngineContext();
 	LOG_INFO("Engine: Startup engine tick");
 	engineTick();
 	LOG_INFO("Engine: Shut down engine context");
@@ -42,12 +44,17 @@ void Engine::startupModules()
 	
 	AudioModule::getInstance().startUp();
 	ECSModule::getInstance().startUp();
+	LuaScriptModule::getInstance().startUp();
 }
 
 void Engine::startupEngineContextObject()
 {
 	m_engineContext = std::make_unique<Editor>();
-	m_engineContext->init();
+	m_engineContext->initMinor();
+}
+void Engine::initMajorEngineContext()
+{
+	m_engineContext->initMajor();
 }
 void Engine::engineTick()
 {
@@ -77,6 +84,7 @@ void Engine::shutDownEngineContextObject()
 
 void Engine::shutDownModules()
 {
+
 	ECSModule::getInstance().shutDown();
 	AudioModule::getInstance().shutDown();
 	RenderModule::getInstance().shutDown();

@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "c-style-shit": "cpp"
+        "c-style-shit": "cpp",
+        "xstring": "cpp"
     }
 }

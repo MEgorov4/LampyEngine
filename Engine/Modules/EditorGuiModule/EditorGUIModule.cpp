@@ -6,12 +6,14 @@
 
 void EditorGUIModule::startUp()
 {
+    ImGuiModule::getInstance().startUp();
     LOG_INFO("EditorGUIModule: Startup");
     m_toolPanel = std::make_unique<GUIEditorToolPanel>();
     m_mainMenuBar = std::make_unique<GUIMainMenuBar>();
     m_outputLog = std::make_unique<GUIOutputLog>();
     m_contentBrowser = std::make_unique<GUIContentBrowser>();
     m_worldInspector = std::make_unique<GUIWorldInspector>();
+    m_editorViewport = std::make_unique<GUIEditorViewport>();
 }
 
 void EditorGUIModule::render()
@@ -33,4 +35,7 @@ void EditorGUIModule::shutDown()
     m_outputLog.reset();
     m_contentBrowser.reset();
     m_worldInspector.reset();
+    m_editorViewport.reset();
+
+    ImGuiModule::getInstance().shutDown();
 }

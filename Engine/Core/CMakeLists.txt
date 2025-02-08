@@ -18,4 +18,5 @@ target_link_libraries(Engine PUBLIC
     PRIVATE
     EventModule
     ObjectCoreModule
+    LuaScriptModule
 )

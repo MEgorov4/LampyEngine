@@ -15,12 +15,7 @@ GUIOutputLog::~GUIOutputLog()
 
 void GUIOutputLog::render()
 {
-	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 3 * 2));
-	ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 3));
-
-	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBringToFrontOnFocus;
-
-	ImGui::Begin("Console Log", nullptr, windowFlags);
+	ImGui::Begin("Console Log", nullptr, 0);
 
 
 	if (ImGui::Button("Clear"))

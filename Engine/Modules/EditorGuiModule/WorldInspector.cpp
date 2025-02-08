@@ -11,19 +11,14 @@ GUIWorldInspector::GUIWorldInspector() : GUIObject()
 
 void GUIWorldInspector::render()
 {
-	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x / 3 * 2
-			, 50));
-	ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x / 3 , ImGui::GetIO().DisplaySize.y - 50 - ImGui::GetIO().DisplaySize.y / 3));
-	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove 
-				| ImGuiWindowFlags_NoResize 
-				| ImGuiWindowFlags_NoCollapse;
 
-	if (ImGui::Begin("WorldInspector", nullptr, windowFlags))
+	if (ImGui::Begin("WorldInspector", nullptr, 0))
 	{
-		
-		ImGui::BeginChild("WorldTree", ImVec2(0, ImGui::GetWindowHeight() * 0.7f), true);
+		ImGui::Text("Tree");
+		ImGui::BeginChild("WorldTree", ImVec2(0, ImGui::GetWindowHeight() * 0.3f), true);
 		renderEntityList();
 		ImGui::EndChild();
+		ImGui::Text("Defaults");
 		ImGui::BeginChild("ObjectDefaults", ImVec2(0, 0), true);
 		renderSelectedEntityDefaults();
 		ImGui::EndChild();

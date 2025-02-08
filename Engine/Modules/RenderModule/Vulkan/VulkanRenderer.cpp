@@ -15,6 +15,8 @@
 
 #include "VulkanObjects/VulkanVertexBufferCache.h"
 #include "VulkanObjects/VulkanPipelineCache.h"
+#include "VulkanObjects/VulkanDescriptorPool.h"
+#include "VulkanOffscreenObjects/VulkanOffscreenRenderer.h"
 #include "../RenderConfig.h"
 #include "../../WindowModule/WindowModule.h"
 #include "../../ImGuiModule/GLFWBackends/imgui_impl_glfw.h"
@@ -24,7 +26,8 @@
 VulkanRenderer::VulkanRenderer(Window* window) : m_window(window)
 {
 	initVulkan();
-	if (RenderConfig::getInstance().getImGuiEnabled())
+	m_imguiEnabled = RenderConfig::getInstance().getImGuiEnabled();
+	if (m_imguiEnabled)
 	{
 		initImGui();
 	}
@@ -57,6 +60,15 @@ void VulkanRenderer::initVulkan()
 
 	m_syncManager = std::make_unique<VulkanSynchronizationManager>(m_logicalDevice->getLogicalDevice(),
 														   RenderConfig::getInstance().getMaxFramesInFlight());
+
+	m_descriptorPool = std::make_unique<VulkanDescriptorPool>(m_logicalDevice->getLogicalDevice());
+
+	m_offscreenRenderer = std::make_unique<VulkanOffscreenRenderer>(m_logicalDevice->getLogicalDevice()
+		, m_logicalDevice->getPhysicalDevice()
+		, VkExtent2D(1920, 1080)
+		, m_commandPool->getCommandPool()
+		, m_logicalDevice->getGraphicsQueue()
+		, m_descriptorPool->getDescriptorPool());
 }
 
 void VulkanRenderer::initImGui() {
@@ -113,6 +125,8 @@ void VulkanRenderer::initImGui() {
 		vkDestroyDescriptorPool(m_logicalDevice->getLogicalDevice(), imguiPool, nullptr);
 		ImGui_ImplVulkan_Shutdown();
 		});
+	
+	//ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 }
 
 
@@ -149,13 +163,14 @@ void VulkanRenderer::immediate_submit(std::function<void(VkCommandBuffer)>&& fun
 
 void VulkanRenderer::cleanupVulkan()
 {
+	m_offscreenRenderer.reset();
+	m_descriptorPool.reset();
 	m_syncManager.reset();
 	cleanSwapChainAndDependent();
 	m_commandPool.reset();
 	m_logicalDevice.reset();
 	m_surface.reset();
 	m_instance.reset();
-
 }
 
 void VulkanRenderer::recreateSwapChainAndDependent()
@@ -231,6 +246,10 @@ void VulkanRenderer::removeVertexData(const std::vector<Vertex>& vertexData)
 	m_vertexBufferCache->removeVertexBuffer(vertexData);
 }
 
+VkDescriptorSet VulkanRenderer::getVulkanOffscreenImageView()
+{
+	return m_offscreenRenderer->getColorImageDescriptor();
+}
 
 void VulkanRenderer::drawFrame()
 {
@@ -344,6 +363,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 		throw std::runtime_error("failed to begin recording command buffer!");
 	}
 
+
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = m_renderPass->getRenderPass();
@@ -355,7 +375,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 	VkClearValue clearColor = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 	renderPassInfo.clearValueCount = 1;
 	renderPassInfo.pClearValues = &clearColor;
-
+	
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 
@@ -373,11 +393,18 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 	scissor.extent = m_swapChain->getExtent();
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	createSceneRenderCommands(commandBuffer);
-
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+	if (m_imguiEnabled)
+	{
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+	}
 
 	vkCmdEndRenderPass(commandBuffer);
+
+	m_offscreenRenderer->beginRenderPass(commandBuffer);
+
+	createSceneRenderCommands(commandBuffer);
+
+	m_offscreenRenderer->endRenderPass(commandBuffer);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("failed to record command buffer!");
