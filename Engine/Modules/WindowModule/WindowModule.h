@@ -32,7 +32,7 @@ public:
     /// <param name="height">The height of the window in pixels.</param>
     /// <param name="title">The title of the window.</param>
     /// <exception cref="std::runtime_error">Thrown if window creation fails.</exception>
-    void startUp(int width, int height, const char* title)
+    void startup(int width, int height, const char* title)
     {
         LOG_INFO("WindowModule: Startup");
         m_window = std::make_unique<Window>(width, height, title);

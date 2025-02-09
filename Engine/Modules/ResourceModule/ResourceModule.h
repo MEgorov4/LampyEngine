@@ -16,7 +16,7 @@ public:
 		return ResourceManager;
 	}
 
-	void startUp()
+	void startup()
 	{
 		LOG_INFO("ResourceModule: Startup");
 	}

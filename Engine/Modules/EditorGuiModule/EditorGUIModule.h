@@ -35,7 +35,7 @@ public:
     /// Initializes the editor GUI by creating tool panels, menus, logs, and content browsers.
     /// </summary>
 
-    void startUp();
+    void startup();
     /// <summary>
     /// Renders the GUI elements using the ImGui module.
     /// </summary>

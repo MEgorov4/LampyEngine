@@ -25,7 +25,7 @@ public:
     /// Retrieves the singleton instance of the ImGuiModule.
     /// </summary>
     /// <returns>Reference to the singleton ImGuiModule instance.</returns>
-    void startUp();
+    void startup();
     void shutDown();
     static ImGuiModule& getInstance()
     {

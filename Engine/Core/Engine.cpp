@@ -33,18 +33,18 @@ void Engine::run()
 
 void Engine::startupModules()
 {
-	WindowModule::getInstance().startUp(800, 600, "Lampy Engine");
+	WindowModule::getInstance().startup(800, 600, "Lampy Engine");
 
-	InputModule::getInstance().startUp(WindowModule::getInstance().getWindow());
+	InputModule::getInstance().startup(WindowModule::getInstance().getWindow());
 
 	RenderConfig& renderConfig = RenderConfig::getInstance();
 	renderConfig.setMaxFramesInFlight(EngineConfig::getInstance().getMaxFramesInFlight());
 	renderConfig.setGraphicsAPI(GraphicsAPI::Vulkan);
-	RenderModule::getInstance().startUp(WindowModule::getInstance().getWindow());
+	RenderModule::getInstance().startup(WindowModule::getInstance().getWindow());
 	
-	AudioModule::getInstance().startUp();
-	ECSModule::getInstance().startUp();
-	LuaScriptModule::getInstance().startUp();
+	AudioModule::getInstance().startup();
+	ECSModule::getInstance().startup();
+	LuaScriptModule::getInstance().startup();
 }
 
 void Engine::startupEngineContextObject()

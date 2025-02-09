@@ -16,11 +16,10 @@ public:
     return luaScriptModule;
   }
 
-  void startUp() 
-  {
-      m_luaState.open_libraries(sol::lib::base, sol::lib::package, sol::lib::os, sol::lib::string);
-  }
-    
+  void startup();
+  void registerLogger();
+  void registerEvent();
+  void registerInputModuleEvents();
   sol::state& getLuaState() 
   { 
       return m_luaState; 

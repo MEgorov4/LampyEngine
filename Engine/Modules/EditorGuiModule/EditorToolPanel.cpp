@@ -10,14 +10,22 @@ void GUIEditorToolPanel::render()
 {
 	if (ImGui::Begin("Tool panel", nullptr, 0))
 	{
-		if (ImGui::Button("PlayButton"))
+		if (!m_ecsModule.getTickEnabled())
 		{
-			m_ecsModule.startSystems();
+			if (ImGui::Button("Start"))
+			{
+				m_ecsModule.startSystems();
+			}
 		}
+
 		ImGui::SameLine();
-		if (ImGui::Button("StopButton"))
+
+		if (m_ecsModule.getTickEnabled())
 		{
-			m_ecsModule.stopSystems();
+			if (ImGui::Button("Stop"))
+			{
+				m_ecsModule.stopSystems();
+			}
 		}
 	}
 	ImGui::End();

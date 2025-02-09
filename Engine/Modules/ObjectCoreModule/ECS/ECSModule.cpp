@@ -4,21 +4,17 @@
 #include "../../ProjectModule/ProjectModule.h"
 #include "ECSLuaScriptsSystem.h"
 
-void ECSModule::startUp()
+void ECSModule::startup()
 {
-	LOG_INFO("ECSModule: startUp");
+	LOG_INFO("ECSModule: startup");
 	m_world = flecs::world();
 
+	m_world.entity("GameStart").add(flecs::Phase);
+	m_world.entity("GameEnd").add(flecs::Phase);
+
 	loadInitialWorldState();
-	LOG_INFO(std::format("Entity bob find state: {}", m_world.lookup("Bob").is_valid()));
 
 	ECSluaScriptsSystem::getInstance().registerSystem(m_world);
-	auto move_sys = m_world.system<Position>()
-		.each([](flecs::iter& it, size_t, Position& p) {
-		p.x += 200 * it.delta_time();
-			});
-	move_sys.add(flecs::OnUpdate);
-
 }
 
 void ECSModule::loadInitialWorldState()
@@ -26,8 +22,9 @@ void ECSModule::loadInitialWorldState()
 	m_world.entity("Bob").set<Position>({ 10, 20, 30 });
 	m_world.entity("Alice").set<Position>({ 10, 20, 30 });
 	m_world.entity("Penis").set<Position>({ 10, 20, 30 });
+	m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 	m_world.entity("Chlen").set<Position>({ 10, 20, 30 });
-	m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/script.lua"});
+	m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 }
 
 void ECSModule::clearWorld()
@@ -37,14 +34,18 @@ void ECSModule::clearWorld()
 
 void ECSModule::startSystems()
 {
-	LOG_INFO("ECSModule: start systems");
+	LOG_INFO("ECSModule: Start systems");
+
+	ECSluaScriptsSystem::getInstance().startSystem(m_world);
 	m_tickEnabled = true;
 }
 
 void ECSModule::stopSystems()
 {
-	LOG_INFO("ECSMOdule: stop systems");
+	LOG_INFO("ECSModule: Stop systems");
 	m_tickEnabled = false;
+
+	ECSluaScriptsSystem::getInstance().stopSystem(m_world);
 	clearWorld();
 	loadInitialWorldState();
 }
@@ -63,6 +64,6 @@ void ECSModule::ecsTick(float deltaTime)
 {
 	if (m_tickEnabled)
 	{
-		m_world.run_pipeline(0, deltaTime);
+		m_world.progress(deltaTime);
 	}
 }

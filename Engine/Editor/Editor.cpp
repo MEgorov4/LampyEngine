@@ -6,7 +6,7 @@ void Editor::initMinor()
 {
 	LOG_INFO("Editor: Init");
 	LOG_INFO("Editor: startup editor modules");
-	ProjectModule::getInstance().startUp();
+	ProjectModule::getInstance().startup();
 }
 
 void Editor::initMajor()
@@ -17,7 +17,7 @@ void Editor::initMajor()
 
 void Editor::startupEditorModules()
 {
-	EditorGUIModule::getInstance().startUp();
+	EditorGUIModule::getInstance().startup();
 }
 
 void Editor::tick(float deltaTime)

@@ -28,7 +28,7 @@ public:
     /// Initializes the rendering module based on the selected graphics API.
     /// </summary>
     /// <param name="window">Pointer to the application window.</param>
-    void startUp(Window* window)
+    void startup(Window* window)
     {
         const RenderConfig& config = RenderConfig::getInstance();
         LOG_INFO(std::format("RenderModule: Startup with - {}", config.getGraphicsAPI() == GraphicsAPI::Vulkan ? "Vulkan" : "OpenGL"));

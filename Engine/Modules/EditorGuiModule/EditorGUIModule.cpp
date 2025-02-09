@@ -4,9 +4,9 @@
 #include "../ImGuiModule/ImGuiModule.h"
 #include "../LoggerModule/Logger.h"
 
-void EditorGUIModule::startUp()
+void EditorGUIModule::startup()
 {
-    ImGuiModule::getInstance().startUp();
+    ImGuiModule::getInstance().startup();
     LOG_INFO("EditorGUIModule: Startup");
     m_toolPanel = std::make_unique<GUIEditorToolPanel>();
     m_mainMenuBar = std::make_unique<GUIMainMenuBar>();

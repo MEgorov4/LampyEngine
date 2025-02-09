@@ -61,7 +61,7 @@ public:
     /// <summary>
     /// Initializes the project module and sets up the project environment.
     /// </summary>
-    void startUp()
+    void startup()
     {
         LOG_INFO("ProjectModule: Startup");
         setupProjectEnvironment();

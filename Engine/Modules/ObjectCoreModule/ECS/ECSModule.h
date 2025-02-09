@@ -20,12 +20,14 @@ public:
 		return ECSModule;
 	}
 
-	void startUp();
+	void startup();
 	
 	void loadInitialWorldState();
 	void clearWorld();
 	void startSystems();
 	void stopSystems();
+	
+	bool getTickEnabled() { return m_tickEnabled; }
 
 	flecs::world& getCurrentWorld();
 

@@ -2,7 +2,7 @@
 #include <memory>
 #include <functional>
 #include "../WindowModule/Window.h"
-
+#include "../EventModule/Event.h"
 /// <summary>
 /// Manages user input events such as keyboard, mouse movement, and scrolling.
 /// Uses function callbacks to handle input from a given window.
@@ -18,13 +18,19 @@ class InputModule
     /// Callback function for handling mouse cursor movement.
     /// </summary>
     std::function<void(double xpos, double ypos)> m_cursorPositionCallback;
-
+    
     /// <summary>
     /// Callback function for handling mouse scrolling events.
     /// </summary>
     std::function<void(double xoffset, double yoffset)> m_scrollCallback;
-
+    
 public:
+
+    Event<int, int, int, int> OnKeyAction;
+
+    Event<double, double> OnScrollAction;
+
+    Event<double, double> OnMousePosAction;
     /// <summary>
     /// Constructs an empty InputModule.
     /// </summary>
@@ -49,7 +55,7 @@ public:
     /// Initializes the input system and registers callbacks for input events.
     /// </summary>
     /// <param name="window">Pointer to the window where input will be captured.</param>
-    void startUp(Window* window)
+    void startup(Window* window)
     {
         LOG_INFO("InputModule: Startup");
 
@@ -58,6 +64,7 @@ public:
             if (instance.m_keyCallback) {
                 instance.m_keyCallback(key, scancode, action, mods);
             }
+            instance.OnKeyAction(key, scancode, action, mods);
             });
 
         window->setCursorPositionCallback([](GLFWwindow* win, double xpos, double ypos) {
@@ -65,6 +72,7 @@ public:
             if (instance.m_cursorPositionCallback) {
                 instance.m_cursorPositionCallback(xpos, ypos);
             }
+            instance.OnMousePosAction(xpos, ypos);
             });
 
         window->setScrollCallback([](GLFWwindow* win, double xoffset, double yoffset) {
@@ -72,6 +80,7 @@ public:
             if (instance.m_scrollCallback) {
                 instance.m_scrollCallback(xoffset, yoffset);
             }
+            instance.OnScrollAction(xoffset, yoffset);
             });
     }
 

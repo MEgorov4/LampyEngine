@@ -18,6 +18,6 @@ target_link_libraries(ObjectCoreModule PUBLIC
     flecs::flecs_static
 )
 
-target_link_libraries(ObjectCoreModule PRIVATE
+target_link_libraries(ObjectCoreModule PUBLIC
     LuaScriptModule
 )

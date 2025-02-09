@@ -31,7 +31,7 @@ public:
   /// </summary>
   /// <exception cref="std::runtime_error">Thrown if the audio device or context
   /// cannot be initialized.</exception>
-  void startUp() {
+  void startup() {
     LOG_INFO("AudioModule: Startup");
 
     m_device = alcOpenDevice(nullptr);

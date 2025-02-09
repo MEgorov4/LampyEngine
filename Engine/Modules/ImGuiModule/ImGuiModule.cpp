@@ -10,7 +10,7 @@
 
 #include "../LoggerModule/Logger.h"
 
-void ImGuiModule::startUp()
+void ImGuiModule::startup()
 {
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 }
