@@ -9,28 +9,13 @@
 /// </summary>
 class InputModule
 {
-    /// <summary>
-    /// Callback function for handling keyboard input events.
-    /// </summary>
-    std::function<void(int key, int scancode, int action, int mods)> m_keyCallback;
-
-    /// <summary>
-    /// Callback function for handling mouse cursor movement.
-    /// </summary>
-    std::function<void(double xpos, double ypos)> m_cursorPositionCallback;
-    
-    /// <summary>
-    /// Callback function for handling mouse scrolling events.
-    /// </summary>
-    std::function<void(double xoffset, double yoffset)> m_scrollCallback;
-    
 public:
-
     Event<int, int, int, int> OnKeyAction;
 
     Event<double, double> OnScrollAction;
 
     Event<double, double> OnMousePosAction;
+
     /// <summary>
     /// Constructs an empty InputModule.
     /// </summary>
@@ -61,25 +46,16 @@ public:
 
         window->setKeyCallback([](GLFWwindow* win, int key, int scancode, int action, int mods) {
             auto& instance = getInstance();
-            if (instance.m_keyCallback) {
-                instance.m_keyCallback(key, scancode, action, mods);
-            }
             instance.OnKeyAction(key, scancode, action, mods);
             });
 
         window->setCursorPositionCallback([](GLFWwindow* win, double xpos, double ypos) {
             auto& instance = getInstance();
-            if (instance.m_cursorPositionCallback) {
-                instance.m_cursorPositionCallback(xpos, ypos);
-            }
             instance.OnMousePosAction(xpos, ypos);
             });
 
         window->setScrollCallback([](GLFWwindow* win, double xoffset, double yoffset) {
             auto& instance = getInstance();
-            if (instance.m_scrollCallback) {
-                instance.m_scrollCallback(xoffset, yoffset);
-            }
             instance.OnScrollAction(xoffset, yoffset);
             });
     }
@@ -90,35 +66,5 @@ public:
     void shutDown()
     {
         LOG_INFO("InputModule: Shut down");
-        m_keyCallback = nullptr;
-        m_cursorPositionCallback = nullptr;
-        m_scrollCallback = nullptr;
-    }
-
-    /// <summary>
-    /// Sets a callback function for keyboard input events.
-    /// </summary>
-    /// <param name="callback">Function to be called when a key event occurs.</param>
-    void setKeyCallback(const std::function<void(int key, int scancode, int action, int mods)>& callback)
-    {
-        m_keyCallback = callback;
-    }
-
-    /// <summary>
-    /// Sets a callback function for mouse cursor position events.
-    /// </summary>
-    /// <param name="callback">Function to be called when the mouse moves.</param>
-    void setCursorPositionCallback(const std::function<void(double xpos, double ypos)>& callback)
-    {
-        m_cursorPositionCallback = callback;
-    }
-
-    /// <summary>
-    /// Sets a callback function for mouse scroll events.
-    /// </summary>
-    /// <param name="callback">Function to be called when the mouse wheel is scrolled.</param>
-    void setScrollCallback(const std::function<void(double xoffset, double yoffset)>& callback)
-    {
-        m_scrollCallback = callback;
     }
 };

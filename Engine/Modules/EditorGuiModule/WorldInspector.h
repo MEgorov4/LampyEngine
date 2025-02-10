@@ -12,6 +12,9 @@ public:
 	virtual ~GUIWorldInspector() override = default;
 
 	virtual void render() override;
-	void renderEntityList();
+
+private:
+	void renderEntityTreePopup();
+	void renderEntityTree();
 	void renderSelectedEntityDefaults();
 };

@@ -13,16 +13,17 @@ GUIWorldInspector::GUIWorldInspector() : GUIObject()
 void GUIWorldInspector::render()
 {
 
-	if (ImGui::Begin("WorldInspector", nullptr, 0))
+	if (ImGui::Begin("WorldInspector##", nullptr, 0))
 	{
-		ImGui::BeginChild("WorldTree", ImVec2(0, ImGui::GetWindowHeight() * 0.3f), true);
+		ImGui::BeginChild("WorldTree##", ImVec2(0, ImGui::GetWindowHeight() * 0.3f), true);
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Tree").x) / 2);
-		ImGui::Text("Tree");
+		ImGui::Text("Tree##");
 		ImGui::SetCursorPosX(0);
 		ImGui::Separator();
-		renderEntityList();
+		renderEntityTree();
+		renderEntityTreePopup();
 		ImGui::EndChild();
-		ImGui::BeginChild("ObjectDefaults", ImVec2(0, 0), true);
+		ImGui::BeginChild("ObjectDefaults##", ImVec2(0, 0), true);
 		renderSelectedEntityDefaults();
 		ImGui::EndChild();
 	}
@@ -30,7 +31,35 @@ void GUIWorldInspector::render()
 	ImGui::End();
 }
 
-void GUIWorldInspector::renderEntityList()
+void GUIWorldInspector::renderEntityTreePopup()
+{
+	if (ImGui::BeginPopupContextWindow())
+	{
+		if (ImGui::Button("Add entity##1"))
+		{
+			ImGui::OpenPopup("CreateEntityPopup##2");
+		}
+		if (ImGui::BeginPopup("CreateEntityPopup##2"))
+		{
+			static char buffer[128] = "";
+			ImGui::InputText("##EntityName", buffer, sizeof(buffer));
+
+			ImGui::SameLine();
+			std::string strBuffer = buffer;
+			if (ImGui::Button("CreateEntity##5"))
+			{
+				if (strBuffer.size() > 0)
+				{
+					m_world.entity(buffer).set<Position>({0, 0, 0});
+				}
+			}
+			ImGui::EndPopup();
+		}
+		ImGui::EndPopup();
+	}
+}
+
+void GUIWorldInspector::renderEntityTree()
 {
 	auto query = m_world.query<Position>();
 	query.each([&](flecs::entity e, Position pos)
@@ -67,11 +96,22 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 			ImGui::Separator();
 			ImGui::Text("Script");
 			ImGui::SameLine();
-
-			if (ImGui::Selectable(script->script_path.c_str()))
+	
+			ImGui::Text(script->script_path.c_str());
+			if (ImGui::BeginDragDropTarget())
 			{
-				LOG_INFO("GUIWorldInspector: Script picked");
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
+				{
+					std::string droppedPath = static_cast<const char*>(payload->Data);
+					if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".lua")
+					{
+						m_selectedEntity.set<Script>({droppedPath});
+					}
+					LOG_INFO(std::format("Dropped file: {}", droppedPath));
+				}
+				ImGui::EndDragDropTarget();
 			}
+
 			ImGui::Separator();
 		}
 	

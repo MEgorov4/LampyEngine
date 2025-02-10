@@ -27,6 +27,12 @@ void GUIEditorToolPanel::render()
 				m_ecsModule.stopSystems();
 			}
 		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Save world"))
+		{
+		}
 	}
 	ImGui::End();
 }
