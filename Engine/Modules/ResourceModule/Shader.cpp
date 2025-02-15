@@ -1,21 +1,22 @@
 #include "Shader.h"
 
+#include <fstream>
 
-RShader::RShader(const std::string& vertPath, const std::string& fragPath) : m_vertPath(vertPath), m_fragPath(fragPath)
-{
-}
 
-std::string RShader::getShaderHash()
+RShader::RShader(const std::string& path)
 {
-	return m_vertPath + '|' + m_fragPath;
-}
+	std::ifstream file(path, std::ios::ate | std::ios::binary);
 
-const std::string& RShader::getVertPath()
-{
-	return m_vertPath;
-}
+	if (!file.is_open())
+	{
+		throw std::runtime_error("Failed to open file - " + path + std::string("!"));
+	}
 
-const std::string& RShader::getFragPath()
-{
-	return m_fragPath;
+	shaderInfo.fileSize = (size_t)file.tellg();
+	shaderInfo.buffer = std::vector<char>(shaderInfo.fileSize);
+
+	file.seekg(0);
+	file.read(shaderInfo.buffer.data(), shaderInfo.fileSize);
+
+	file.close();
 }

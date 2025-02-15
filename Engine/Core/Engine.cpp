@@ -11,6 +11,8 @@
 #include "../Modules/ObjectCoreModule/ECS/ECSModule.h"
 #include "../Modules/LoggerModule/Logger.h"
 #include "../Modules/LuaScriptModule/LuaScriptModule.h"
+#include "../Modules/ResourceModule/ResourceManager.h"
+// #include "../Modules/ResourceModule/Shader.h"
 
 Engine::Engine(){}
 
@@ -45,6 +47,15 @@ void Engine::startupModules()
 	AudioModule::getInstance().startup();
 	ECSModule::getInstance().startup();
 	LuaScriptModule::getInstance().startup();
+
+	std::shared_ptr<RShader> shader = ResourceManager::load<RShader>("D:/B_Projects/LampyEngine/Engine/Shaders/vert.spv");
+	std::shared_ptr<RShader> shader2 = ResourceManager::load<RShader>("D:/B_Projects/LampyEngine/Engine/Shaders/vert.spv");
+	if (shader == shader2)
+	{
+		std::cout << "RIGHT" << std::endl;
+	}
+	std::cout << shader.use_count() << std::endl;
+	ResourceManager::instance().clearAllCache();
 }
 
 void Engine::startupEngineContextObject()
