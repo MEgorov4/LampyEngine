@@ -140,6 +140,7 @@ public:
 		{
 			return registry[componentType]();
 		}
+		return nullptr;
 	}
 private:
 	std::unordered_map<std::string, RendererCreator> registry;
