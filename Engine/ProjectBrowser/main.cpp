@@ -48,6 +48,7 @@ void onFileSelect(Fl_Widget*, void*) {
             sendDataOnOutStream(jsonData);
             exit(0); 
         }
+        exit(1);
     }
 }
 
@@ -96,8 +97,9 @@ void onFolderSelect(Fl_Widget*, void*) {
             file << jsonData;
             sendDataOnOutStream(jsonData);
             file.close();
+            exit(0);
         }
-        exit(0);
+        exit(1);
     }
 }
 
@@ -112,7 +114,7 @@ void onExit(Fl_Widget*, void*) {
         nlohmann::json jsonData;
         jsonData["result"] = "exit";
         sendDataOnOutStream(jsonData);
-        exit(0);
+        exit(1);
     }
 }
 
@@ -125,7 +127,6 @@ int main() {
         int xWidth = 300;
         int yWidth = 400;
         Fl_Window* window = new Fl_Window(xWidth, yWidth, "Project Browser");
-
         Fl_Button* file_button = new Fl_Button(0, 0, xWidth, yWidth / 3, "Select project file");
         file_button->callback(onFileSelect);
 
@@ -137,6 +138,8 @@ int main() {
 
         window->end();
         window->show();
+
+        window->callback(onExit);
     }
     catch (const std::exception& e)
     {

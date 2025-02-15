@@ -22,14 +22,12 @@ void ECSModule::startup()
 
 void ECSModule::loadInitialWorldState()
 {
-<<<<<<< Updated upstream
 	m_world.entity("Bob").set<Position>({ 10, 20, 30 });
 	m_world.entity("Alice").set<Position>({ 10, 20, 30 });
 	m_world.entity("Penis").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 	m_world.entity("Chlen").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
-=======
 	if (m_currentWorldFile == "default")
 	{
 		fillDefaultWorld();
@@ -96,7 +94,6 @@ void ECSModule::setCurrentWorldPath(const std::string& path)
 bool ECSModule::isWorldSetted()
 {
 	return m_currentWorldFile != "default";
->>>>>>> Stashed changes
 }
 
 void ECSModule::clearWorld()

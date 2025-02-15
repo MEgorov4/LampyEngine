@@ -39,6 +39,11 @@ void ProjectModule::setupProjectEnvironment()
 	}
 	projectBrowserProcess.wait();
 
+	if (projectBrowserProcess.exit_code() != 0)
+	{
+		std::exit(0);
+	}
+
 }
 void ProjectModule::saveProjectConfig()
 {
