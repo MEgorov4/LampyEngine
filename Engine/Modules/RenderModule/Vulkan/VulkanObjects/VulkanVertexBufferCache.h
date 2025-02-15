@@ -26,26 +26,9 @@ class VulkanVertexBufferCache
     std::string hashVertexData(const std::vector<Vertex>& vertexData) const;
 
 public:
-    /// <summary>
-    /// Constructs an empty Vulkan vertex buffer cache.
-    /// </summary>
     VulkanVertexBufferCache();
-
-    /// <summary>
-    /// Deleted copy constructor to prevent copying of the cache.
-    /// </summary>
     VulkanVertexBufferCache(const VulkanVertexBufferCache&) = delete;
-
-    /// <summary>
-    /// Destroys the cache and clears all stored vertex buffers.
-    /// </summary>
     ~VulkanVertexBufferCache();
-
-    /// <summary>
-    /// Deleted assignment operator to prevent copying.
-    /// </summary>
-    /// <param name="rhs">The right-hand side object to assign from.</param>
-    /// <returns>Reference to this object.</returns>
     VulkanVertexBufferCache& operator=(const VulkanVertexBufferCache& rhs) = delete;
 
     /// <summary>

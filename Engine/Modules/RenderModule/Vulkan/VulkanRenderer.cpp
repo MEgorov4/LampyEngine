@@ -401,7 +401,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 	vkCmdEndRenderPass(commandBuffer);
 
 	m_offscreenRenderer->beginRenderPass(commandBuffer);
-
+	
 	createSceneRenderCommands(commandBuffer);
 
 	m_offscreenRenderer->endRenderPass(commandBuffer);

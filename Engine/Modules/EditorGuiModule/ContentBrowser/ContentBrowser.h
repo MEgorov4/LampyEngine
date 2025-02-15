@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "../ImGuiModule/GUIObject.h"
-
+#include <filesystem>
+#include "../../ImGuiModule/GUIObject.h"
 class GUIFolderActionPopup;
 
 class GUIContentBrowser : public GUIObject
@@ -14,6 +14,8 @@ class GUIContentBrowser : public GUIObject
 
     void updateDirectoryContents();
     std::string normilizePath(const std::string& path);
+
+    void renderFolderTree(const std::filesystem::path& directory);
 
 public:
     GUIContentBrowser();

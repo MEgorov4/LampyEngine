@@ -1,6 +1,6 @@
 #pragma once
 #include <flecs.h>
-#include "../ImGuiModule/GUIObject.h"
+#include "../../ImGuiModule/GUIObject.h"
 
 
 class GUIWorldInspector : public GUIObject
@@ -18,3 +18,5 @@ private:
 	void renderEntityTree();
 	void renderSelectedEntityDefaults();
 };
+
+

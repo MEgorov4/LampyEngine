@@ -4,9 +4,9 @@
 #include "EditorToolPanel.h"
 #include "MainMenuBar.h"
 #include "OutputLog.h"
-#include "ContentBrowser.h"
+#include "ContentBrowser/ContentBrowser.h"
 #include "EditorViewport.h"
-#include "WorldInspector.h"
+#include "WorldInspector/WorldInspector.h"
 /// <summary>
 /// Manages the graphical user interface (GUI) of the editor, including tool panels, menu bars, logs, and content browsers.
 /// Implements a singleton pattern to ensure a single instance.

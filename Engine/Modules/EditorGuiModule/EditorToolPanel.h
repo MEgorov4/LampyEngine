@@ -10,4 +10,6 @@ public:
 	virtual ~GUIEditorToolPanel() override = default;
 
 	virtual void render() override;
+private:
+	void renderSaveWorldPopup();
 };

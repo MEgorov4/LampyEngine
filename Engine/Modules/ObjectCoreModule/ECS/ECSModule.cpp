@@ -1,35 +1,107 @@
 #include "ECSModule.h"	
 #include <format>
+#include <fstream>
 #include "../../LoggerModule/Logger.h"
 #include "../../ProjectModule/ProjectModule.h"
 #include "ECSLuaScriptsSystem.h"
-
 void ECSModule::startup()
 {
 	LOG_INFO("ECSModule: startup");
 	m_world = flecs::world();
+	m_world.import<flecs::stats>();
 
-	m_world.entity("GameStart").add(flecs::Phase);
-	m_world.entity("GameEnd").add(flecs::Phase);
+	ProjectConfig& config = ProjectModule::getInstance().getProjectConfig();
+	m_currentWorldFile = config.getEditorStartWorld();
 
 	loadInitialWorldState();
-
 	ECSluaScriptsSystem::getInstance().registerSystem(m_world);
+
+	m_world.component<Script>();
+
 }
 
 void ECSModule::loadInitialWorldState()
 {
+<<<<<<< Updated upstream
 	m_world.entity("Bob").set<Position>({ 10, 20, 30 });
 	m_world.entity("Alice").set<Position>({ 10, 20, 30 });
 	m_world.entity("Penis").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 	m_world.entity("Chlen").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
+=======
+	if (m_currentWorldFile == "default")
+	{
+		fillDefaultWorld();
+	}
+	else
+	{
+		loadWorldFromFile(m_currentWorldFile);
+	}
+}
+
+void ECSModule::fillDefaultWorld()
+{
+	flecs::entity entity = m_world.entity("Hero");
+	m_world.entity("Hero").set<Position>({ 0, 0, 0 }).set<Camera>({90, 0.7, 0, 100});
+	m_world.entity("Hero").set<Script>({ ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" }); 
+	
+
+	const char* json = entity.to_json();
+
+	if (json)
+	{
+		LOG_INFO(json);
+	}
+}
+
+void ECSModule::saveCurrentWorld()
+{
+	std::string strJson = m_world.to_json().c_str();
+
+	std::ofstream file(m_currentWorldFile);
+	if (file.is_open())
+	{
+		file << strJson;
+		file.close();
+	}
+}
+
+void ECSModule::loadWorldFromFile(const std::string& path)
+{
+	m_currentWorldFile = path;
+
+	std::ifstream file(path);
+	std::string strData;
+	if (file.is_open())
+	{
+		std::string line;
+		while (std::getline(file, line))
+		{
+			strData += line;
+		}
+		file.close();
+	}
+	m_world.from_json(strData.c_str());
+}
+
+void ECSModule::setCurrentWorldPath(const std::string& path)
+{
+	m_currentWorldFile = path;
+	clearWorld();
+	loadWorldFromFile(m_currentWorldFile);
+}
+
+
+bool ECSModule::isWorldSetted()
+{
+	return m_currentWorldFile != "default";
+>>>>>>> Stashed changes
 }
 
 void ECSModule::clearWorld()
 {
-	m_world.each([](flecs::entity& e) {e.destruct();});
+	m_world.each([](flecs::entity& e) {e.destruct(); });
 }
 
 void ECSModule::startSystems()
@@ -50,9 +122,9 @@ void ECSModule::stopSystems()
 	loadInitialWorldState();
 }
 
-flecs::world& ECSModule::getCurrentWorld() 
-{ 
-	return m_world; 
+flecs::world& ECSModule::getCurrentWorld()
+{
+	return m_world;
 }
 
 void ECSModule::shutDown()

@@ -2,7 +2,9 @@
 #include <imgui.h>
 #include <filesystem>
 #include <fstream>
-#include "../ProjectModule/ProjectModule.h"
+#include "../../ProjectModule/ProjectModule.h"
+#include "../../ObjectCoreModule/ECS/ECSModule.h"
+#include "FileActionFactory.h"
 
 namespace fs = std::filesystem;
 
@@ -11,6 +13,9 @@ GUIContentBrowser::GUIContentBrowser()
 	, m_rootPath(ProjectModule::getInstance().getProjectConfig().getResourcesPath())
 	, m_currentPath(m_rootPath)
 {
+	auto& factory = FileActionFactoryRegistry::getInstance();
+	factory.registerFactory(".lworld", [](){return std::make_unique<WorldFileActionFactory>(); });
+
 	updateDirectoryContents();
 }
 
@@ -33,55 +38,35 @@ std::string GUIContentBrowser::normilizePath(const std::string& path)
 	return std::filesystem::path(path).make_preferred().string();
 }
 
+
 void GUIContentBrowser::render()
 {
-	if (ImGui::Begin("Content Browser", nullptr, 0))
+	if (ImGui::Begin("Content Browser"))
 	{
 		ImGui::BeginChild("FoldersPane", ImVec2(ImGui::GetWindowWidth() * 0.3f, 0), true);
-		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folders:").x) / 2);
 		ImGui::Text("Folders");
-		ImGui::SetCursorPosX(0);
 		ImGui::Separator();
 
-		for (size_t i = 0; i < m_folders.size(); ++i)
-		{
-			std::string label = m_folders[i] + "##folder" + std::to_string(i);
-			if (ImGui::Selectable(label.c_str()))
-			{
-				m_currentPath = (fs::path(m_currentPath) / m_folders[i]).string();
-				updateDirectoryContents();
-			}
-		}
+		renderFolderTree(m_rootPath);
 
-		if (m_currentPath != m_rootPath)
-		{
-			if (ImGui::Button("..##up"))
-			{
-				m_currentPath = fs::path(m_currentPath).parent_path().string();
-				updateDirectoryContents();
-			}
-		}
-		renderFoldersSectionPopup();
 		ImGui::EndChild();
 
 		ImGui::SameLine();
 
 		ImGui::BeginChild("FilesPane", ImVec2(0, 0), true);
-		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("Files").x) / 2);
 		ImGui::Text("Files");
-		ImGui::SetCursorPosX(0);
 		ImGui::Separator();
 
 		for (size_t i = 0; i < m_files.size(); ++i)
 		{
-
-			const std::string& fullFilePath = normilizePath(m_currentPath + "\\" + m_files[i]).c_str();
+			std::string fullFilePath = normilizePath(m_currentPath + "\\" + m_files[i]);
 			std::string label = m_files[i] + "##file" + std::to_string(i);
 			if (ImGui::Selectable(label.c_str()))
 			{
 				ImGui::OpenPopup(("ItemAction##" + fullFilePath).c_str());
 			}
 			renderFilePopup(fullFilePath);
+
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 			{
 				ImGui::SetDragDropPayload("FilePath", fullFilePath.c_str(), fullFilePath.size() + 1);
@@ -134,10 +119,18 @@ void GUIContentBrowser::renderFilePopup(const std::string& filePath)
 	{
 		ImGui::SetNextItemWidth(ImGui::GetWindowSize().x);
 
-		if (ImGui::Button(std::string("Delete##" + filePath).c_str()))
+		auto& registry = FileActionFactoryRegistry::getInstance();
+
+		auto factory = registry.getFactory(filePath);
+		auto actions = factory->createActions();
+		for (auto& action : actions)
 		{
-			ImGui::OpenPopup("ConfirmDelete");
+			if (ImGui::Button((action->getName() + "##" + filePath).c_str()))
+			{
+				action->execute(filePath);
+			}
 		}
+
 		ImGuiIO& io = ImGui::GetIO();
 		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x / 2, io.DisplaySize.y / 2)
 			, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -167,34 +160,6 @@ void GUIContentBrowser::renderFilePopup(const std::string& filePath)
 
 		ImGui::SetNextItemWidth(ImGui::GetWindowSize().x);
 
-		if (ImGui::Button(std::string("Copy path##" + filePath).c_str()))
-		{
-
-		}
-
-		ImGui::SetNextItemWidth(ImGui::GetWindowSize().x);
-
-		if (ImGui::Button(std::string("Dublicate##" + filePath).c_str()))
-		{
-
-		}
-
-		if (filePath.size() > 7 && filePath.substr(filePath.size() - 7) == ".lworld")
-		{
-			ImGui::SetNextItemWidth(ImGui::GetWindowSize().x);
-
-			if (ImGui::Button(std::string("Set as default editor world##" + filePath).c_str()))
-			{
-
-			}
-
-			ImGui::SetNextItemWidth(ImGui::GetWindowSize().x);
-
-			if (ImGui::Button(std::string("Set as default game world##" + filePath).c_str()))
-			{
-
-			}
-		}
 		ImGui::EndPopup();
 	}
 }
@@ -231,6 +196,48 @@ void GUIContentBrowser::renderFolderPopup()
 			ImGui::EndPopup();
 		}
 		ImGui::EndPopup();
+	}
+}
+
+void GUIContentBrowser::renderFolderTree(const fs::path& directory)
+{
+	for (const auto& entry : fs::directory_iterator(directory))
+	{
+		if (entry.is_directory())
+		{
+			fs::path path = entry.path();
+			std::string folderName = path.filename().string();
+
+			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+			if (m_currentPath == path.string())
+				flags |= ImGuiTreeNodeFlags_Selected;
+
+			bool hasSubDirs = false;
+			for (const auto& subEntry : fs::directory_iterator(path))
+			{
+				if (subEntry.is_directory())
+				{
+					hasSubDirs = true;
+					break;
+				}
+			}
+			if (!hasSubDirs)
+				flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+			std::string nodeId = folderName + "##" + path.string();
+
+			bool nodeOpen = ImGui::TreeNodeEx(nodeId.c_str(), flags, folderName.c_str());
+			if (ImGui::IsItemClicked())
+			{
+				m_currentPath = path.string();
+				updateDirectoryContents();
+			}
+			if (nodeOpen && hasSubDirs)
+			{
+				renderFolderTree(path);
+				ImGui::TreePop();
+			}
+		}
 	}
 }
 

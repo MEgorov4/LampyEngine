@@ -38,6 +38,8 @@ public:
 
     std::string getEditorStartWorld() const { return editorStartWorld; }
     std::string getGameStartWorld() const { return gameStartWorld; }
+
+    void setEditorStartWorld(const std::string& path) { editorStartWorld = path; }
 };
 
 /// <summary>

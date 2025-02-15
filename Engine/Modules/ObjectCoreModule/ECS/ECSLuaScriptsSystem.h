@@ -17,10 +17,10 @@ struct Script {
 		}
 	}
 
-	void start(const std::string& entityName) {
+	void start(const flecs::entity& entity) {
 		initialize();  
 		if (script_table) {
-			script_table.value()["entityName"] = entityName;
+			script_table.value()["entity"] = entity;
 			sol::optional<sol::function> maybe_start = script_table.value()["Start"];
 			if (maybe_start) {
 				sol::function start_func = maybe_start.value();
@@ -78,7 +78,7 @@ public:
 		auto query = world.query<Script>();
 		query.each([](const flecs::entity& entity, Script& script) 
 		{
-				script.start(entity.name().c_str());
+				script.start(entity);
 		});
 	}
 
