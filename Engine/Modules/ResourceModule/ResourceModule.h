@@ -23,17 +23,18 @@ public:
 
 	std::unique_ptr<RShader> createAndRegisterShader(const std::string& vertPath, const std::string& fragPath)
 	{
-		std::unique_ptr<RShader> shader = std::make_unique<RShader>(vertPath, fragPath);
-		assert(shader);
+		// std::unique_ptr<RShader> shader = std::make_unique<RShader>(vertPath, fragPath);
+		// assert(shader);
 
-		RenderModule::getInstance().registerShader(vertPath, fragPath);
+		// RenderModule::getInstance().registerShader(vertPath, fragPath);
 
-		return shader;
+		// return shader;
+		return nullptr;
 	}
 
 	void removeShader(std::unique_ptr<RShader> shader)
 	{
-		RenderModule::getInstance().removeShader(shader->getVertPath(), shader->getFragPath());
+		// RenderModule::getInstance().removeShader(shader->getVertPath(), shader->getFragPath());
 	} 
 	
 	std::unique_ptr<RMesh> createAndRegisterMesh(const std::vector<MeshVertex>& vertices)

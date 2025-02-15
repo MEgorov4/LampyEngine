@@ -22,9 +22,9 @@ void ECSModule::loadInitialWorldState()
 	m_world.entity("Bob").set<Position>({ 10, 20, 30 });
 	m_world.entity("Alice").set<Position>({ 10, 20, 30 });
 	m_world.entity("Penis").set<Position>({ 10, 20, 30 });
-	m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
+	// m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 	m_world.entity("Chlen").set<Position>({ 10, 20, 30 });
-	m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
+	// m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 }
 
 void ECSModule::clearWorld()

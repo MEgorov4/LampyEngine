@@ -1,15 +1,25 @@
 #pragma once
+
+#include "BaseResource.h"
 #include <memory>
 #include <string>
+#include <vector>
 
-class RShader
+struct ShaderInfo
 {
-	std::string m_vertPath;
-	std::string m_fragPath;
+	std::vector<char> buffer;
+	size_t fileSize;
+};
+
+class RShader : public BaseResource
+{
 public:
-	RShader(const std::string& vertPath, const std::string& fragPath);
-	
-	std::string getShaderHash();
-	const std::string& getVertPath();
-	const std::string& getFragPath();
+	RShader(const std::string& path);
+
+	const ShaderInfo& getShaderInfo() const
+	{
+		return shaderInfo;
+	}
+private:
+	ShaderInfo shaderInfo;
 };
