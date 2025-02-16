@@ -1,5 +1,6 @@
 add_subdirectory(EventModule)
 add_subdirectory(LoggerModule)
+add_subdirectory(FilesystemModule)
 
 add_subdirectory(ResourceModule)
 add_subdirectory(WindowModule)

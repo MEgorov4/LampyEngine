@@ -48,8 +48,8 @@ void onFileSelect(Fl_Widget*, void*) {
             sendDataOnOutStream(jsonData);
             exit(0); 
         }
-        exit(1);
     }
+    exit(1);
 }
 
 /// <summary>
@@ -99,8 +99,8 @@ void onFolderSelect(Fl_Widget*, void*) {
             file.close();
             exit(0);
         }
-        exit(1);
     }
+    exit(1);
 }
 
 /// <summary>

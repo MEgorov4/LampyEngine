@@ -131,35 +131,6 @@ void GUIContentBrowser::renderFilePopup(const std::string& filePath)
 			}
 		}
 
-		ImGuiIO& io = ImGui::GetIO();
-		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x / 2, io.DisplaySize.y / 2)
-			, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-		ImGuiWindowFlags flags = ImGuiWindowFlags_NoResize 
-					| ImGuiWindowFlags_NoCollapse
-					| ImGuiWindowFlags_NoMove
-					| ImGuiWindowFlags_NoTitleBar;
-		if (ImGui::BeginPopupModal("ConfirmDelete", 0, flags))
-		{
-			ImGui::Text("Are you shure?");
-			if (ImGui::Button("Yes"))
-			{
-				fs::remove(filePath);
-				updateDirectoryContents();
-
-				ImGui::CloseCurrentPopup();
-			}
-
-			ImGui::SameLine();
-
-			if (ImGui::Button("No"))
-			{
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::EndPopup();
-		}
-
-		ImGui::SetNextItemWidth(ImGui::GetWindowSize().x);
-
 		ImGui::EndPopup();
 	}
 }

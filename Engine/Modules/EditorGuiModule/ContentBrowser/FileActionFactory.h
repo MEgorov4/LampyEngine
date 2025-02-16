@@ -5,6 +5,7 @@
 #include <string>
 #include "../../ObjectCoreModule/ECS/ECSModule.h"
 #include <functional>
+#include "../../FilesystemModule/FilesystemModule.h"
 
 class IFileAction
 {
@@ -18,7 +19,7 @@ class DeleteFileAction : public IFileAction
 {
 public:
 	void execute(const std::string& filePath) override {
-		ImGui::OpenPopup("ConfirmDelete");
+		FilesystemModule::getInstance().deleteFile(filePath);
 	}
 	std::string getName() const override { return "Delete"; }
 };
@@ -28,7 +29,7 @@ class CopyPathAction : public IFileAction
 public:
 	void execute(const std::string& filePath) override 
 	{
-
+		FilesystemModule::getInstance().copyRelativePath(filePath);
 	}
 
 	std::string getName() const override { return "Copy path"; }
@@ -39,7 +40,7 @@ class CopyAbsolutePathAction : public IFileAction
 public:
 	void execute(const std::string& filePath) override 
 	{
-
+		FilesystemModule::getInstance().copyAbsolutePath(filePath);
 	}
 	std::string getName() const override { return "Copy absolute path"; }
 };
@@ -57,7 +58,7 @@ public:
 class DuplicateFileAction : public IFileAction {
 public:
 	void execute(const std::string& filePath) override {
-
+		FilesystemModule::getInstance().duplicateFileInDirectory(filePath);
 	}
 
 	std::string getName() const override { return "Duplicate"; }
