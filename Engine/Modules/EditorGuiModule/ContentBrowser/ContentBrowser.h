@@ -17,6 +17,8 @@ class GUIContentBrowser : public GUIObject
 
     void renderFolderTree(const std::filesystem::path& directory);
     void renderInFolderFiles();
+
+    void updateContent();
 public:
     GUIContentBrowser();
     ~GUIContentBrowser() override = default;

@@ -1,6 +1,8 @@
 #include "VulkanRenderer.h"
 #include <stdexcept>
 
+#include <imgui.h>
+
 #include "../../WindowModule/Window.h"
 
 #include "VulkanObjects/VulkanInstance.h"
@@ -21,8 +23,7 @@
 #include "../../WindowModule/WindowModule.h"
 #include "../../ImGuiModule/GLFWBackends/imgui_impl_glfw.h"
 #include "../../ImGuiModule/VulkanBackends/imgui_impl_vulkan.h"
-#include "imgui.h"
-
+#include "../../ObjectCoreModule/ECS/ECSModule.h"
 VulkanRenderer::VulkanRenderer(Window* window) : m_window(window)
 {
 	initVulkan();
@@ -423,6 +424,12 @@ void VulkanRenderer::createSceneRenderCommands(VkCommandBuffer commandBuffer)
 {
 	if (m_rendererScene)
 	{
+		/*
+		auto& world = ECSModule::getInstance().getCurrentWorld();
+
+		auto query = world.query<Mesh, Position, Rotation, Scale>();
+
+		query.each()*/
 	}
 }
 

@@ -44,6 +44,7 @@ struct Camera
 	float aspect;
 	float nearClip;
 	float farClip;
+	bool isViewportCamera;
 };
 
 class ECSModule

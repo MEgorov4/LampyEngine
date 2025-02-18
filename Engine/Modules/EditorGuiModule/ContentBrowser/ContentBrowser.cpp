@@ -19,6 +19,14 @@ GUIContentBrowser::GUIContentBrowser()
 
 }
 
+void GUIContentBrowser::updateContent()
+{
+	m_files.clear();
+	m_folders.clear();
+
+	m_folders = dirIter.getCurrentDirContents({ DirContentType::FOLDERS });
+	m_files = dirIter.getCurrentDirContents({DirContentType::FILES});
+}
 
 void GUIContentBrowser::render()
 {
@@ -29,6 +37,9 @@ void GUIContentBrowser::render()
 		ImGui::Text("Folders");
 		ImGui::SetWindowFontScale(1);
 		ImGui::Separator();
+
+		if (dirIter.isCurrentDirChanged())
+			updateContent();
 
 		renderFolderTree(m_rootPath);
 
@@ -52,9 +63,6 @@ void GUIContentBrowser::render()
 
 void GUIContentBrowser::renderInFolderFiles()
 {
-	if (dirIter.isCurrentDirChanged())
-		m_files = dirIter.getCurrentDirContents({ DirContentType::FILES });
-
 	for (size_t i = 0; i < m_files.size(); ++i)
 	{
 		if (ImGui::Selectable(m_files[i].c_str()))
@@ -75,6 +83,7 @@ void GUIContentBrowser::renderInFolderFiles()
 	}
 	renderFolderPopup();
 }
+
 
 void GUIContentBrowser::renderFilePopup(const std::string& filePath)
 {
@@ -164,8 +173,6 @@ void GUIContentBrowser::renderFolderPopup()
 
 void GUIContentBrowser::renderFolderTree(const fs::path& directory)
 {
-	if (dirIter.isCurrentDirChanged())
-		m_folders = dirIter.getCurrentDirContents({ DirContentType::FOLDERS });
 
 	for (auto& dir : m_folders)
 	{

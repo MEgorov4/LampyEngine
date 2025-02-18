@@ -28,29 +28,29 @@ void ECSModule::loadInitialWorldState()
 	// m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 	m_world.entity("Chlen").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
-	if (m_currentWorldFile == "default")
-	{
-		fillDefaultWorld();
-	}
-	else
-	{
-		loadWorldFromFile(m_currentWorldFile);
-	}
+	flecs::entity entity = m_world.entity("Hero");
+	m_world.entity("Hero").set<Position>({ 0, 0, 0 }).set<Camera>({90, 0.7, 0, 100, true});
+	m_world.entity("Hero").set<Script>({ ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" }); 
+	
+
+	//if (m_currentWorldFile == "default")
+	//{
+	//	fillDefaultWorld();
+	//}
+	//else
+	//{
+	//	loadWorldFromFile(m_currentWorldFile);
+	//}
 }
 
 void ECSModule::fillDefaultWorld()
 {
-	flecs::entity entity = m_world.entity("Hero");
-	m_world.entity("Hero").set<Position>({ 0, 0, 0 }).set<Camera>({90, 0.7, 0, 100});
-	m_world.entity("Hero").set<Script>({ ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" }); 
-	
+	//const char* json = entity.to_json();
 
-	const char* json = entity.to_json();
-
-	if (json)
-	{
-		LOG_INFO(json);
-	}
+	//if (json)
+	//{
+	//	LOG_INFO(json);
+	//}
 }
 
 void ECSModule::saveCurrentWorld()
