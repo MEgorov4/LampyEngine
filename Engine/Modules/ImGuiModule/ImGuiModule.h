@@ -1,6 +1,7 @@
 #pragma once 
 #include <vector>
 
+struct ImVec4;
 class GUIObject;
 /// <summary>
 /// Manages the ImGui user interface system, handling GUI object registration and rendering.
@@ -21,17 +22,19 @@ public:
     /// </summary>
     ~ImGuiModule() = default;
 
+    void startup();
+    void shutDown();
     /// <summary>
     /// Retrieves the singleton instance of the ImGuiModule.
     /// </summary>
     /// <returns>Reference to the singleton ImGuiModule instance.</returns>
-    void startup();
-    void shutDown();
     static ImGuiModule& getInstance()
     {
         static ImGuiModule ImGuiModule;
         return ImGuiModule;
     }
+
+    void setImGuiStyle();
 
     /// <summary>
     /// Renders the ImGui user interface.
@@ -50,4 +53,6 @@ public:
     /// </summary>
     /// <param name="id">The unique ID of the GUI object to remove.</param>
     void removeObject(uint32_t id);
+public:
+    ImVec4 ConvertToLinear(ImVec4 color);
 };

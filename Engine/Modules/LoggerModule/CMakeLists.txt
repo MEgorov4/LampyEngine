@@ -5,5 +5,5 @@ file(GLOB_RECURSE LOGGER_MODULE_SOURCE
 format_source_group(${LOGGER_MODULE_SOURCE})
 add_library(LoggerModule STATIC ${LOGGER_MODULE_SOURCE})
 
-target_link_libraries(LoggerModule PRIVATE EventModule)
+target_link_libraries(LoggerModule PRIVATE EventModule ProjectModule FilesystemModule)
 

@@ -9,6 +9,7 @@
 struct ProjectConfig
 {
 private:
+    std::string openTime; ///< Time when project was opened
     std::string projectPath; ///< Path to the project directory.
     std::string projectName; ///< Name of the project.
 
@@ -27,6 +28,8 @@ public:
     /// </summary>
     /// <param name="data">String containing JSON-formatted project configuration data.</param>
     ProjectConfig(std::string data);
+
+    std::string getOpenTime() const { return openTime; }
 
     std::string getProjectPath() const { return projectPath; }
     std::string getProjectName() const { return projectName; }
@@ -95,3 +98,5 @@ private:
     /// </summary>
     void saveProjectConfig();
 };
+
+inline ProjectModule& PM = ProjectModule::getInstance();

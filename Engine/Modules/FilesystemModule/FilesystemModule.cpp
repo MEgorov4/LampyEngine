@@ -3,6 +3,12 @@
 #include <fstream>
 #include <clip.h>
 
+#ifdef _WIN32
+#include <windows.h>
+//#include <fileapi.h>
+#else
+#endif
+
 #include "../LoggerModule/Logger.h"
 #include "../ProjectModule/ProjectModule.h"
 
@@ -162,9 +168,86 @@ size_t FilesystemModule::getFileSize(constr filePath)
 	return fs::file_size(filePath);
 }
 
+std::vector<std::string> FilesystemModule::getDirectoryContents(constr dirPath, ContentSearchFilter filter = ContentSearchFilter())
+{
+	std::vector<std::string> contents;
+
+	if (!isPathExists(dirPath) || !isPathExists(dirPath))
+	{
+		LOG_ERROR(std::format("FilesystemModule:getDirectoryContents: invalid directory path: {}", dirPath));
+		return contents;
+	}
+
+	for (const auto& entry : fs::directory_iterator(dirPath))
+	{
+		fs::path entryPath = entry.path();
+		std::string entryName = entryPath.filename().string();
+
+		if (filter.contentType == DirContentType::FILES && !entry.is_regular_file()) continue;
+		if (filter.contentType == DirContentType::FOLDERS && !entry.is_directory()) continue;
+
+		if (filter.fileExtensions && entry.is_regular_file())
+		{
+			std::string extension = entryPath.extension().string();
+			bool match = false;
+
+			for (const std::string& ext : filter.fileExtensions.value())
+			{
+				if (extension == ext)
+				{
+					match = true;
+					break;
+				}
+			}
+
+			if (!match) continue;  
+		}
+
+		if (filter.filter && entryName.find(filter.filter.value()) == std::string::npos)
+		{
+			continue; 
+		}
+
+		contents.push_back(entryPath.filename().string());
+	}
+
+	return contents;
+}
+
+uint64_t FilesystemModule::getFolderModificationTime(constr folderPath)
+{
+#ifdef _WIN32
+	WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+	if (GetFileAttributesExA(folderPath.c_str(), GetFileExInfoStandard, &fileInfo))
+	{
+		return	(static_cast<uint64_t>(fileInfo.ftLastWriteTime.dwHighDateTime) << 32) |
+			fileInfo.ftLastWriteTime.dwLowDateTime;
+	}
+	return 0;
+#else
+	struct stat attr;
+	if (stat(folderPath.c_str(), &attr) == 0)
+	{
+		return attr.st_mtime;
+	}
+	return 0;
+#endif
+
+}
+
 bool FilesystemModule::isPathExists(constr path)
 {
 	return fs::exists(path);
+}
+
+bool FilesystemModule::isFile(constr path)
+{
+	return isPathExists(path) && fs::is_regular_file(path);
+}
+
+bool FilesystemModule::isDirectory(constr path)
+{
+	return isPathExists(path) && fs::is_directory(path);
 }
 
 FResult FilesystemModule::createFile(constr dirPath, constr fileName)

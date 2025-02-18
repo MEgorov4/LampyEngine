@@ -23,7 +23,11 @@ void GUIWorldInspector::render()
 	{
 		ImGui::BeginChild("WorldTree", ImVec2(0, ImGui::GetWindowHeight() * 0.3f), true);
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Tree").x) / 2);
+
+		ImGui::SetWindowFontScale(1.2f);
 		ImGui::Text("Tree");
+		ImGui::SetWindowFontScale(1);
+
 		ImGui::SetCursorPosX(0);
 		ImGui::Separator();
 		renderEntityTree();
@@ -83,7 +87,9 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 	{
 	
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(m_selectedEntity.name()).x) / 2);
-		ImGui::TextColored(ImVec4(0,1,0,1), m_selectedEntity.name());
+		ImGui::SetWindowFontScale(1.2f);
+		ImGui::TextColored(ImVec4(0.5882353186607361f, 0.5372549295425415f, 0.1764705926179886f, 1.0f), m_selectedEntity.name());
+		ImGui::SetWindowFontScale(1);
 		ImGui::SetCursorPosX(0);
 		
 

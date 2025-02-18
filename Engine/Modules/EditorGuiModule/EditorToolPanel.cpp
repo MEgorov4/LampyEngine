@@ -63,6 +63,8 @@ void GUIEditorToolPanel::renderSaveWorldPopup()
 
 		static std::filesystem::path currentPath(config.getResourcesPath());
 		static std::filesystem::path rootPath(config.getResourcesPath());
+		
+		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
 
 		ImGui::BeginChild("FoldersTree", ImVec2(ImGui::GetWindowWidth() * 0.3f, 0));
 		ImGui::Text("Folders");

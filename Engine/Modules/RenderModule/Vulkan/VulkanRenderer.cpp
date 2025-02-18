@@ -115,6 +115,15 @@ void VulkanRenderer::initImGui() {
 
 	ImGui_ImplVulkan_Init(&init_info, m_renderPass->getRenderPass());
 
+	ImGuiIO& io = ImGui::GetIO();
+	io.Fonts->Clear();
+	io.Fonts->AddFontFromFileTTF("../Fonts/JetBrainsMono-Light.ttf", 16);
+	io.Fonts->AddFontFromFileTTF("../Fonts/JetBrainsMono-Regular.ttf", 16);
+	io.Fonts->AddFontFromFileTTF("../Fonts/JetBrainsMono-Light.ttf", 32);
+	io.Fonts->AddFontFromFileTTF("../Fonts/JetBrainsMono-Regular.ttf", 11);
+	io.Fonts->AddFontFromFileTTF("../Fonts/JetBrainsMono-Bold.ttf", 11);
+	io.Fonts->Build();
+
 	immediate_submit([&](VkCommandBuffer cmd) {
 		ImGui_ImplVulkan_CreateFontsTexture(cmd);
 		});
@@ -126,7 +135,6 @@ void VulkanRenderer::initImGui() {
 		ImGui_ImplVulkan_Shutdown();
 		});
 	
-	//ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 }
 
 

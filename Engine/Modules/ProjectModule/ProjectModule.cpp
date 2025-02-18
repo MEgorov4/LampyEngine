@@ -5,6 +5,7 @@
 #include <portable-file-dialogs.h>
 #include <nlohmann/json.hpp>
 #include <boost/process.hpp>
+#include <chrono>
 #include "../LoggerModule/Logger.h"
 
 ProjectConfig::ProjectConfig(std::string data)
@@ -21,6 +22,23 @@ ProjectConfig::ProjectConfig(std::string data)
 
 	editorStartWorld = jsonData["editorStartWorld"];
 	gameStartWorld = jsonData["gameStartWorld"];
+	
+	auto now = std::chrono::system_clock::now();
+	std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+
+	std::tm localTime;
+	
+#ifdef _WIN32
+	localtime_s(&localTime, &now_c);
+#else 
+	localtime_r(&now_c, &localTime);
+#endif
+	
+	std::ostringstream oss;
+
+	oss << std::put_time(&localTime, "[%Y-%m-%d]-[%H-%M-%S]");
+
+	openTime = oss.str();
 }
 
 void ProjectModule::setupProjectEnvironment()

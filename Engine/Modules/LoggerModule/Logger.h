@@ -47,15 +47,7 @@ public:
     /// </summary>
     /// <param name="verbosity">The verbosity level of the log.</param>
     /// <param name="message">The message to be logged.</param>
-    void Log(LogVerbosity verbosity, const std::string& message)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-
-        std::string formattedMessage = std::format("[{}] {}", ToString(verbosity), message);
-        std::cout << formattedMessage << std::endl;
-
-        OnMessagePushed(formattedMessage);
-    }
+    void Log(LogVerbosity verbosity, const std::string& message);
 
 private:
     /// <summary>
