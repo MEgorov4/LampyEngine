@@ -47,10 +47,6 @@ void Engine::startupModules()
 	AudioModule::getInstance().startup();
 	ECSModule::getInstance().startup();
 	LuaScriptModule::getInstance().startup();
-	
-	
-
-	ResourceManager::instance().clearAllCache();
 }
 
 void Engine::startupEngineContextObject()

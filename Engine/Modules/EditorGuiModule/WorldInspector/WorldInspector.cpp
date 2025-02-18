@@ -12,6 +12,8 @@ GUIWorldInspector::GUIWorldInspector() : GUIObject()
 {
 	ComponentRendererFactory& factory = ComponentRendererFactory::getInstance();
 	factory.registerRenderer("Position", []() {return std::make_unique<PositionRenderer>(); });
+	factory.registerRenderer("Rotation", []() {return std::make_unique<RotationRenderer>(); });
+	factory.registerRenderer("Scale", []() {return std::make_unique<ScaleRenderer>(); });
 	factory.registerRenderer("Script", []() {return std::make_unique<ScriptRenderer>(); });
 	factory.registerRenderer("Camera", []() {return std::make_unique<CameraRenderer>(); });
 }
@@ -103,6 +105,22 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 			}
 		}
 		
+		if (m_selectedEntity.has<Rotation>())
+		{
+			auto renderer = factory.createRenderer("Rotation");
+			if (renderer) {
+				renderer->render(m_selectedEntity);
+			}
+		}
+
+		if (m_selectedEntity.has<Scale>())
+		{
+			auto renderer = factory.createRenderer("Scale");
+			if (renderer) {
+				renderer->render(m_selectedEntity);
+			}
+		}
+
 		if (m_selectedEntity.has<Camera>())
 		{
 			auto renderer = factory.createRenderer("Camera");

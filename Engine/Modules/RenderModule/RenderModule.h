@@ -2,7 +2,6 @@
 #include <memory>
 #include "RenderConfig.h"
 #include "IRenderer.h"
-#include "Vulkan/VulkanRenderer.h"
 #include "../LoggerModule/Logger.h"
 
 /// <summary>
@@ -28,21 +27,7 @@ public:
     /// Initializes the rendering module based on the selected graphics API.
     /// </summary>
     /// <param name="window">Pointer to the application window.</param>
-    void startup(Window* window)
-    {
-        const RenderConfig& config = RenderConfig::getInstance();
-        LOG_INFO(std::format("RenderModule: Startup with - {}", config.getGraphicsAPI() == GraphicsAPI::Vulkan ? "Vulkan" : "OpenGL"));
-
-        switch (config.getGraphicsAPI())
-        {
-        case GraphicsAPI::Vulkan:
-            m_renderer = std::make_unique<VulkanRenderer>(window);
-            break;
-
-            // case GraphicsAPI::OpenGL:
-            //     m_renderer = std::make_unique<OpenGLRenderer>(); (Implementation required)
-        }
-    }
+    void startup(Window* window);
 
     /// <summary>
     /// Registers a shader pipeline using the provided vertex and fragment shader paths.
@@ -82,7 +67,6 @@ public:
         m_renderer->removeVertexData(vertexData);
     }
     
-    VkDescriptorSet getVulkanOffscreenImageView();
     /// <summary>
     /// Retrieves a pointer to the active renderer.
     /// </summary>

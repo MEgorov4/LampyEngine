@@ -21,13 +21,9 @@ public:
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
 
-		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4))) {
+		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) {
 			if (const Position* pos = entity.get<Position>()) {
 				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Position").x) / 2);
-
-				ImGui::SetWindowFontScale(1.2);
-				ImGui::Text("Position");
-				ImGui::SetWindowFontScale(1);
 
 				ImGui::SetCursorPosX(0);
 				ImGui::Separator();
@@ -38,7 +34,7 @@ public:
 
 				float position[3] = { pos->x, pos->y, pos->z };
 
-				if (ImGui::SliderFloat3("##", position, -100000, 100000)) {
+				if (ImGui::SliderFloat3("##Position", position, -100000, 100000)) {
 					entity.set<Position>({ position[0], position[1], position[2] });
 				}
 			}
@@ -47,6 +43,63 @@ public:
 	}
 };
 
+class RotationRenderer : public IComponentRenderer
+{
+public:
+	void render(flecs::entity& entity) override
+	{
+		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+
+		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) {
+			if (const Rotation* rot = entity.get<Rotation>()) {
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Rotation").x) / 2);
+
+				ImGui::SetCursorPosX(0);
+				ImGui::Separator();
+
+				ImGui::Text("Rotation");
+
+				ImGui::SameLine();
+				glm::vec3 angles = rot->toEulerAngles();
+				float rotation[3] = { angles.x, angles.y, angles.y };
+
+				if (ImGui::SliderFloat3("##Rotation", rotation, -360, 360)) {
+					entity.set<Rotation>(Rotation(glm::vec3(rotation[0], rotation[1], rotation[2])));
+				}
+			}
+		}
+		ImGui::EndChildFrame();
+	}
+};
+
+class ScaleRenderer : public IComponentRenderer
+{
+public:
+	void render(flecs::entity& entity) override
+	{
+		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+
+		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) {
+			if (const Scale* scale = entity.get<Scale>()) {
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Scale").x) / 2);
+
+				ImGui::SetCursorPosX(0);
+				ImGui::Separator();
+
+				ImGui::Text("Scale");
+
+				ImGui::SameLine();
+
+				float scalev[3] = { scale->x, scale->y, scale->z };
+
+				if (ImGui::SliderFloat3("##Scale", scalev, -1000, 1000)) {
+					entity.set<Scale>({ glm::vec3(scalev[0], scalev[1], scalev[2]) });
+				}
+			}
+		}
+		ImGui::EndChildFrame();
+	}
+};
 class ScriptRenderer : public IComponentRenderer {
 public:
 	void render(flecs::entity& entity) override {
