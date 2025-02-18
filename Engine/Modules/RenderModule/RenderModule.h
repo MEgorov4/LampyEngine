@@ -4,6 +4,7 @@
 #include "IRenderer.h"
 #include "../LoggerModule/Logger.h"
 
+class Window;
 /// <summary>
 /// Singleton class that manages the rendering module, handling the initialization, selection,
 /// and shutdown of the appropriate rendering API (e.g., Vulkan, OpenGL).

@@ -1,6 +1,7 @@
 #include "RenderModule.h"
 
 #include "Vulkan/VulkanRenderer.h"
+#include "../WindowModule/Window.h"
 
 void RenderModule::startup(Window* window)
 {
