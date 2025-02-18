@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../ObjectCoreModule/ObjectModel/Scene.h"
-#include "Vulkan/VulkanObjects/VulkanGraphicsPipeline.h"
 /// <summary>
 /// Interface for a renderer, defining core rendering operations and resource management.
 /// </summary>
@@ -58,7 +57,7 @@ public:
     /// <param name="scene">Pointer to the scene to render.</param>
     virtual void setSceneToRender(Scene* scene) { m_rendererScene = scene; }
     
-    virtual VkDescriptorSet getVulkanOffscreenImageView() = 0;
+    virtual void* getVulkanOffscreenImageView() = 0;
     /// <summary>
     /// Waits for the renderer to complete all rendering operations before proceeding.
     /// </summary>

@@ -121,7 +121,7 @@ public:
     /// </summary>
     /// <param name="vertexData">Vertex data to remove.</param>
     virtual void removeVertexData(const std::vector<Vertex>& vertexData) override;
-    virtual VkDescriptorSet getVulkanOffscreenImageView() override;
+    virtual void* getVulkanOffscreenImageView() override;
 
     /// <summary>
     /// Recreates the swap chain and all dependent resources.
