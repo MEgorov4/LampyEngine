@@ -5,7 +5,7 @@
 
 VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
     const std::vector<Vertex>& vertexData,
-    VkQueue transferQueue, VkCommandPool commandPool) : m_verticesCount(static_cast<uint32_t>(vertexData.size()))
+    VkQueue transferQueue, VkCommandPool commandPool) : VulkanBuffer(device), m_verticesCount(static_cast<uint32_t>(vertexData.size()))
 {
     createVertexBuffer(device, physicalDevice, vertexData, transferQueue, commandPool);
 }

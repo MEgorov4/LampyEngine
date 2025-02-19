@@ -12,10 +12,10 @@ protected:
     VkDeviceMemory m_memory; ///< Handle to the allocated memory for the buffer.
 
 public:
-    VulkanBuffer();
+    VulkanBuffer(VkDevice device);
     void cleanupVulkanBuffer();
 
-    ~VulkanBuffer();
+    virtual ~VulkanBuffer();
 
     VkBuffer getBuffer();
 

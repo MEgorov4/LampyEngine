@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-VulkanBuffer::VulkanBuffer()
+VulkanBuffer::VulkanBuffer(VkDevice device) : m_device(device)
 {
 
 }
@@ -15,7 +15,7 @@ void VulkanBuffer::cleanupVulkanBuffer()
 
 VulkanBuffer::~VulkanBuffer()
 {
-	
+    
 }
 
 VkBuffer VulkanBuffer::getBuffer()

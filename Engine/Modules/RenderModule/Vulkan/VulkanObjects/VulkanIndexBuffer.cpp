@@ -5,7 +5,7 @@
 
 VulkanIndexBuffer::VulkanIndexBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
     const std::vector<uint32_t>& indexData,
-    VkQueue transferQueue, VkCommandPool commandPool) : m_indexCount(static_cast<uint32_t>(indexData.size()))
+    VkQueue transferQueue, VkCommandPool commandPool) : VulkanBuffer(device), m_indexCount(static_cast<uint32_t>(indexData.size()))
 {
     createIndexBuffer(device, physicalDevice, indexData, transferQueue, commandPool);
 }

@@ -69,8 +69,8 @@ void ResourceManager::checkAllResources()
 			if (!loadedMesh) return;
 			
 			std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
-			// RenderModule::getInstance().registerVertexData(vertices);
-			// RenderModule::getInstance().registerIndexData(loadedMesh->getIndicesData());
+			RenderModule::getInstance().registerVertexData(vertices);
+			RenderModule::getInstance().registerIndexData(loadedMesh->getIndicesData());
 		});
 
 	flecs::entity bob = world.entity("Bob");
