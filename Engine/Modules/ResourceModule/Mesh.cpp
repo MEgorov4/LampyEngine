@@ -24,14 +24,11 @@ namespace std
 
 RMesh::RMesh(const std::string& path)
 {
-	// ��������� �������� ��� �������, ������� � ���������� ��������� � ����� ����� (attrib.vertices, attrib.normals � attrib.texcoords)
 	tinyobj::attrib_t attrib;
-	// �������� ��� ��������� ������� � �� �����
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
 	std::string warn, err;
 
-	// � LoadObj ���� �������������� �������� ��� �������������� ������������ ������, ������� ����� ������ ��� ������. ������� �� ���������.
 	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str()))
 	{
 		throw std::runtime_error(warn + err);
@@ -39,24 +36,20 @@ RMesh::RMesh(const std::string& path)
 
 	std::unordered_map<MeshVertex, uint32_t> uniqueVertices{};
 
-	// ����� �� ���������� ��� ����� � ����� � ���� ������
 	for (const tinyobj::shape_t& shape : shapes)
 	{
-		// ������� ������������ ��� ��� ���������� ������� ��� ������ �� ������ �����, ������� ������ �� ����� �������� ���������� ������� � ���������� �� ����� � ��� ������ ������
 		for (const tinyobj::index_t& index : shape.mesh.indices)
 		{
 			MeshVertex vertex{};
 
-			// �� index �� ���� ��������� ������
 			vertex.pos = {
-				// �������� �� 3, ��� ��� attrib.vertices ��� ������ float, � ��� ����� glm::vec3
-				attrib.vertices[3 * index.vertex_index + 0], // �������� ��� ������� � X, Y � Z
+				attrib.vertices[3 * index.vertex_index + 0], 
 				attrib.vertices[3 * index.vertex_index + 1],
 				attrib.vertices[3 * index.vertex_index + 2]
 			};
 
 			vertex.uv = {
-				attrib.texcoords[2 * index.texcoord_index + 0], // �������� ��� ������� � ����������� U � V
+				attrib.texcoords[2 * index.texcoord_index + 0], 
 				1.f - attrib.texcoords[2 * index.texcoord_index + 1]
 			};
 
@@ -83,4 +76,9 @@ RMesh::RMesh(const std::string& path)
 const std::vector<MeshVertex>& RMesh::getVertexData()
 {
 	return m_vertexData;
+}
+
+const std::vector<uint32_t>& RMesh::getIndicesData()
+{
+	return m_indicesData;
 }

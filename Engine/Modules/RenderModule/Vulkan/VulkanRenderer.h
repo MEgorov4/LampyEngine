@@ -44,6 +44,7 @@ class VulkanCommandPool;
 class VulkanCommandBuffers;
 class VulkanSynchronizationManager;
 class VulkanPipelineCache;
+class VulkanIndexBufferCache;
 class VulkanVertexBufferCache;
 class VulkanOffscreenRenderer;
 class VulkanDescriptorPool;
@@ -63,6 +64,7 @@ class VulkanRenderer : public IRenderer
     std::unique_ptr<VulkanCommandBuffers> m_commandBuffers;
     std::unique_ptr<VulkanSynchronizationManager> m_syncManager;
     std::unique_ptr<VulkanPipelineCache> m_pipelineCache;
+    std::unique_ptr<VulkanIndexBufferCache> m_indexBufferCache;
     std::unique_ptr<VulkanVertexBufferCache> m_vertexBufferCache;
 
     std::unique_ptr<VulkanDescriptorPool> m_descriptorPool;
@@ -122,6 +124,18 @@ public:
     /// <param name="vertexData">Vertex data to remove.</param>
     virtual void removeVertexData(const std::vector<Vertex>& vertexData) override;
     virtual void* getVulkanOffscreenImageView() override;
+
+    /// <summary>
+    /// Registers index data and creates a Vulkan index buffer if needed.
+    /// </summary>
+    /// <param name="indexData">index data to register.</param>
+    virtual void registerIndexData(const std::vector<uint32_t>& indexData) override;
+
+    /// <summary>
+    /// Removes index data and releases associated buffers if no longer needed.
+    /// </summary>
+    /// <param name="indexData">index data to remove.</param>
+    virtual void removeIndexData(const std::vector<uint32_t>& indexData) override;
 
     /// <summary>
     /// Recreates the swap chain and all dependent resources.

@@ -15,6 +15,10 @@ VulkanVertexBufferCache::~VulkanVertexBufferCache()
 
 void VulkanVertexBufferCache::clearCache()
 {
+    for (auto& buffer : m_vertexBuffers)
+    {
+        buffer.second.second.get()->cleanupVulkanBuffer();
+    }
     m_vertexBuffers.clear();
 }
 

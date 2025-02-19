@@ -26,6 +26,7 @@ public:
 	RMesh(const std::vector<MeshVertex>& f) {}
 
 	const std::vector<MeshVertex>& getVertexData();
+	const std::vector<uint32_t>& getIndicesData();
 
 private:
 	std::vector<MeshVertex> m_vertexData;

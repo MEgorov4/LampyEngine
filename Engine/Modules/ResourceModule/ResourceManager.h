@@ -15,7 +15,7 @@ using TextureCache = ResourceCache<RTexture>;
 class ResourceManager
 {
 public:
-	static ResourceManager& instance()
+	static ResourceManager& getInstance()
 	{
 		static ResourceManager resourceManager;
 		return resourceManager;
@@ -25,12 +25,18 @@ public:
 	static std::shared_ptr<T> load(const std::string& path);
 
 	void clearAllCache();
+
+	void startup();
+	void shutDown();
+	void OnLoadInitialWorldState();
 private:
 	ResourceManager();
 
 	MeshCache meshCache;
 	ShaderCache shaderCache;
 	TextureCache textureCache;
+
+	void checkAllResources();
 };
 
 template<>
@@ -41,7 +47,7 @@ inline std::shared_ptr<RMesh> ResourceManager::load<RMesh>(const std::string& pa
 		return nullptr;
 	}
 
-	return instance().meshCache.load(path);
+	return getInstance().meshCache.load(path);
 }
 
 template<>
@@ -52,7 +58,7 @@ inline std::shared_ptr<RShader> ResourceManager::load<RShader>(const std::string
 		return nullptr;
 	}
 
-	return instance().shaderCache.load(path);
+	return getInstance().shaderCache.load(path);
 }
 
 template<>
@@ -63,5 +69,5 @@ inline std::shared_ptr<RTexture> ResourceManager::load<RTexture>(const std::stri
 		return nullptr;
 	}
 
-	return instance().textureCache.load(path);
+	return getInstance().textureCache.load(path);
 }
