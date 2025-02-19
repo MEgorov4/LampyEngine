@@ -21,7 +21,7 @@ void ECSModule::startup()
 
 void ECSModule::loadInitialWorldState()
 {
-	m_world.entity("Bob").set<Position>({ 10, 20, 30 }).set<MeshComponent>({ std::string("../Resources/Meshes/viking_room.obj") });
+	m_world.entity("Bob").set<Position>({ 10, 20, 30 }).set<MeshComponent>({ "../Resources/Meshes/viking_room.obj" });
 	m_world.entity("Alice").set<Position>({ 10, 20, 30 });
 	auto& c = m_world.entity("Penis").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});

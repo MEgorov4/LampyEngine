@@ -445,9 +445,9 @@ void VulkanRenderer::recordWorldRenderCommands(VkCommandBuffer commandBuffer)
 {
 	auto& world = ECSModule::getInstance().getCurrentWorld();
 
-	auto query = world.query<MeshComponent, Position, Rotation, Scale>();
+	auto query = world.query<Position, MeshComponent>();
 
-	query.each([&](flecs::entity e, MeshComponent& mesh, Position& pos, Rotation& rot, Scale& scale)
+	query.each([&](const flecs::entity& e, Position& pos, MeshComponent& mesh)
 		{
 			auto& resourceManager = ResourceManager::getInstance();
 			std::shared_ptr<RMesh> loadedMesh = resourceManager.load<RMesh>(std::string(mesh.meshResourcePath));

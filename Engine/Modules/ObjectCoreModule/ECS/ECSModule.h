@@ -50,7 +50,7 @@ struct Camera
 
 struct MeshComponent
 {
-	std::string meshResourcePath;
+	const char* meshResourcePath;
 };
 
 class ECSModule
