@@ -17,14 +17,18 @@ public:
   }
 
   void startup();
+    
+  void processCommand(const std::string& command);
+  sol::state& getLuaState() 
+  { 
+      return m_luaState; 
+  };
+
+private:
   void registerLogger();
   void registerEvent();
   void registerInputModuleEvents();
   void registerAudioModule();
   void registerMathTypes();
   void registerECSModule();
-  sol::state& getLuaState() 
-  { 
-      return m_luaState; 
-  };
 };

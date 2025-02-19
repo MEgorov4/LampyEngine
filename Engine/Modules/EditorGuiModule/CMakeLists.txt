@@ -7,5 +7,5 @@ add_library(EditorGuiModule STATIC ${EDITOR_GUI_MODULE_SOURCE})
 
 find_package(VulkanLoader)
 
-target_link_libraries(EditorGuiModule PRIVATE Vulkan::Loader EventModule ProjectModule ObjectCoreModule ImGuiModule RenderModule FilesystemModule)
+target_link_libraries(EditorGuiModule PRIVATE Vulkan::Loader EventModule ProjectModule ObjectCoreModule ImGuiModule RenderModule FilesystemModule LuaScriptModule)
 # target_link_libraries(EditorGuiModule PUBLIC ImGuiModule)

@@ -22,6 +22,29 @@ void LuaScriptModule::startup()
 	registerECSModule();
 }
 
+void LuaScriptModule::processCommand(const std::string& command)
+{
+	try {
+		sol::load_result loadedScript = m_luaState.load(command);
+		if (!loadedScript.valid()) {
+			sol::error loadError = loadedScript;
+			LOG_ERROR("Lua load error: " + std::string(loadError.what()));
+			return;
+		}
+
+		sol::protected_function script = loadedScript;
+		sol::protected_function_result result = script();
+
+		if (!result.valid()) {
+			sol::error execError = result;
+			LOG_ERROR("Lua execution error: " + std::string(execError.what()));
+		}
+	}
+	catch (const sol::error& e) {
+		LOG_ERROR("Lua exception caught: " + std::string(e.what()));
+	}
+}
+
 void LuaScriptModule::registerLogger()
 {
 	m_luaState.set_function("LogInfo", [](const std::string& message) {
