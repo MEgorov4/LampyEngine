@@ -158,6 +158,11 @@ std::string FilesystemModule::getFileExtensions(constr filePath)
 	return fs::path(filePath).extension().string();
 }
 
+std::string FilesystemModule::getRelativeToTheResources(constr filePath)
+{
+	return fs::relative(filePath, PM.getProjectConfig().getResourcesPath()).string();
+}
+
 size_t FilesystemModule::getFileSize(constr filePath)
 {
 	if (!isPathExists(filePath))

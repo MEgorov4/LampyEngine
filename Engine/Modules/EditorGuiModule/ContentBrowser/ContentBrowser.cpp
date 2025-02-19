@@ -50,7 +50,9 @@ void GUIContentBrowser::render()
 		ImGui::BeginChild("FilesPane", ImVec2(0, 0), true);
 
 		ImGui::SetWindowFontScale(1.2);
-		ImGui::Text("Files");
+		ImGui::Text("Files in");
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.5882353186607361f, 0.5372549295425415f, 0.1764705926179886f, 1.0f), FS.getRelativeToTheResources(dirIter.getCurrentDir()).c_str());
 		ImGui::SetWindowFontScale(1);
 
 		ImGui::Separator();
@@ -63,11 +65,13 @@ void GUIContentBrowser::render()
 
 void GUIContentBrowser::renderInFolderFiles()
 {
+	static std::string selectedFile = "";
 	for (size_t i = 0; i < m_files.size(); ++i)
 	{
 		if (ImGui::Selectable(m_files[i].c_str()))
 		{
 			ImGui::OpenPopup(("ItemAction##"));
+			selectedFile = m_files[i];
 		}
 
 		std::string fullFilePath = dirIter.getCurrentDirWithAppend(m_files[i]);
@@ -78,8 +82,10 @@ void GUIContentBrowser::renderInFolderFiles()
 			ImGui::Text(fullFilePath.c_str());
 			ImGui::EndDragDropSource();
 		}
-
-		renderFilePopup(dirIter.getCurrentDirWithAppend(m_files[i]));
+	}
+	if (!selectedFile.empty())
+	{
+		renderFilePopup(dirIter.getCurrentDirWithAppend(selectedFile));
 	}
 	renderFolderPopup();
 }
@@ -100,6 +106,7 @@ void GUIContentBrowser::renderFilePopup(const std::string& filePath)
 			if (ImGui::Button((action->getName() + "##" + filePath).c_str()))
 			{
 				action->execute(filePath);
+				ImGui::CloseCurrentPopup();
 			}
 		}
 

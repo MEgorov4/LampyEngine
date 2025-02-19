@@ -61,6 +61,7 @@ public:
 
     std::string getFileName(constr filePath);
     std::string getFileExtensions(constr filePath);
+    std::string getRelativeToTheResources(constr filePath);
     size_t getFileSize(constr filePath);
     std::vector <std::string> getDirectoryContents(constr dirPath, ContentSearchFilter filter);
     uint64_t getFolderModificationTime(constr folderPath);
