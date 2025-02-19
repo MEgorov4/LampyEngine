@@ -23,7 +23,7 @@ void ECSModule::loadInitialWorldState()
 {
 	m_world.entity("Bob").set<Position>({ 10, 20, 30 }).set<MeshComponent>({ std::string("../Resources/Meshes/viking_room.obj") });
 	m_world.entity("Alice").set<Position>({ 10, 20, 30 });
-	m_world.entity("Penis").set<Position>({ 10, 20, 30 });
+	auto& c = m_world.entity("Penis").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 	m_world.entity("Chlen").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
@@ -40,16 +40,16 @@ void ECSModule::loadInitialWorldState()
 	//{
 	//	loadWorldFromFile(m_currentWorldFile);
 	//}
+	std::string json = c.to_json().c_str();
+
+	LOG_INFO(json);
 }
 
 void ECSModule::fillDefaultWorld()
 {
-	//const char* json = entity.to_json();
+	std::string json = m_world.to_json().c_str();
 
-	//if (json)
-	//{
-	//	LOG_INFO(json);
-	//}
+	LOG_INFO(json);
 }
 
 void ECSModule::saveCurrentWorld()
