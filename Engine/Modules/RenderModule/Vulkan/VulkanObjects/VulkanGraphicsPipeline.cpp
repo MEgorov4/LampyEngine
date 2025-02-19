@@ -1,8 +1,10 @@
 #include "VulkanGraphicsPipeline.h"
 #include <stdexcept>
-
+#include <array>
 #include "../../../LoggerModule/Logger.h"
 #include "../../../ResourceModule/ResourceModule.h"
+
+#include "Vertex.h"
 
 VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkDevice device, VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath) : m_vk_device(device)
 {

@@ -2,8 +2,8 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
-#include "VulkanGraphicsPipeline.h"
 
+#include "Vertex.h"
 /// <summary>
 /// Manages a Vulkan vertex buffer for storing vertex data on the GPU.
 /// </summary>

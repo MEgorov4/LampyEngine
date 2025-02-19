@@ -1,6 +1,9 @@
 #pragma once
 
+#include <vector>
+
 #include "../ObjectCoreModule/ObjectModel/Scene.h"
+#include "Vulkan/VulkanObjects/Vertex.h"
 /// <summary>
 /// Interface for a renderer, defining core rendering operations and resource management.
 /// </summary>

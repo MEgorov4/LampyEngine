@@ -1,7 +1,6 @@
 #include "VulkanVertexBuffer.h"
 #include <stdexcept>
 #include <cstring>
-
 #include "../../../LoggerModule/Logger.h"
 
 VulkanVertexBuffer::VulkanVertexBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
