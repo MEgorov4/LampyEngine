@@ -9,19 +9,16 @@
 /// </summary>
 class IRenderer
 {
-protected:
-    Scene* m_rendererScene; ///< Pointer to the scene currently being rendered.
-
 public:
     /// <summary>
     /// Constructs an IRenderer with no assigned scene.
     /// </summary>
-    IRenderer() : m_rendererScene(nullptr) {}
+    IRenderer() = default;
 
     /// <summary>
     /// Virtual destructor to ensure proper cleanup of derived renderers.
     /// </summary>
-    virtual ~IRenderer() {}
+    virtual ~IRenderer() = default;
 
     /// <summary>
     /// Renders a single frame.
@@ -57,12 +54,6 @@ public:
     virtual void registerIndexData(const std::vector<uint32_t>& indexData) = 0;
     virtual void removeIndexData(const std::vector<uint32_t>& indexData) = 0;
 
-    /// <summary>
-    /// Sets the scene that the renderer will render.
-    /// </summary>
-    /// <param name="scene">Pointer to the scene to render.</param>
-    virtual void setSceneToRender(Scene* scene) { m_rendererScene = scene; }
-    
     virtual void* getVulkanOffscreenImageView() = 0;
     /// <summary>
     /// Waits for the renderer to complete all rendering operations before proceeding.

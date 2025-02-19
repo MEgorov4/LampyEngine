@@ -180,7 +180,7 @@ private:
     /// Creates rendering commands for the current scene.
     /// </summary>
     /// <param name="commandBuffer">Command buffer to record draw calls into.</param>
-    void createSceneRenderCommands(VkCommandBuffer commandBuffer);
+    void recordWorldRenderCommands(VkCommandBuffer commandBuffer);
 
     /// <summary>
     /// Creates the swap chain and all dependent resources.

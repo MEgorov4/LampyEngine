@@ -432,7 +432,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 
 	m_offscreenRenderer->beginRenderPass(commandBuffer);
 
-	createSceneRenderCommands(commandBuffer);
+	recordWorldRenderCommands(commandBuffer);
 
 	m_offscreenRenderer->endRenderPass(commandBuffer);
 
@@ -441,36 +441,33 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 	}
 }
 
-void VulkanRenderer::createSceneRenderCommands(VkCommandBuffer commandBuffer)
+void VulkanRenderer::recordWorldRenderCommands(VkCommandBuffer commandBuffer)
 {
-	if (m_rendererScene)
-	{
-		auto& world = ECSModule::getInstance().getCurrentWorld();
+	auto& world = ECSModule::getInstance().getCurrentWorld();
 
-		auto query = world.query<MeshComponent, Position, Rotation, Scale>();
+	auto query = world.query<MeshComponent, Position, Rotation, Scale>();
 
-		query.each([&](flecs::entity e, MeshComponent& mesh, Position& pos, Rotation& rot, Scale& scale)
+	query.each([&](flecs::entity e, MeshComponent& mesh, Position& pos, Rotation& rot, Scale& scale)
+		{
+			auto& resourceManager = ResourceManager::getInstance();
+			std::shared_ptr<RMesh> loadedMesh = resourceManager.load<RMesh>(std::string(mesh.meshResourcePath));
+
+			if (!loadedMesh)
 			{
-				auto& resourceManager = ResourceManager::getInstance();
-				std::shared_ptr<RMesh> loadedMesh = resourceManager.load<RMesh>(std::string(mesh.meshResourcePath));
+				LOG_INFO("Can't load mesh in path: " + std::string(mesh.meshResourcePath));
+			}
 
-				if (!loadedMesh)
-				{
-					LOG_INFO("Can't load mesh in path: " + std::string(mesh.meshResourcePath));
-				}
+			std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
+			VulkanVertexBuffer* vertexBuffer = m_vertexBufferCache->getOrCreateVertexBuffer(vertices,
+				m_logicalDevice->getGraphicsQueue(),
+				m_commandPool->getCommandPool(),
+				m_logicalDevice->getLogicalDevice(),
+				m_logicalDevice->getPhysicalDevice());
 
-				std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
-				VulkanVertexBuffer* vertexBuffer = m_vertexBufferCache->getOrCreateVertexBuffer(vertices,
-					m_logicalDevice->getGraphicsQueue(),
-					m_commandPool->getCommandPool(),
-					m_logicalDevice->getLogicalDevice(),
-					m_logicalDevice->getPhysicalDevice());
+			VkBuffer verBuffer = vertexBuffer->getBuffer();
 
-				VkBuffer verBuffer = vertexBuffer->getBuffer();
-
-				VkDeviceSize offsets[] = { 0 };
-				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &verBuffer, offsets);
-			});
-	}
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &verBuffer, offsets);
+		});
 }
 
