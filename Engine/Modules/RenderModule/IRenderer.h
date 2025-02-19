@@ -54,6 +54,9 @@ public:
     /// <param name="vertexData">Vertex data to remove.</param>
     virtual void removeVertexData(const std::vector<Vertex>& vertexData) = 0;
 
+    virtual void registerIndexData(const std::vector<uint32_t>& indexData) = 0;
+    virtual void removeIndexData(const std::vector<uint32_t>& indexData) = 0;
+
     /// <summary>
     /// Sets the scene that the renderer will render.
     /// </summary>

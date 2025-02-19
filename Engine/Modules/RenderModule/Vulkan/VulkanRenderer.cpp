@@ -15,6 +15,7 @@
 #include "VulkanObjects/VulkanCommandBuffers.h"
 #include "VulkanObjects/VulkanSynchronizationManager.h"
 
+#include "VulkanObjects/VulkanIndexBufferCache.h"
 #include "VulkanObjects/VulkanVertexBufferCache.h"
 #include "VulkanObjects/VulkanPipelineCache.h"
 #include "VulkanObjects/VulkanDescriptorPool.h"
@@ -24,6 +25,9 @@
 #include "../../ImGuiModule/GLFWBackends/imgui_impl_glfw.h"
 #include "../../ImGuiModule/VulkanBackends/imgui_impl_vulkan.h"
 #include "../../ObjectCoreModule/ECS/ECSModule.h"
+#include "../../ResourceModule/ResourceManager.h"
+#include "../../ResourceModule/Mesh.h"
+
 VulkanRenderer::VulkanRenderer(Window* window) : m_window(window)
 {
 	initVulkan();
@@ -33,7 +37,7 @@ VulkanRenderer::VulkanRenderer(Window* window) : m_window(window)
 		initImGui();
 	}
 }
-VulkanRenderer::~VulkanRenderer() 
+VulkanRenderer::~VulkanRenderer()
 {
 	m_mainDeletionQueue.flush();
 	cleanupVulkan();
@@ -47,20 +51,21 @@ void VulkanRenderer::render()
 void VulkanRenderer::initVulkan()
 {
 	m_instance = std::make_unique<VulkanInstance>(m_window->getRequiredInstanceExtensions(),
-												  true);
-	m_surface = std::make_unique<VulkanSurface>(m_instance->getInstance(), 
-												m_window->getWindowSurface(m_instance->getInstance()));
+		true);
+	m_surface = std::make_unique<VulkanSurface>(m_instance->getInstance(),
+		m_window->getWindowSurface(m_instance->getInstance()));
 	m_logicalDevice = std::make_unique<VulkanLogicalDevice>(m_instance->getInstance(),
-															m_surface->getSurface());
+		m_surface->getSurface());
 
 	m_commandPool = std::make_unique<VulkanCommandPool>(m_logicalDevice->getLogicalDevice(),
-														m_logicalDevice->getDeviceFamilyIndices().graphicsFamily.value());
+		m_logicalDevice->getDeviceFamilyIndices().graphicsFamily.value());
 	createSwapChainAndDependent();
 	m_pipelineCache = std::make_unique<VulkanPipelineCache>();
 	m_vertexBufferCache = std::make_unique<VulkanVertexBufferCache>();
+	m_indexBufferCache = std::make_unique<VulkanIndexBufferCache>();
 
 	m_syncManager = std::make_unique<VulkanSynchronizationManager>(m_logicalDevice->getLogicalDevice(),
-														   RenderConfig::getInstance().getMaxFramesInFlight());
+		RenderConfig::getInstance().getMaxFramesInFlight());
 
 	m_descriptorPool = std::make_unique<VulkanDescriptorPool>(m_logicalDevice->getLogicalDevice());
 
@@ -135,14 +140,14 @@ void VulkanRenderer::initImGui() {
 		vkDestroyDescriptorPool(m_logicalDevice->getLogicalDevice(), imguiPool, nullptr);
 		ImGui_ImplVulkan_Shutdown();
 		});
-	
+
 }
 
 
 void VulkanRenderer::immediate_submit(std::function<void(VkCommandBuffer)>&& function) {
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.commandPool = m_commandPool->getCommandPool(); 
+	allocInfo.commandPool = m_commandPool->getCommandPool();
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	allocInfo.commandBufferCount = 1;
 
@@ -176,10 +181,17 @@ void VulkanRenderer::cleanupVulkan()
 	m_descriptorPool.reset();
 	m_syncManager.reset();
 	cleanSwapChainAndDependent();
+	m_vertexBufferCache->clearCache();
+	m_indexBufferCache->clearCache();
 	m_commandPool.reset();
 	m_logicalDevice.reset();
 	m_surface.reset();
 	m_instance.reset();
+}
+
+void VulkanRenderer::removeIndexData(const std::vector<uint32_t>& indexData)
+{
+	m_indexBufferCache->removeIndexBuffer(indexData);
 }
 
 void VulkanRenderer::recreateSwapChainAndDependent()
@@ -193,11 +205,11 @@ void VulkanRenderer::recreateSwapChainAndDependent()
 
 void VulkanRenderer::cleanSwapChainAndDependent()
 {
-	m_commandBuffers.reset();     
-	m_framebuffers.reset();       
-	m_renderPass.reset();         
+	m_commandBuffers.reset();
+	m_framebuffers.reset();
+	m_renderPass.reset();
 	m_pipelineCache->clearCache();
-	m_swapChain.reset();          
+	m_swapChain.reset();
 }
 
 void VulkanRenderer::createSwapChainAndDependent()
@@ -230,10 +242,10 @@ void VulkanRenderer::waitIdle()
 
 void VulkanRenderer::registerShader(const std::string& vertPath, const std::string& fragPath)
 {
-	m_pipelineCache->getOrCreatePipeline(vertPath, 
-										 fragPath, 
-										 m_logicalDevice->getLogicalDevice(), 
-										 m_renderPass->getRenderPass());
+	m_pipelineCache->getOrCreatePipeline(vertPath,
+		fragPath,
+		m_logicalDevice->getLogicalDevice(),
+		m_renderPass->getRenderPass());
 }
 
 void VulkanRenderer::removeShader(const std::string& vertPath, const std::string& fragPath)
@@ -244,10 +256,10 @@ void VulkanRenderer::removeShader(const std::string& vertPath, const std::string
 void VulkanRenderer::registerVertexData(const std::vector<Vertex>& vertexData)
 {
 	m_vertexBufferCache->getOrCreateVertexBuffer(vertexData,
-												 m_logicalDevice->getGraphicsQueue(),
-												 m_commandPool->getCommandPool(),
-												 m_logicalDevice->getLogicalDevice(),
-												 m_logicalDevice->getPhysicalDevice());
+		m_logicalDevice->getGraphicsQueue(),
+		m_commandPool->getCommandPool(),
+		m_logicalDevice->getLogicalDevice(),
+		m_logicalDevice->getPhysicalDevice());
 }
 
 void VulkanRenderer::removeVertexData(const std::vector<Vertex>& vertexData)
@@ -258,6 +270,15 @@ void VulkanRenderer::removeVertexData(const std::vector<Vertex>& vertexData)
 void* VulkanRenderer::getVulkanOffscreenImageView()
 {
 	return m_offscreenRenderer->getColorImageDescriptor();
+}
+
+void VulkanRenderer::registerIndexData(const std::vector<uint32_t>& indexData)
+{
+	m_indexBufferCache->getOrCreateIndexBuffer(indexData,
+		m_logicalDevice->getGraphicsQueue(),
+		m_commandPool->getCommandPool(),
+		m_logicalDevice->getLogicalDevice(),
+		m_logicalDevice->getPhysicalDevice());
 }
 
 void VulkanRenderer::drawFrame()
@@ -384,7 +405,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 	VkClearValue clearColor = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 	renderPassInfo.clearValueCount = 1;
 	renderPassInfo.pClearValues = &clearColor;
-	
+
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 
@@ -410,7 +431,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 	vkCmdEndRenderPass(commandBuffer);
 
 	m_offscreenRenderer->beginRenderPass(commandBuffer);
-	
+
 	createSceneRenderCommands(commandBuffer);
 
 	m_offscreenRenderer->endRenderPass(commandBuffer);
@@ -424,12 +445,32 @@ void VulkanRenderer::createSceneRenderCommands(VkCommandBuffer commandBuffer)
 {
 	if (m_rendererScene)
 	{
-		/*
 		auto& world = ECSModule::getInstance().getCurrentWorld();
 
-		auto query = world.query<Mesh, Position, Rotation, Scale>();
+		auto query = world.query<MeshComponent, Position, Rotation, Scale>();
 
-		query.each()*/
+		query.each([&](flecs::entity e, MeshComponent& mesh, Position& pos, Rotation& rot, Scale& scale)
+			{
+				auto& resourceManager = ResourceManager::getInstance();
+				std::shared_ptr<RMesh> loadedMesh = resourceManager.load<RMesh>(std::string(mesh.meshResourcePath));
+
+				if (!loadedMesh)
+				{
+					LOG_INFO("Can't load mesh in path: " + std::string(mesh.meshResourcePath));
+				}
+
+				std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
+				VulkanVertexBuffer* vertexBuffer = m_vertexBufferCache->getOrCreateVertexBuffer(vertices,
+					m_logicalDevice->getGraphicsQueue(),
+					m_commandPool->getCommandPool(),
+					m_logicalDevice->getLogicalDevice(),
+					m_logicalDevice->getPhysicalDevice());
+
+				VkBuffer verBuffer = vertexBuffer->getBuffer();
+
+				VkDeviceSize offsets[] = { 0 };
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &verBuffer, offsets);
+			});
 	}
 }
 

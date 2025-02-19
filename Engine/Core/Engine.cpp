@@ -39,14 +39,19 @@ void Engine::startupModules()
 
 	InputModule::getInstance().startup(WindowModule::getInstance().getWindow());
 
+	ResourceManager::getInstance().startup();
+
 	RenderConfig& renderConfig = RenderConfig::getInstance();
 	renderConfig.setMaxFramesInFlight(EngineConfig::getInstance().getMaxFramesInFlight());
 	renderConfig.setGraphicsAPI(GraphicsAPI::Vulkan);
 	RenderModule::getInstance().startup(WindowModule::getInstance().getWindow());
 	
 	AudioModule::getInstance().startup();
-	ECSModule::getInstance().startup();
+	ECSModule::getInstance().startup(); 
+	idOnLoadInitialWorldState = ECSModule::getInstance().OnLoadInitialWorldState.subscribe(std::bind(&ResourceManager::OnLoadInitialWorldState, ResourceManager::getInstance()));
 	LuaScriptModule::getInstance().startup();
+
+	ECSModule::getInstance().OnLoadInitialWorldState();
 }
 
 void Engine::startupEngineContextObject()
@@ -86,9 +91,11 @@ void Engine::shutDownEngineContextObject()
 
 void Engine::shutDownModules()
 {
+	ECSModule::getInstance().OnLoadInitialWorldState.unsubscribe(idOnLoadInitialWorldState);
 	ECSModule::getInstance().shutDown();
 	AudioModule::getInstance().shutDown();
 	RenderModule::getInstance().shutDown();
+	ResourceManager::getInstance().shutDown();
 	InputModule::getInstance().shutDown();
 	WindowModule::getInstance().shutDown();
 }

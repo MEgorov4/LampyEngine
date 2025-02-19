@@ -4,6 +4,7 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include "../../EventModule/Event.h"
 
 struct Position {
 	float x = 0.0f, y = 0.0f, z = 0.0f;
@@ -47,6 +48,11 @@ struct Camera
 	bool isViewportCamera;
 };
 
+struct MeshComponent
+{
+	std::string meshResourcePath;
+};
+
 class ECSModule
 {
 	bool m_tickEnabled = false;
@@ -80,4 +86,6 @@ public:
 	void ecsTick(float deltaTime);
 
 	void shutDown();
+
+	Event<> OnLoadInitialWorldState;
 };

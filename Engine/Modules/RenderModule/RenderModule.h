@@ -67,6 +67,24 @@ public:
     {
         m_renderer->removeVertexData(vertexData);
     }
+
+    /// <summary>
+    /// Registers index data, creating a Vulkan index buffer if needed.
+    /// </summary>
+    /// <param name="indexData">Vertex data to register.</param>
+    void registerIndexData(const std::vector<uint32_t>& indexData)
+    {
+        m_renderer->registerIndexData(indexData);
+    }
+
+    /// <summary>
+    /// Removes index data and releases associated buffers if no longer needed.
+    /// </summary>
+    /// <param name="indexData">index data to remove.</param>
+    void removeIndexData(const std::vector<uint32_t>& indexData)
+    {
+        m_renderer->removeIndexData(indexData);
+    }
     
     /// <summary>
     /// Retrieves a pointer to the active renderer.

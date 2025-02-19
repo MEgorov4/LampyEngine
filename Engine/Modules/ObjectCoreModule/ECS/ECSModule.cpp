@@ -17,12 +17,11 @@ void ECSModule::startup()
 	ECSluaScriptsSystem::getInstance().registerSystem(m_world);
 
 	m_world.component<Script>();
-
 }
 
 void ECSModule::loadInitialWorldState()
 {
-	m_world.entity("Bob").set<Position>({ 10, 20, 30 });
+	m_world.entity("Bob").set<Position>({ 10, 20, 30 }).set<MeshComponent>({ std::string("../Resources/Meshes/viking_room.obj") });
 	m_world.entity("Alice").set<Position>({ 10, 20, 30 });
 	m_world.entity("Penis").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
@@ -32,7 +31,7 @@ void ECSModule::loadInitialWorldState()
 	m_world.entity("Hero").set<Position>({ 0, 0, 0 }).set<Camera>({90, 0.7, 0, 100, true});
 	m_world.entity("Hero").set<Script>({ ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" }); 
 	
-
+	
 	//if (m_currentWorldFile == "default")
 	//{
 	//	fillDefaultWorld();
