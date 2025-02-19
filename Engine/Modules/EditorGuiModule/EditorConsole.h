@@ -1,7 +1,7 @@
 #pragma once
-
-#include "../ImGuiModule/GUIObject.h"
 #include <string>
+#include <list>
+#include "../ImGuiModule/GUIObject.h"
 
 class GUIEditorConsole : GUIObject
 {

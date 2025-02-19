@@ -28,3 +28,4 @@ void GUIEditorConsole::processCommand(const std::string command)
 {
 	LuaScriptModule::getInstance().processCommand(command);
 }
+
