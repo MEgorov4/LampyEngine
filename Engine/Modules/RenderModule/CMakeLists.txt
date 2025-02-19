@@ -13,9 +13,9 @@ target_link_libraries( RenderModule PUBLIC
     ObjectCoreModule
     ResourceModule
     LoggerModule
+    Vulkan::Loader
     PRIVATE
     ImGuiModule
     glfw
-    Vulkan::Loader
     glm::glm
 )

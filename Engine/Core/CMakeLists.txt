@@ -6,7 +6,7 @@ file(GLOB_RECURSE ENGINE_SOURCE
 format_source_group(${ENGINE_SOURCE})
 add_executable(Engine ${ENGINE_SOURCE})
 
-target_link_libraries(Engine PUBLIC
+target_link_libraries(Engine PRIVATE
     InputModule
     AudioModule
     WindowModule
@@ -15,8 +15,18 @@ target_link_libraries(Engine PUBLIC
     ResourceModule
     EditorModule
     EngineContext
-    PRIVATE
     EventModule
     ObjectCoreModule
     LuaScriptModule
+)
+
+set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Resources")
+
+set(OUTPUT_DIR "${CMAKE_SOURCE_DIR}/build/Engine/Resources")
+
+add_custom_command(TARGET Engine POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${RESOURCE_DIR}"
+    "${OUTPUT_DIR}"
+    COMMENT "Copying Resources folder to output directory"
 )
