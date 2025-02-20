@@ -189,9 +189,9 @@ void VulkanRenderer::cleanupVulkan()
 	m_instance.reset();
 }
 
-void VulkanRenderer::removeIndexData(const std::vector<uint32_t>& indexData)
+void VulkanRenderer::removeIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile)
 {
-	m_indexBufferCache->removeIndexBuffer(indexData);
+	m_indexBufferCache->removeIndexBuffer(indexData, pathToFile);
 }
 
 void VulkanRenderer::recreateSwapChainAndDependent()
@@ -253,18 +253,19 @@ void VulkanRenderer::removeShader(const std::string& vertPath, const std::string
 	m_pipelineCache->removePipeline(vertPath, fragPath);
 }
 
-void VulkanRenderer::registerVertexData(const std::vector<Vertex>& vertexData)
+void VulkanRenderer::registerVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile)
 {
 	m_vertexBufferCache->getOrCreateVertexBuffer(vertexData,
+		pathToFile,
 		m_logicalDevice->getGraphicsQueue(),
 		m_commandPool->getCommandPool(),
 		m_logicalDevice->getLogicalDevice(),
 		m_logicalDevice->getPhysicalDevice());
 }
 
-void VulkanRenderer::removeVertexData(const std::vector<Vertex>& vertexData)
+void VulkanRenderer::removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile)
 {
-	m_vertexBufferCache->removeVertexBuffer(vertexData);
+	m_vertexBufferCache->removeVertexBuffer(vertexData, pathToFile);
 }
 
 void* VulkanRenderer::getVulkanOffscreenImageView()
@@ -272,9 +273,10 @@ void* VulkanRenderer::getVulkanOffscreenImageView()
 	return m_offscreenRenderer->getColorImageDescriptor();
 }
 
-void VulkanRenderer::registerIndexData(const std::vector<uint32_t>& indexData)
+void VulkanRenderer::registerIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile)
 {
 	m_indexBufferCache->getOrCreateIndexBuffer(indexData,
+		pathToFile,
 		m_logicalDevice->getGraphicsQueue(),
 		m_commandPool->getCommandPool(),
 		m_logicalDevice->getLogicalDevice(),
@@ -449,15 +451,17 @@ void VulkanRenderer::recordWorldRenderCommands(VkCommandBuffer commandBuffer)
 
 	query.each([&](const flecs::entity& e, Position& pos, MeshComponent& mesh)
 		{
+			const std::string meshPath = std::string(mesh.meshResourcePath);
+
 			auto& resourceManager = ResourceManager::getInstance();
-			std::shared_ptr<RMesh> loadedMesh = resourceManager.load<RMesh>(std::string(mesh.meshResourcePath));
+			std::shared_ptr<RMesh> loadedMesh = resourceManager.load<RMesh>(std::string(meshPath));
 
 			if (!loadedMesh)
 			{
-				LOG_INFO("Can't load mesh in path: " + std::string(mesh.meshResourcePath));
+				LOG_INFO("Can't load mesh in path: " + std::string(meshPath));
 			}
 
-			std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
+			/*std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
 			VulkanVertexBuffer* vertexBuffer = m_vertexBufferCache->getOrCreateVertexBuffer(vertices,
 				m_logicalDevice->getGraphicsQueue(),
 				m_commandPool->getCommandPool(),
@@ -467,7 +471,14 @@ void VulkanRenderer::recordWorldRenderCommands(VkCommandBuffer commandBuffer)
 			VkBuffer verBuffer = vertexBuffer->getBuffer();
 
 			VkDeviceSize offsets[] = { 0 };
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &verBuffer, offsets);
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &verBuffer, offsets);*/
+
+			VulkanIndexBuffer* vertexBuffer = m_indexBufferCache->getOrCreateIndexBuffer(loadedMesh->getIndicesData(),
+				meshPath,
+				m_logicalDevice->getGraphicsQueue(),
+				m_commandPool->getCommandPool(),
+				m_logicalDevice->getLogicalDevice(),
+				m_logicalDevice->getPhysicalDevice());
 		});
 }
 

@@ -116,26 +116,26 @@ public:
     /// Registers vertex data and creates a Vulkan vertex buffer if needed.
     /// </summary>
     /// <param name="vertexData">Vertex data to register.</param>
-    virtual void registerVertexData(const std::vector<Vertex>& vertexData) override;
+    virtual void registerVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile) override;
 
     /// <summary>
     /// Removes vertex data and releases associated buffers if no longer needed.
     /// </summary>
     /// <param name="vertexData">Vertex data to remove.</param>
-    virtual void removeVertexData(const std::vector<Vertex>& vertexData) override;
+    virtual void removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile) override;
     virtual void* getVulkanOffscreenImageView() override;
 
     /// <summary>
     /// Registers index data and creates a Vulkan index buffer if needed.
     /// </summary>
     /// <param name="indexData">index data to register.</param>
-    virtual void registerIndexData(const std::vector<uint32_t>& indexData) override;
+    virtual void registerIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) override;
 
     /// <summary>
     /// Removes index data and releases associated buffers if no longer needed.
     /// </summary>
     /// <param name="indexData">index data to remove.</param>
-    virtual void removeIndexData(const std::vector<uint32_t>& indexData) override;
+    virtual void removeIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) override;
 
     /// <summary>
     /// Recreates the swap chain and all dependent resources.

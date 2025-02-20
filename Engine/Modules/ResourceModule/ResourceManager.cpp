@@ -34,13 +34,14 @@ void ResourceManager::shutDown()
 
 	query.each([&](flecs::entity e, MeshComponent& mesh, Position& pos)
 		{
-			std::shared_ptr<RMesh> loadedMesh = load<RMesh>(std::string(mesh.meshResourcePath));
+			const std::string meshPath = std::string(mesh.meshResourcePath);
+			std::shared_ptr<RMesh> loadedMesh = load<RMesh>(meshPath);
 
 			if (!loadedMesh) return;
 
 			std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
-			RenderModule::getInstance().removeVertexData(vertices);
-			RenderModule::getInstance().removeIndexData(loadedMesh->getIndicesData());
+			RenderModule::getInstance().removeVertexData(vertices, meshPath);
+			RenderModule::getInstance().removeIndexData(loadedMesh->getIndicesData(), meshPath);
 		});
 }
 
@@ -64,13 +65,14 @@ void ResourceManager::checkAllResources()
 	auto query = world.query<Position, MeshComponent>();
 	query.each([](const flecs::entity& entity, Position& pos, MeshComponent& mesh)
 		{
-			std::shared_ptr<RMesh> loadedMesh = load<RMesh>(std::string(mesh.meshResourcePath));
+			const std::string meshPath = std::string(mesh.meshResourcePath);
+			std::shared_ptr<RMesh> loadedMesh = load<RMesh>(meshPath);
 
 			if (!loadedMesh) return;
 			
 			std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
-			RenderModule::getInstance().registerVertexData(vertices);
-			RenderModule::getInstance().registerIndexData(loadedMesh->getIndicesData());
+			RenderModule::getInstance().registerVertexData(vertices, meshPath);
+			RenderModule::getInstance().registerIndexData(loadedMesh->getIndicesData(), meshPath);
 		});
 
 	flecs::entity bob = world.entity("Bob");

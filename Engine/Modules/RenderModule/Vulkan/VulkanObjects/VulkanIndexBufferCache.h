@@ -19,13 +19,6 @@ class VulkanIndexBufferCache
     /// </summary>
     std::unordered_map<std::string, std::pair<uint32_t, std::unique_ptr<VulkanIndexBuffer>>> m_indexBuffers;
 
-    /// <summary>
-    /// Generates a unique hash string for a given vertex data set.
-    /// </summary>
-    /// <param name="indexData">Vector containing index data.</param>
-    /// <returns>Unique hash string representing the vertex data.</returns>
-    std::string hashIndexData(const std::vector<uint32_t>& indexData) const;
-
 public:
     VulkanIndexBufferCache();
     VulkanIndexBufferCache(const VulkanIndexBufferCache&) = delete;
@@ -47,6 +40,7 @@ public:
     /// <param name="physicalDevice">Vulkan physical device.</param>
     /// <returns>Pointer to the Vulkan vertex buffer.</returns>
     VulkanIndexBuffer* getOrCreateIndexBuffer(const std::vector<uint32_t>& indexData,
+        const std::string& pathToFile,
         VkQueue transferQueue,
         VkCommandPool commandPool,
         VkDevice device,
@@ -56,5 +50,5 @@ public:
     /// Removes a vertex buffer from the cache if it is no longer needed.
     /// </summary>
     /// <param name="vertexData">Vertex data associated with the buffer.</param>
-    void removeIndexBuffer(const std::vector<uint32_t>& indexData);
+    void removeIndexBuffer(const std::vector<uint32_t>& indexData, const std::string& pathToFile);
 };

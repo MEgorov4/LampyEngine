@@ -43,16 +43,16 @@ public:
     /// Registers vertex data, creating a vertex buffer if needed.
     /// </summary>
     /// <param name="vertexData">Vertex data to register.</param>
-    virtual void registerVertexData(const std::vector<Vertex>& vertexData) = 0;
+    virtual void registerVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile) = 0;
 
     /// <summary>
     /// Removes vertex data, releasing associated buffers if no longer needed.
     /// </summary>
     /// <param name="vertexData">Vertex data to remove.</param>
-    virtual void removeVertexData(const std::vector<Vertex>& vertexData) = 0;
+    virtual void removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile) = 0;
 
-    virtual void registerIndexData(const std::vector<uint32_t>& indexData) = 0;
-    virtual void removeIndexData(const std::vector<uint32_t>& indexData) = 0;
+    virtual void registerIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) = 0;
+    virtual void removeIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) = 0;
 
     virtual void* getVulkanOffscreenImageView() = 0;
     /// <summary>

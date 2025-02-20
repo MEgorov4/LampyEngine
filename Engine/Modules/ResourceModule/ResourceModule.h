@@ -51,7 +51,7 @@ public:
 				return Vertex(meshVertex);
 			});
 
-		RenderModule::getInstance().registerVertexData(v_vertices);
+		// RenderModule::getInstance().registerVertexData(v_vertices);
 		return mesh;
 	}
 	
@@ -66,7 +66,7 @@ public:
 				return Vertex(meshVertex);
 			});
 
-		RenderModule::getInstance().removeVertexData(vertices);
+		// RenderModule::getInstance().removeVertexData(vertices);
 	}
 	
 	std::vector<char> loadShader(const std::string& path)

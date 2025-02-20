@@ -18,13 +18,6 @@ class VulkanVertexBufferCache
     /// </summary>
     std::unordered_map<std::string, std::pair<uint32_t, std::unique_ptr<VulkanVertexBuffer>>> m_vertexBuffers;
 
-    /// <summary>
-    /// Generates a unique hash string for a given vertex data set.
-    /// </summary>
-    /// <param name="vertexData">Vector containing vertex data.</param>
-    /// <returns>Unique hash string representing the vertex data.</returns>
-    std::string hashVertexData(const std::vector<Vertex>& vertexData) const;
-
 public:
     VulkanVertexBufferCache();
     VulkanVertexBufferCache(const VulkanVertexBufferCache&) = delete;
@@ -46,6 +39,7 @@ public:
     /// <param name="physicalDevice">Vulkan physical device.</param>
     /// <returns>Pointer to the Vulkan vertex buffer.</returns>
     VulkanVertexBuffer* getOrCreateVertexBuffer(const std::vector<Vertex>& vertexData,
+        const std::string& pathToFile,
         VkQueue transferQueue,
         VkCommandPool commandPool,
         VkDevice device,
@@ -55,5 +49,5 @@ public:
     /// Removes a vertex buffer from the cache if it is no longer needed.
     /// </summary>
     /// <param name="vertexData">Vertex data associated with the buffer.</param>
-    void removeVertexBuffer(const std::vector<Vertex>& vertexData);
+    void removeVertexBuffer(const std::vector<Vertex>& vertexData, const std::string& pathToFile);
 };
