@@ -50,7 +50,7 @@ struct Camera
 
 struct MeshComponent
 {
-	const char* meshResourcePath;
+	char meshResourcePath[512];
 };
 
 class ECSModule
@@ -88,4 +88,7 @@ public:
 	void shutDown();
 
 	Event<> OnLoadInitialWorldState;
+
+private:
+	void registerComponents();
 };

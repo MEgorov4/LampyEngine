@@ -6,6 +6,7 @@
 #include "../../ObjectCoreModule/ECS/ECSModule.h"
 #include "../../ObjectCoreModule/ECS/ECSLuaScriptsSystem.h"
 #include "../../ProjectModule/ProjectModule.h"
+#include "../../FilesystemModule/FilesystemModule.h"
 
 class IComponentRenderer
 {
@@ -43,6 +44,7 @@ public:
 	}
 };
 
+
 class RotationRenderer : public IComponentRenderer
 {
 public:
@@ -72,6 +74,7 @@ public:
 	}
 };
 
+
 class ScaleRenderer : public IComponentRenderer
 {
 public:
@@ -100,6 +103,48 @@ public:
 		ImGui::EndChildFrame();
 	}
 };
+
+class MeshComponentRenderer : public IComponentRenderer
+{
+public:
+	void render(flecs::entity& entity) override
+	{
+		if (ImGui::BeginChildFrame(2, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4))) {
+			if (const MeshComponent* meshComponent = entity.get<MeshComponent>()) {
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("MeshComponent").x) / 2);
+
+				ImGui::SetWindowFontScale(1.2);
+				ImGui::Text("MeshComponent");
+				ImGui::SetWindowFontScale(1);
+
+				ImGui::SetCursorPosX(0);
+				ImGui::Separator();
+
+				ImGui::Text("Path:");
+				ImGui::SameLine();
+
+				std::string resPath = ProjectModule::getInstance().getProjectConfig().getResourcesPath();
+				ImGui::Text(FS.getFileName(meshComponent->meshResourcePath).c_str());
+
+				if (ImGui::BeginDragDropTarget()) {
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {
+						std::string droppedPath = static_cast<const char*>(payload->Data);
+						if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".obj") {
+							MeshComponent* meshComponent = entity.get_mut<MeshComponent>();
+							memcpy(droppedPath.data(), meshComponent->meshResourcePath,  sizeof(meshComponent->meshResourcePath));
+						}
+						LOG_INFO(std::format("Dropped file: {}", droppedPath));
+					}
+					ImGui::EndDragDropTarget();
+				}
+			}
+
+		}
+		ImGui::EndChildFrame();
+	}
+};
+
+
 class ScriptRenderer : public IComponentRenderer {
 public:
 	void render(flecs::entity& entity) override {
@@ -118,10 +163,7 @@ public:
 				ImGui::SameLine();
 
 				std::string resPath = ProjectModule::getInstance().getProjectConfig().getResourcesPath();
-				ImGui::Text(std::filesystem::relative(
-					std::filesystem::path(script->script_path),
-					std::filesystem::path(resPath)
-				).string().c_str());
+				ImGui::Text(FS.getFileName(script->script_path).c_str());
 
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {

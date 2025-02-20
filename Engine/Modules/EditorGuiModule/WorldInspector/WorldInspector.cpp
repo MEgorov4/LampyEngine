@@ -15,6 +15,7 @@ GUIWorldInspector::GUIWorldInspector() : GUIObject()
 	factory.registerRenderer("Rotation", []() {return std::make_unique<RotationRenderer>(); });
 	factory.registerRenderer("Scale", []() {return std::make_unique<ScaleRenderer>(); });
 	factory.registerRenderer("Script", []() {return std::make_unique<ScriptRenderer>(); });
+	factory.registerRenderer("MeshComponent", []() {return std::make_unique<MeshComponentRenderer>(); });
 	factory.registerRenderer("Camera", []() {return std::make_unique<CameraRenderer>(); });
 }
 
@@ -124,6 +125,14 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 		if (m_selectedEntity.has<Camera>())
 		{
 			auto renderer = factory.createRenderer("Camera");
+			if (renderer) {
+				renderer->render(m_selectedEntity);
+			}
+		}
+
+		if (m_selectedEntity.has<MeshComponent>())
+		{
+			auto renderer = factory.createRenderer("MeshComponent");
 			if (renderer) {
 				renderer->render(m_selectedEntity);
 			}

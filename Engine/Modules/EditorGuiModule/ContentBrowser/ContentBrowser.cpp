@@ -21,11 +21,15 @@ GUIContentBrowser::GUIContentBrowser()
 
 void GUIContentBrowser::updateContent()
 {
-	m_files.clear();
-	m_folders.clear();
+	std::thread thread([&]() {
+		m_files.clear();
+		m_folders.clear();
 
-	m_folders = dirIter.getCurrentDirContents({ DirContentType::FOLDERS });
-	m_files = dirIter.getCurrentDirContents({DirContentType::FILES});
+		m_folders = dirIter.getCurrentDirContents({ DirContentType::FOLDERS });
+		m_files = dirIter.getCurrentDirContents({ DirContentType::FILES });
+		});
+
+	thread.detach();
 }
 
 void GUIContentBrowser::render()
@@ -52,7 +56,7 @@ void GUIContentBrowser::render()
 		ImGui::SetWindowFontScale(1.2);
 		ImGui::Text("Files in");
 		ImGui::SameLine();
-		ImGui::TextColored(ImVec4(0.5882353186607361f, 0.5372549295425415f, 0.1764705926179886f, 1.0f), FS.getRelativeToTheResources(dirIter.getCurrentDir()).c_str());
+		
 		ImGui::SetWindowFontScale(1);
 
 		ImGui::Separator();

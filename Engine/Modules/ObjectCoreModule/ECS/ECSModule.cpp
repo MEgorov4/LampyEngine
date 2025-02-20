@@ -4,6 +4,7 @@
 #include "../../LoggerModule/Logger.h"
 #include "../../ProjectModule/ProjectModule.h"
 #include "ECSLuaScriptsSystem.h"
+
 void ECSModule::startup()
 {
 	LOG_INFO("ECSModule: startup");
@@ -12,18 +13,18 @@ void ECSModule::startup()
 
 	ProjectConfig& config = ProjectModule::getInstance().getProjectConfig();
 	m_currentWorldFile = config.getEditorStartWorld();
-
+	registerComponents();
 	loadInitialWorldState();
 	ECSluaScriptsSystem::getInstance().registerSystem(m_world);
-
+	
 	m_world.component<Script>();
 }
 
 void ECSModule::loadInitialWorldState()
 {
-	m_world.entity("Bob").set<Position>({ 10, 20, 30 }).set<MeshComponent>({ "../Resources/Meshes/viking_room.obj" });
+	auto& c = m_world.entity("Bob").set<Position>({ 10, 20, 30 }).set<MeshComponent>({ "../Resources/Meshes/viking_room.obj" });
 	m_world.entity("Alice").set<Position>({ 10, 20, 30 });
-	auto& c = m_world.entity("Penis").set<Position>({ 10, 20, 30 });
+	m_world.entity("Penis").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 	m_world.entity("Chlen").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
@@ -126,6 +127,22 @@ flecs::world& ECSModule::getCurrentWorld()
 void ECSModule::shutDown()
 {
 	m_world.reset();
+}
+
+void ECSModule::registerComponents()
+{
+	m_world.component<Position>()
+		.member("x", &Position::x)
+		.member("y", &Position::y)
+		.member("z", &Position::z);
+
+	m_world.component<Scale>()
+		.member("x", &Scale::x)
+		.member("y", &Scale::y)
+		.member("z", &Scale::z);
+	
+	m_world.component<MeshComponent>()
+		.member("meshResourcePath", &MeshComponent::meshResourcePath);
 }
 
 void ECSModule::ecsTick(float deltaTime)
