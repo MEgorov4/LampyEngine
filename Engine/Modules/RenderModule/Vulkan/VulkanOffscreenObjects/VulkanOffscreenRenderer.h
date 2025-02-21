@@ -108,6 +108,8 @@ public:
     /// </summary>
     VkSampler getColorSampler() const { return colorSampler; }
 
+
+    VkRenderPass getOffscreenRenderPass() const { return renderPass; }
 private:
     VkDevice device;
     VkPhysicalDevice physicalDevice;

@@ -211,7 +211,6 @@ void VulkanRenderer::cleanSwapChainAndDependent()
 	m_commandBuffers.reset();
 	m_framebuffers.reset();
 	m_renderPass.reset();
-	m_pipelineCache->clearCache();
 	m_swapChain.reset();
 }
 
@@ -248,7 +247,7 @@ void VulkanRenderer::registerShader(const std::string& vertPath, const std::stri
 	m_pipelineCache->getOrCreatePipeline(vertPath,
 		fragPath,
 		m_logicalDevice->getLogicalDevice(),
-		m_renderPass->getRenderPass());
+		m_offscreenRenderer->getOffscreenRenderPass());
 }
 
 void VulkanRenderer::removeShader(const std::string& vertPath, const std::string& fragPath)
@@ -411,6 +410,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 	renderPassInfo.clearValueCount = 1;
 	renderPassInfo.pClearValues = &clearColor;
 
+
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 
@@ -441,6 +441,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 
 	m_offscreenRenderer->endRenderPass(commandBuffer);
 
+
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("failed to record command buffer!");
 	}
@@ -458,7 +459,7 @@ void VulkanRenderer::recordWorldRenderCommands(VkCommandBuffer commandBuffer)
 
 			auto& resourceManager = ResourceManager::getInstance();
 			std::shared_ptr<RMesh> loadedMesh = resourceManager.load<RMesh>(std::string(meshPath));
-
+			
 			if (!loadedMesh)
 			{
 				LOG_INFO("Can't load mesh in path: " + std::string(meshPath));
@@ -486,7 +487,7 @@ void VulkanRenderer::recordWorldRenderCommands(VkCommandBuffer commandBuffer)
 			
 			vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-			// Отрисовываем меш
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 			vkCmdDrawIndexed(commandBuffer, indexBuffer->getIndexCount(), 1, 0, 0, 0);
 		});
 }
