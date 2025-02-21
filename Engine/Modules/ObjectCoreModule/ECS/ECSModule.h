@@ -1,5 +1,4 @@
 #pragma once
-#include <memory>
 #include <flecs.h>
 #include <string>
 #include <glm/glm.hpp>
@@ -9,7 +8,7 @@
 struct Position {
 	float x = 0.0f, y = 0.0f, z = 0.0f;
 
-	glm::vec3 toGLMVec() const{ return glm::vec3(x, y, z); }
+	glm::vec3 toGLMVec() const { return glm::vec3(x, y, z); }
 
 	void fromGLMVec(const glm::vec3& v)
 	{
@@ -20,23 +19,43 @@ struct Position {
 };
 
 struct Rotation {
-	glm::quat value = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); 
+	float w = 1.0f;
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
 
-	Rotation() = default;
+	glm::quat toQuat() const {
+		return glm::quat(w, x, y, z);
+	}
 
-	Rotation(const glm::vec3& eulerAngles) : value(glm::quat(eulerAngles)) {}
+	glm::vec3 toEuler() const {
+		return glm::eulerAngles(toQuat());
+	}
 
-	glm::vec3 toEulerAngles() const { return glm::eulerAngles(value); }
+	void fromQuat(const glm::quat& q) {
+		w = q.w;
+		x = q.x;
+		y = q.y;
+		z = q.z;
+	}
+
+	void fromEuler(const glm::vec3& euler) {
+		auto q = glm::quat(euler);
+		fromQuat(q);
+	}
 };
 
 struct Scale {
 	float x = 1.0f, y = 1.0f, z = 1.0f;
 
-	Scale() = default;
+	glm::vec3 toGLMVec() const {return glm::vec3(x, y , z);}
 
-	Scale(const glm::vec3& v) : x(v.x), y(v.y), z(v.z) {}
-
-	operator glm::vec3() const { return glm::vec3(x, y, z); }
+	void fromGMLVec(const glm::vec3& v)
+	{
+		x = v.x;
+		y = v.y;
+		z = v.z;
+	}
 };
 
 struct Camera
@@ -50,7 +69,7 @@ struct Camera
 
 struct MeshComponent
 {
-	char meshResourcePath[512];
+	char meshResourcePath[256];
 };
 
 class ECSModule

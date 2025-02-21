@@ -1,7 +1,6 @@
 #pragma once
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <thread>

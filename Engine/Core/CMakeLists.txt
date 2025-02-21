@@ -18,6 +18,7 @@ target_link_libraries(Engine PRIVATE
     EventModule
     ObjectCoreModule
     LuaScriptModule
+    ShaderCompilerModule
 )
 
 set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Resources")

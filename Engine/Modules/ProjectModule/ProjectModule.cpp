@@ -46,8 +46,9 @@ void ProjectModule::setupProjectEnvironment()
 	LOG_INFO("ProjectModule: Run project browser");
 	namespace bp = boost::process;
 	
+	system("dir");
 	bp::ipstream out_stream;
-	bp::child projectBrowserProcess("../../build/bin/debug/ProjectBrowser.exe", bp::std_out > out_stream);
+	bp::child projectBrowserProcess("ProjectBrowser.exe", bp::std_out > out_stream);
 	
 	std::string line;
 	while (std::getline(out_stream, line))

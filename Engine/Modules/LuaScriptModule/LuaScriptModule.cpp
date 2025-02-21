@@ -1,7 +1,6 @@
 #include "LuaScriptModule.h"
 #include "../LoggerModule/Logger.h"
 #include "../InputModule/InputModule.h"
-#include "../ObjectCoreModule/ECS/ECSLuaScriptsSystem.h"
 #include "../ObjectCoreModule/ECS/ECSModule.h"
 #include "../AudioModule/AudioModule.h"
 
@@ -307,10 +306,11 @@ void LuaScriptModule::registerECSModule()
 			if (auto* position = e.get<Position>()) {
 				return position->toGLMVec();
 			}
+			return glm::vec3();
 		},
 
 		"set_position", [](flecs::entity& e, glm::vec3 pos) {
-			if (auto* position = e.get<Position>())
+			if (e.has<Position>())
 			{
 				e.set<Position>({pos.x, pos.y, pos.z});
 			}

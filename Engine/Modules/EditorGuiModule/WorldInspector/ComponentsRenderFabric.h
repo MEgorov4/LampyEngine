@@ -51,9 +51,9 @@ public:
 	void render(flecs::entity& entity) override
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
-
+		
 		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) {
-			if (const Rotation* rot = entity.get<Rotation>()) {
+			if (auto rot = entity.get<Rotation>()) {
 				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Rotation").x) / 2);
 
 				ImGui::SetCursorPosX(0);
@@ -62,11 +62,12 @@ public:
 				ImGui::Text("Rotation");
 
 				ImGui::SameLine();
-				glm::vec3 angles = rot->toEulerAngles();
+				const glm::vec3 angles = rot->toEuler();
 				float rotation[3] = { angles.x, angles.y, angles.y };
 
 				if (ImGui::SliderFloat3("##Rotation", rotation, -360, 360)) {
-					entity.set<Rotation>(Rotation(glm::vec3(rotation[0], rotation[1], rotation[2])));
+					const auto newRot = entity.get_mut<Rotation>();
+					newRot->fromEuler(glm::vec3(rotation[0], rotation[1], rotation[2]));
 				}
 			}
 		}
@@ -96,7 +97,8 @@ public:
 				float scalev[3] = { scale->x, scale->y, scale->z };
 
 				if (ImGui::SliderFloat3("##Scale", scalev, -1000, 1000)) {
-					entity.set<Scale>({ glm::vec3(scalev[0], scalev[1], scalev[2]) });
+					auto sc = entity.get_mut<Scale>();
+					sc->fromGMLVec(glm::vec3(scalev[0], scalev[1], scalev[2]));
 				}
 			}
 		}

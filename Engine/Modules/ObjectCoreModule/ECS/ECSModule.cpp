@@ -16,32 +16,21 @@ void ECSModule::startup()
 	registerComponents();
 	loadInitialWorldState();
 	ECSluaScriptsSystem::getInstance().registerSystem(m_world);
-	
-	m_world.component<Script>();
 }
 
 void ECSModule::loadInitialWorldState()
 {
-	auto& c = m_world.entity("Bob").set<Position>({ 10, 20, 30 }).set<MeshComponent>({ "../Resources/Meshes/viking_room.obj" });
-	m_world.entity("Alice").set<Position>({ 10, 20, 30 });
+	m_world.entity("Bob").set<Position>({ 10, 20, 30 }).set<MeshComponent>({ "../Resources/Meshes/viking_room.obj" });
+	m_world.entity("Alice").set<Position>({ 10, 20, 30 }).set<Scale>({1.0f, 1.0f, 1.0f}).set<Rotation>({1,0,0,0});
 	m_world.entity("Penis").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 	m_world.entity("Chlen").set<Position>({ 10, 20, 30 });
 	// m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
-	flecs::entity entity = m_world.entity("Hero");
-	m_world.entity("Hero").set<Position>({ 0, 0, 0 }).set<Camera>({90, 0.7, 0, 100, true});
-	m_world.entity("Hero").set<Script>({ ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" }); 
+	m_world.entity("Hero");
+	m_world.entity("Hero").set<Position>({ 0, 0, 0 }).set<Camera>({90.f, 0.7f, 0, 100.f, true});
+	m_world.entity("Hero").set<Script>({ ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
 	
-	
-	//if (m_currentWorldFile == "default")
-	//{
-	//	fillDefaultWorld();
-	//}
-	//else
-	//{
-	//	loadWorldFromFile(m_currentWorldFile);
-	//}
-	std::string json = c.to_json().c_str();
+	std::string json = m_world.to_json().c_str();
 
 	LOG_INFO(json);
 }
@@ -136,19 +125,35 @@ void ECSModule::registerComponents()
 		.member("y", &Position::y)
 		.member("z", &Position::z);
 
+	m_world.component<Rotation>()
+		.member("w", &Rotation::w)
+		.member("x", &Rotation::x)
+		.member("y", &Rotation::y)
+		.member("z", &Rotation::z);
+	
 	m_world.component<Scale>()
 		.member("x", &Scale::x)
 		.member("y", &Scale::y)
 		.member("z", &Scale::z);
+
+	m_world.component<Camera>()
+		.member("fov", &Camera::fov)
+		.member("aspect", &Camera::aspect)
+		.member("farClip", &Camera::farClip)
+		.member("nearClip", &Camera::nearClip);
 	
 	m_world.component<MeshComponent>()
 		.member("meshResourcePath", &MeshComponent::meshResourcePath);
+
 }
 
 void ECSModule::ecsTick(float deltaTime)
 {
 	if (m_tickEnabled)
 	{
-		m_world.progress(deltaTime);
+		if(m_world.progress(deltaTime))
+		{
+			
+		}
 	}
 }

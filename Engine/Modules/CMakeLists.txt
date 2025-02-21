@@ -16,3 +16,5 @@ add_subdirectory(ObjectCoreModule)
 add_subdirectory(ImGuiModule)
 add_subdirectory(EditorGuiModule)
 
+add_subdirectory(ShaderCompilerModule)
+

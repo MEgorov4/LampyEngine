@@ -53,10 +53,9 @@ void GUIContentBrowser::render()
 
 		ImGui::BeginChild("FilesPane", ImVec2(0, 0), true);
 
+
 		ImGui::SetWindowFontScale(1.2);
 		ImGui::Text("Files in");
-		ImGui::SameLine();
-		
 		ImGui::SetWindowFontScale(1);
 
 		ImGui::Separator();

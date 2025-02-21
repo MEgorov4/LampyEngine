@@ -6,5 +6,8 @@ file(GLOB_RECURSE FILESYSTEM_MODULE
 format_source_group(${FILESYSTEM_MODULE})
 
 add_library(FilesystemModule ${FILESYSTEM_MODULE})
-find_package(clip)
-target_link_libraries(FilesystemModule PRIVATE LoggerModule ProjectModule clip::clip)
+target_link_libraries(FilesystemModule PRIVATE 
+    LoggerModule 
+    ProjectModule 
+    clip::clip
+)

@@ -5,7 +5,14 @@ file(GLOB_RECURSE EDITOR_GUI_MODULE_SOURCE
 format_source_group(${EDITOR_GUI_MODULE_SOURCE})
 add_library(EditorGuiModule STATIC ${EDITOR_GUI_MODULE_SOURCE})
 
-find_package(VulkanLoader)
-
-target_link_libraries(EditorGuiModule PRIVATE Vulkan::Loader EventModule ProjectModule ObjectCoreModule ImGuiModule RenderModule FilesystemModule LuaScriptModule)
+target_link_libraries(EditorGuiModule PRIVATE 
+    Vulkan::Loader 
+    EventModule 
+    ProjectModule 
+    ObjectCoreModule 
+    ImGuiModule 
+    RenderModule 
+    FilesystemModule 
+    LuaScriptModule
+)
 # target_link_libraries(EditorGuiModule PUBLIC ImGuiModule)
