@@ -143,6 +143,11 @@ std::string FilesystemModule::readTextFile(constr filePath)
 	return buffer.str();
 }
 
+std::string FilesystemModule::getCurrentPath()
+{
+	return fs::current_path().string();
+}
+
 std::string FilesystemModule::getFileName(constr filePath)
 {
 	return fs::path(filePath).filename().string();
