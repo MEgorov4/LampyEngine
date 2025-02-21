@@ -3,8 +3,21 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
+class IVulkanBuffer
+{
+protected:
+    virtual void createBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
+        VkDeviceSize size, VkBufferUsageFlags usage,
+        VkMemoryPropertyFlags properties,
+        VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
-class VulkanBuffer 
+    virtual uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+    virtual void copyBuffer(VkDevice device, VkQueue transferQueue, VkCommandPool commandPool,
+        VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+};
+
+class VulkanBuffer : public IVulkanBuffer
 {
 protected:
     VkDevice m_device; ///< Handle to the Vulkan logical device.
@@ -18,15 +31,4 @@ public:
     virtual ~VulkanBuffer();
 
     VkBuffer getBuffer();
-
-protected:
-    void createBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
-        VkDeviceSize size, VkBufferUsageFlags usage,
-        VkMemoryPropertyFlags properties,
-        VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-
-    uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
-
-    void copyBuffer(VkDevice device, VkQueue transferQueue, VkCommandPool commandPool,
-        VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 };

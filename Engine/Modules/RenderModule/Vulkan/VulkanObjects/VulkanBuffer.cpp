@@ -23,7 +23,7 @@ VkBuffer VulkanBuffer::getBuffer()
 	return m_buffer;
 }
 
-void VulkanBuffer::createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+void IVulkanBuffer::createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -50,7 +50,7 @@ void VulkanBuffer::createBuffer(VkDevice device, VkPhysicalDevice physicalDevice
     vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
-uint32_t VulkanBuffer::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+uint32_t IVulkanBuffer::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
@@ -64,7 +64,7 @@ uint32_t VulkanBuffer::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t 
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-void VulkanBuffer::copyBuffer(VkDevice device, VkQueue transferQueue, VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+void IVulkanBuffer::copyBuffer(VkDevice device, VkQueue transferQueue, VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

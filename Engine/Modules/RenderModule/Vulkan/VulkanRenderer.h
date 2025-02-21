@@ -44,6 +44,7 @@ class VulkanCommandPool;
 class VulkanCommandBuffers;
 class VulkanSynchronizationManager;
 class VulkanPipelineCache;
+class VulkanUniformBuffer;
 class VulkanIndexBufferCache;
 class VulkanVertexBufferCache;
 class VulkanOffscreenRenderer;
@@ -66,6 +67,7 @@ class VulkanRenderer : public IRenderer
     std::unique_ptr<VulkanPipelineCache> m_pipelineCache;
     std::unique_ptr<VulkanIndexBufferCache> m_indexBufferCache;
     std::unique_ptr<VulkanVertexBufferCache> m_vertexBufferCache;
+    std::unique_ptr<VulkanUniformBuffer> m_uniformBuffer;
 
     std::unique_ptr<VulkanDescriptorPool> m_descriptorPool;
     std::unique_ptr<VulkanOffscreenRenderer> m_offscreenRenderer;

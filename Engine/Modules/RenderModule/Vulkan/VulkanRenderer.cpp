@@ -15,6 +15,7 @@
 #include "VulkanObjects/VulkanCommandBuffers.h"
 #include "VulkanObjects/VulkanSynchronizationManager.h"
 
+#include "VulkanObjects/VulkanUniformBuffer.h"
 #include "VulkanObjects/VulkanIndexBufferCache.h"
 #include "VulkanObjects/VulkanVertexBufferCache.h"
 #include "VulkanObjects/VulkanPipelineCache.h"
@@ -63,6 +64,7 @@ void VulkanRenderer::initVulkan()
 	m_pipelineCache = std::make_unique<VulkanPipelineCache>();
 	m_vertexBufferCache = std::make_unique<VulkanVertexBufferCache>();
 	m_indexBufferCache = std::make_unique<VulkanIndexBufferCache>();
+	// m_uniformBuffer = std::make_unique<VulkanUniformBuffer>(m_logicalDevice->getLogicalDevice(), m_logicalDevice->getPhysicalDevice());
 
 	m_syncManager = std::make_unique<VulkanSynchronizationManager>(m_logicalDevice->getLogicalDevice(),
 		RenderConfig::getInstance().getMaxFramesInFlight());
@@ -181,6 +183,7 @@ void VulkanRenderer::cleanupVulkan()
 	m_descriptorPool.reset();
 	m_syncManager.reset();
 	cleanSwapChainAndDependent();
+	// m_uniformBuffer->cleanupVulkanUniformBuffers();
 	m_vertexBufferCache->clearCache();
 	m_indexBufferCache->clearCache();
 	m_commandPool.reset();
@@ -461,24 +464,30 @@ void VulkanRenderer::recordWorldRenderCommands(VkCommandBuffer commandBuffer)
 				LOG_INFO("Can't load mesh in path: " + std::string(meshPath));
 			}
 
-			/*std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
+			std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
 			VulkanVertexBuffer* vertexBuffer = m_vertexBufferCache->getOrCreateVertexBuffer(vertices,
-				m_logicalDevice->getGraphicsQueue(),
-				m_commandPool->getCommandPool(),
-				m_logicalDevice->getLogicalDevice(),
-				m_logicalDevice->getPhysicalDevice());
-
-			VkBuffer verBuffer = vertexBuffer->getBuffer();
-
-			VkDeviceSize offsets[] = { 0 };
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &verBuffer, offsets);*/
-
-			VulkanIndexBuffer* vertexBuffer = m_indexBufferCache->getOrCreateIndexBuffer(loadedMesh->getIndicesData(),
 				meshPath,
 				m_logicalDevice->getGraphicsQueue(),
 				m_commandPool->getCommandPool(),
 				m_logicalDevice->getLogicalDevice(),
 				m_logicalDevice->getPhysicalDevice());
+			
+			VkBuffer verBuffer = vertexBuffer->getBuffer();
+
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &verBuffer, offsets);
+
+			VulkanIndexBuffer* indexBuffer = m_indexBufferCache->getOrCreateIndexBuffer(loadedMesh->getIndicesData(),
+				meshPath,
+				m_logicalDevice->getGraphicsQueue(),
+				m_commandPool->getCommandPool(),
+				m_logicalDevice->getLogicalDevice(),
+				m_logicalDevice->getPhysicalDevice());
+			
+			vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+			// Отрисовываем меш
+			vkCmdDrawIndexed(commandBuffer, indexBuffer->getIndexCount(), 1, 0, 0, 0);
 		});
 }
 
