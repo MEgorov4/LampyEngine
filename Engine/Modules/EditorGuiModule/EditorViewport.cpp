@@ -1,7 +1,7 @@
 #include "EditorViewport.h"
 #include <imgui.h>
 #include "../RenderModule/RenderModule.h"
-GUIEditorViewport::GUIEditorViewport() : GUIObject(), m_offscreenImageDescriptor(RenderModule::getInstance().getRenderer()->getVulkanOffscreenImageView())
+GUIEditorViewport::GUIEditorViewport() : GUIObject(), m_offscreenImageDescriptor(RenderModule::getInstance().getRenderer()->getOffscreenImageDescriptor())
 {
 }
 

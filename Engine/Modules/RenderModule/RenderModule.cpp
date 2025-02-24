@@ -2,6 +2,7 @@
 
 #include "Vulkan/VulkanRenderer.h"
 #include "../WindowModule/Window.h"
+#include "OpenGL/OpenGLRenderer.h"
 
 void RenderModule::startup(Window* window)
 {
@@ -13,8 +14,8 @@ void RenderModule::startup(Window* window)
 	case GraphicsAPI::Vulkan:
 		m_renderer = std::make_unique<VulkanRenderer>(window);
 		break;
-
-		// case GraphicsAPI::OpenGL:
-		//     m_renderer = std::make_unique<OpenGLRenderer>(); (Implementation required)
+	case GraphicsAPI::OpenGL:
+		m_renderer = std::make_unique<OpenGLRenderer>(window);
+		break;
 	}
 }

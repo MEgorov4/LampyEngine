@@ -54,7 +54,7 @@ public:
     virtual void registerIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) = 0;
     virtual void removeIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) = 0;
 
-    virtual void* getVulkanOffscreenImageView() = 0;
+    virtual void* getOffscreenImageDescriptor() = 0;
     /// <summary>
     /// Waits for the renderer to complete all rendering operations before proceeding.
     /// </summary>

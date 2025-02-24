@@ -125,7 +125,7 @@ public:
     /// </summary>
     /// <param name="vertexData">Vertex data to remove.</param>
     virtual void removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile) override;
-    virtual void* getVulkanOffscreenImageView() override;
+    virtual void* getOffscreenImageDescriptor() override;
 
     /// <summary>
     /// Registers index data and creates a Vulkan index buffer if needed.

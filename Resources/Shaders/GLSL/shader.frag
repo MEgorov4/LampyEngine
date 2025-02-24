@@ -1,15 +1,18 @@
 #version 450
 
-layout(binding = 1) uniform sampler2D texSampler;
-
-layout(location = 0) in vec3 fragColor;
-layout(location = 1) in vec2 fragTexCoord;
+layout(location = 0) in vec2 fragUV;
+layout(location = 1) in vec3 fragNormal; 
 
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
-    // outColor = vec4(fragColor, 1.0);
-    outColor = texture(texSampler, fragTexCoord);
-    // outColor = vec4(fragColor * texture(texSampler, fragTexCoord).rgb, 1.0);
+    float scale = 10.0;
+    vec2 uvScaled = fragUV * scale;
+    
+    float checker = mod(floor(uvScaled.x) + floor(uvScaled.y), 2.0);
+    
+    vec3 chessColor = (checker < 1.0) ? vec3(1.0) : vec3(0.0);
+    
+    outColor = vec4(chessColor, 1.0);
 }

@@ -1,7 +1,10 @@
 #pragma once
+
+#include "GL/glew.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vector>
+#include "../RenderModule/RenderConfig.h"
 
 /// <summary>
 /// Encapsulates a GLFW window and manages Vulkan-related interactions.
@@ -19,7 +22,7 @@ public:
     /// <param name="height">Height of the window in pixels.</param>
     /// <param name="title">Title of the window.</param>
     /// <exception cref="std::runtime_error">Thrown if GLFW initialization fails.</exception>
-    Window(int width, int height, const char* title);
+    Window(int width, int height, const char* title, GraphicsAPI api);
 
     /// <summary>
     /// Destroys the GLFW window and terminates GLFW.

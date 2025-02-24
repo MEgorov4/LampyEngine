@@ -5,7 +5,7 @@
 
 #include "../LoggerModule/Logger.h"
 
-Window::Window(int width, int height, const char* title)
+Window::Window(int width, int height, const char* title, GraphicsAPI api)
 {	
 	
 	LOG_INFO("Window: Start create window: width = " + std::format("{}", width) + ", height = " + std::format("{}", height) + ", title = " + std::format("{}", title));
@@ -14,10 +14,18 @@ Window::Window(int width, int height, const char* title)
 	{
 		throw std::runtime_error("failed to initialise glfw");
 	}
-	
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+	if (api == GraphicsAPI::Vulkan)
+	{
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	}
 
 	m_window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+
+	if (api == GraphicsAPI::OpenGL)
+	{
+		glfwMakeContextCurrent(m_window);
+	}
 
 	LOG_INFO("Window: Window created");
 

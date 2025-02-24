@@ -12,6 +12,7 @@ target_link_libraries(RenderModule PUBLIC
     LoggerModule
     Vulkan::Loader
     PRIVATE
+    GLEW::GLEW
     ImGuiModule
     glfw
     glm::glm

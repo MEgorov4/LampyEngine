@@ -9,4 +9,5 @@ target_link_libraries(WindowModule PUBLIC
     glfw
     Vulkan::Loader
     LoggerModule
+    GLEW::GLEW
 )

@@ -270,7 +270,7 @@ void VulkanRenderer::removeVertexData(const std::vector<Vertex>& vertexData, con
 	m_vertexBufferCache->removeVertexBuffer(vertexData, pathToFile);
 }
 
-void* VulkanRenderer::getVulkanOffscreenImageView()
+void* VulkanRenderer::getOffscreenImageDescriptor()
 {
 	return m_offscreenRenderer->getColorImageDescriptor();
 }

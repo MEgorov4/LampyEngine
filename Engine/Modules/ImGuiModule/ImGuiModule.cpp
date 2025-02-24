@@ -5,10 +5,12 @@
 
 #include "GLFWBackends/imgui_impl_glfw.h"
 #include "VulkanBackends/imgui_impl_vulkan.h"
+#include "OpenGLBackends/imgui_impl_opengl3.h"
 
 #include "GUIObject.h"
 
 #include "../LoggerModule/Logger.h"
+#include "../RenderModule/RenderConfig.h"
 
 void ImGuiModule::startup()
 {
@@ -113,7 +115,15 @@ void ImGuiModule::setImGuiStyle()
 
 void ImGuiModule::renderUI() const
 {
-    ImGui_ImplVulkan_NewFrame();
+	switch (RenderConfig::getInstance().getGraphicsAPI())
+	{
+	case GraphicsAPI::Vulkan:
+		ImGui_ImplVulkan_NewFrame();
+		break;
+	case GraphicsAPI::OpenGL:
+		ImGui_ImplOpenGL3_NewFrame();
+		break;
+	}
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     
@@ -123,7 +133,7 @@ void ImGuiModule::renderUI() const
         assert(object);
         object->render();
     }
-
+	
     ImGui::Render();
     ImGui::EndFrame();
 }

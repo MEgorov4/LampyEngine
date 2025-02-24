@@ -22,10 +22,8 @@ void ECSModule::loadInitialWorldState()
 {
 	m_world.entity("Bob").set<Position>({ 10, 20, 30 }).set<MeshComponent>({ "../Resources/Meshes/viking_room.obj" });
 	m_world.entity("Alice").set<Position>({ 10, 20, 30 }).set<Scale>({1.0f, 1.0f, 1.0f}).set<Rotation>({1,0,0,0});
-	m_world.entity("Penis").set<Position>({ 10, 20, 30 });
-	// m_world.entity("Penis").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
-	m_world.entity("Chlen").set<Position>({ 10, 20, 30 });
-	// m_world.entity("Chlen").set<Script>({ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
+	m_world.entity("Tom").set<Position>({ 10, 20, 30 });
+	m_world.entity("Jerry").set<Position>({ 10, 20, 30 });
 	m_world.entity("Hero");
 	m_world.entity("Hero").set<Position>({ 0, 0, 0 }).set<Camera>({90.f, 0.7f, 0, 100.f, true});
 	m_world.entity("Hero").set<Script>({ ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});

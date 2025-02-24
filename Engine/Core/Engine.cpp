@@ -35,7 +35,7 @@ void Engine::run()
 
 void Engine::startupModules()
 {
-	WindowModule::getInstance().startup(800, 600, "Lampy Engine");
+	WindowModule::getInstance().startup(800, 600, "Lampy Engine", GraphicsAPI::Vulkan);
 
 	InputModule::getInstance().startup(WindowModule::getInstance().getWindow());
 
