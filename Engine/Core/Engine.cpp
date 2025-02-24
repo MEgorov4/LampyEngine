@@ -35,7 +35,7 @@ void Engine::run()
 
 void Engine::startupModules()
 {
-	WindowModule::getInstance().startup(800, 600, "Lampy Engine", GraphicsAPI::Vulkan);
+	WindowModule::getInstance().startup(800, 600, "Lampy Engine", GraphicsAPI::OpenGL);
 
 	InputModule::getInstance().startup(WindowModule::getInstance().getWindow());
 
@@ -43,7 +43,7 @@ void Engine::startupModules()
 
 	RenderConfig& renderConfig = RenderConfig::getInstance();
 	renderConfig.setMaxFramesInFlight(EngineConfig::getInstance().getMaxFramesInFlight());
-	renderConfig.setGraphicsAPI(GraphicsAPI::Vulkan);
+	renderConfig.setGraphicsAPI(GraphicsAPI::OpenGL);
 	RenderModule::getInstance().startup(WindowModule::getInstance().getWindow());
 	
 	AudioModule::getInstance().startup();

@@ -28,3 +28,5 @@ public:
 private:
 	TextureInfo textureInfo;
 };
+
+

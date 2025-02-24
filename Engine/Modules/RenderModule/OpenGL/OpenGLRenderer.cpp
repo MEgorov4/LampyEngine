@@ -83,26 +83,15 @@ void OpenGLRenderer::renderWorld()
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //m_shader->use();
+    
+    for (auto& renderObject : m_renderObjects) // Custom ShaderPass
+    {
+        renderObject.shader->use();
+        ShaderUniformBlock block = { renderObject.modelMatrix, glm::mat4(1), glm::mat4(1)};
+        renderObject.shader->setUniformBlock(block);
+        renderObject.mesh->draw();
+    }
 
-    //glm::mat4 model = glm::mat4(1.0f);
-    //model = glm::rotate(model, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 1.0f, 0.0f));
-
-    //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-    //glm::mat4 view = glm::lookAt(cameraPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-    //float aspectRatio = static_cast<float>(m_window->getExtent().width) / static_cast<float>(m_window->getExtent().height);
-    //glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
-
-    //glm::mat4 viewProjection = projection * view;
-
-    //glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
-
-    //m_shader->setUniformMat4f("model", model);
-    //m_shader->setUniformMat4f("viewProjection", viewProjection);
-    //m_shader->setUniformMat3f("normalMatrix", normalMatrix);
-
-    // Рисуем все буферы
     for (auto& buffer : m_vertexBuffers)
     {
         buffer->bind();

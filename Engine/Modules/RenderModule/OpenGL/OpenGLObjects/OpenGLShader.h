@@ -2,28 +2,23 @@
 
 #include <string>
 #include <vector>
-
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include "../../../ResourceModule/Shader.h"
+#include "../../Abstract/IShader.h"
 
-class OpenGLShader
+class OpenGLShader : public IShader
 {
 	GLuint m_programID;
+	GLuint m_UBO;
 public:
-	OpenGLShader(const std::string& vertPath, const std::string& fragPath);
+	OpenGLShader(const std::shared_ptr<RShader>& vertShader, const std::shared_ptr<RShader>& fragShader);
 	~OpenGLShader();
-
-	void use() const;
 
 	GLuint getProgramID() const { return m_programID; }
 
-	void setUniform1i(const std::string& name, int value);
-	void setUniform1f(const std::string& name, float value);
-	void setUniform2f(const std::string& name, const glm::vec2& value);
-	void setUniform3f(const std::string& name, const glm::vec3& value);
-	void setUniform4f(const std::string& name, const glm::vec4& value);
-	void setUniformMat3f(const std::string& name, const glm::mat3& value);
-	void setUniformMat4f(const std::string& name, const glm::mat4& value);
+	void use() override;
+	void setUniformBlock(const ShaderUniformBlock& data) override;
 
 private:	
 	GLuint createShaderFromSPIRV(const std::vector<uint8_t> spirvCode, GLenum shaderType);

@@ -7,7 +7,7 @@
 
 struct ShaderInfo
 {
-	std::vector<char> buffer;
+	std::vector<uint8_t> buffer;
 	size_t fileSize;
 };
 

@@ -87,3 +87,5 @@ private:
     /// </summary>
     RenderConfig& operator=(const RenderConfig&) = delete;
 };
+
+inline RenderConfig& RC = RenderConfig::getInstance();

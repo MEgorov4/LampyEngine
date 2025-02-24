@@ -1,41 +1,56 @@
 #include "OpenGLShader.h"
-
 #include "../../../FilesystemModule/FilesystemModule.h"
 #include "../../../LoggerModule/Logger.h"
 
-OpenGLShader::OpenGLShader(const std::string& vertPath, const std::string& fragPath)
+OpenGLShader::OpenGLShader(const std::shared_ptr<RShader>& vertShader, const std::shared_ptr<RShader>& fragShader)
+    : IShader(vertShader, fragShader)
 {
-	std::vector<uint8_t> vertCode = FS.readBinaryFile(vertPath);
-	std::vector<uint8_t> fragCode = FS.readBinaryFile(fragPath);
+    std::vector<uint8_t> vertCode = vertShader->getShaderInfo().buffer;
+    std::vector<uint8_t> fragCode = fragShader->getShaderInfo().buffer;
 
-	GLuint vertShader = createShaderFromSPIRV(vertCode, GL_VERTEX_SHADER);
-	GLuint fragShader = createShaderFromSPIRV(fragCode, GL_FRAGMENT_SHADER);
+    GLuint vertShaderID = createShaderFromSPIRV(vertCode, GL_VERTEX_SHADER);
+    GLuint fragShaderID = createShaderFromSPIRV(fragCode, GL_FRAGMENT_SHADER);
 
     m_programID = glCreateProgram();
-    glAttachShader(m_programID, vertShader);
-    glAttachShader(m_programID, fragShader);
+    glAttachShader(m_programID, vertShaderID);
+    glAttachShader(m_programID, fragShaderID);
     glLinkProgram(m_programID);
 
     GLint success;
     glGetProgramiv(m_programID, GL_LINK_STATUS, &success);
     if (!success) {
         char infoLog[512];
-        glGetProgramInfoLog(m_programID, 512, NULL, infoLog);
+        glGetProgramInfoLog(m_programID, sizeof(infoLog), NULL, infoLog);
         LOG_ERROR("OpenGLShader: Shader link error: " + std::string(infoLog));
     }
 
-    glDeleteShader(vertShader);
-    glDeleteShader(fragShader);
+    glDeleteShader(vertShaderID);
+    glDeleteShader(fragShaderID);
+
+    glGenBuffers(1, &m_UBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(ShaderUniformBlock), nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    GLuint blockIndex = glGetUniformBlockIndex(m_programID, "ShaderData");
+    if (blockIndex != GL_INVALID_INDEX) {
+        glUniformBlockBinding(m_programID, blockIndex, 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_UBO);
+    }
+    else {
+        LOG_ERROR("OpenGLShader: UBO block 'ShaderData' not found in shader");
+    }
 }
 
 OpenGLShader::~OpenGLShader()
 {
-    glDeleteProgram(m_programID);
-}
-
-void OpenGLShader::use() const
-{
-	glUseProgram(m_programID);
+    if (m_programID) {
+        glUseProgram(0); 
+        glDeleteProgram(m_programID);
+    }
+    if (m_UBO) {
+        glDeleteBuffers(1, &m_UBO);
+    }
 }
 
 GLuint OpenGLShader::createShaderFromSPIRV(const std::vector<uint8_t> spirvCode, GLenum shaderType)
@@ -50,44 +65,21 @@ GLuint OpenGLShader::createShaderFromSPIRV(const std::vector<uint8_t> spirvCode,
     if (!success) {
         char log[512];
         glGetShaderInfoLog(shader, sizeof(log), NULL, log);
-        LOG_ERROR("OpenGLShader:createShaderFromSPIRV: Shader compile error: " + std::string(log));
+        LOG_ERROR("OpenGLShader:createShaderFromSPIRV: Shader specialization error: " + std::string(log));
         exit(1);
     }
 
     return shader;
 }
 
-void OpenGLShader::setUniform1i(const std::string& name, int value)
+void OpenGLShader::use()
 {
-    glUniform1i(glGetUniformLocation(m_programID, name.c_str()), value);
+    glUseProgram(m_programID);
 }
 
-void OpenGLShader::setUniform1f(const std::string& name, float value)
+void OpenGLShader::setUniformBlock(const ShaderUniformBlock& data)
 {
-    glUniform1f(glGetUniformLocation(m_programID, name.c_str()), value);
-}
-
-void OpenGLShader::setUniform2f(const std::string& name, const glm::vec2& value)
-{
-    glUniform2f(glGetUniformLocation(m_programID, name.c_str()), value.x, value.y);
-}
-
-void OpenGLShader::setUniform3f(const std::string& name, const glm::vec3& value)
-{
-    glUniform3f(glGetUniformLocation(m_programID, name.c_str()), value.x, value.y, value.z);
-}
-
-void OpenGLShader::setUniform4f(const std::string& name, const glm::vec4& value)
-{
-    glUniform4f(glGetUniformLocation(m_programID, name.c_str()), value.x, value.y, value.z, value.w);
-}
-
-void OpenGLShader::setUniformMat3f(const std::string& name, const glm::mat3& value)
-{
-    glUniformMatrix3fv(glGetUniformLocation(m_programID, name.c_str()), 1, GL_FALSE, &value[0][0]);
-}
-
-void OpenGLShader::setUniformMat4f(const std::string& name, const glm::mat4& value)
-{
-    glUniformMatrix4fv(glGetUniformLocation(m_programID, name.c_str()), 1, GL_FALSE, &value[0][0]);
+    glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ShaderUniformBlock), &data);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }

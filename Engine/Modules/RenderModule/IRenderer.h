@@ -4,11 +4,14 @@
 
 #include "../ObjectCoreModule/ObjectModel/Scene.h"
 #include "Vulkan/VulkanObjects/Vertex.h"
+#include "Abstract/RenderObject.h"
 /// <summary>
 /// Interface for a renderer, defining core rendering operations and resource management.
 /// </summary>
 class IRenderer
 {
+protected:
+    std::vector<RenderObject> m_renderObjects;
 public:
     /// <summary>
     /// Constructs an IRenderer with no assigned scene.
@@ -50,7 +53,6 @@ public:
     /// </summary>
     /// <param name="vertexData">Vertex data to remove.</param>
     virtual void removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile) = 0;
-
     virtual void registerIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) = 0;
     virtual void removeIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) = 0;
 
