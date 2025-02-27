@@ -5,7 +5,7 @@
 #include "../ShaderCompilerModule/ShaderCompiler.h"
 
 
-RShader::RShader(const std::string& path)
+RShader::RShader(const std::string& path) : BaseResource(path)
 {
 	std::string extension = FS.getFileExtensions(path);
 

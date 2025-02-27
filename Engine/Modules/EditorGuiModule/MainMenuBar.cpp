@@ -1,6 +1,9 @@
 #include "MainMenuBar.h"
 #include "imgui.h"
 
+#include "../ResourceModule/ResourceManager.h"
+#include "../RenderModule/Abstract/ResourceFabrics.h"
+
 GUIMainMenuBar::GUIMainMenuBar() : GUIObject()
 {
 }

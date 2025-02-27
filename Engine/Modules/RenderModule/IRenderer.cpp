@@ -52,12 +52,12 @@ void IRenderer::updateRenderList()
 
 			if (mesh.meshResource)
 			{
-				renderObject.mesh = MeshFactory::createMesh(mesh.meshResource.value());
+				renderObject.mesh = MeshFactory::createOrGetMesh(mesh.meshResource.value());
 			}
 
 			if (mesh.vertShaderPath && mesh.fragShaderResource)
 			{
-				renderObject.shader = ShaderFactory::createShader(mesh.vertShaderResource.value(), mesh.fragShaderResource.value());
+				renderObject.shader = ShaderFactory::createOrGetShader(mesh.vertShaderResource.value(), mesh.fragShaderResource.value());
 			}
 
 			m_activeRenderObjects.push_back(renderObject);

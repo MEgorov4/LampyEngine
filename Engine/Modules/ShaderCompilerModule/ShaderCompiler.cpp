@@ -1,9 +1,6 @@
 #include "ShaderCompiler.h"
-
 #include <filesystem>
-
 #include <boost/process.hpp>
-
 #include "../FilesystemModule/FilesystemModule.h";
 #include "../LoggerModule/Logger.h"
 

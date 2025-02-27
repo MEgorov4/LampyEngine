@@ -5,7 +5,7 @@
 class BaseResource
 {
 public:
-	BaseResource() {};
+	BaseResource(const std::string& path) { GUID = path; };
 
 	std::string getGUID() const;
 	void setGUID(std::string& newGUID);

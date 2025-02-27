@@ -4,7 +4,7 @@
 #include <stb_image.h>
 #include <stdexcept>
 
-RTexture::RTexture(const std::string& path)
+RTexture::RTexture(const std::string& path) : BaseResource(path)
 {
     int width, height, channels;
     stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);

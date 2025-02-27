@@ -22,7 +22,7 @@ namespace std
 	};
 };
 
-RMesh::RMesh(const std::string& path)
+RMesh::RMesh(const std::string& path) : BaseResource(path)
 {
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;

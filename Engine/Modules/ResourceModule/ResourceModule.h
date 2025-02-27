@@ -40,19 +40,19 @@ public:
 	std::unique_ptr<RMesh> createAndRegisterMesh(const std::vector<MeshVertex>& vertices)
 	{
 
-		std::unique_ptr<RMesh> mesh = std::make_unique<RMesh>(vertices);
-		assert(mesh);
+		//std::unique_ptr<RMesh> mesh = std::make_unique<RMesh>(vertices);
+		//assert(mesh);
 
-		std::vector<Vertex> v_vertices(vertices.size());
+		//std::vector<Vertex> v_vertices(vertices.size());
 
-		std::transform(vertices.begin(), vertices.end(), v_vertices.begin(),
-			[](const MeshVertex& meshVertex)
-			{
-				return Vertex(meshVertex);
-			});
+		//std::transform(vertices.begin(), vertices.end(), v_vertices.begin(),
+		//	[](const MeshVertex& meshVertex)
+		//	{
+		//		return Vertex(meshVertex);
+		//	});
 
-		// RenderModule::getInstance().registerVertexData(v_vertices);
-		return mesh;
+		//// RenderModule::getInstance().registerVertexData(v_vertices);
+		return nullptr;
 	}
 	
 	void removeMesh(std::unique_ptr<RMesh> mesh)

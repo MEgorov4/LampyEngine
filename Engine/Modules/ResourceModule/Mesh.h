@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <string>
+#include "BaseResource.h"
 
 class RMaterial;
 
@@ -19,11 +20,10 @@ struct MeshVertex
 };
 
 
-class RMesh 
+class RMesh : public BaseResource
 {
 public:
 	RMesh(const std::string& path);
-	RMesh(const std::vector<MeshVertex>& f) {}
 
 	const std::vector<MeshVertex>& getVertexData();
 	const std::vector<uint32_t>& getIndicesData();
