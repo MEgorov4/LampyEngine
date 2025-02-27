@@ -12,6 +12,9 @@ class VulkanSynchronizationManager {
     std::vector<VkSemaphore> m_renderFinishedSemaphores; ///< Semaphores to signal when rendering is finished.
     std::vector<VkFence> m_inFlightFences; ///< Fences to ensure frame synchronization.
 
+    std::vector<VkSemaphore> offscreenSemaphores;
+    std::vector<VkSemaphore> offscreenFinishedSemaphores;
+    VkSemaphore m_offscreenRenderFinishedSemaphore;
 public:
     /// <summary>
     /// Constructs a synchronization manager for handling Vulkan semaphores and fences.
@@ -52,5 +55,9 @@ public:
     VkFence& getInFlightFence(uint32_t currentFrame) {
         return m_inFlightFences[currentFrame];
     }
+
+    VkSemaphore getOffscreenSemaphore(uint32_t frame) { return offscreenSemaphores[frame]; }
+    VkSemaphore getOffscreenFinishedSemaphore(uint32_t frame) { return offscreenFinishedSemaphores[frame]; }
+    VkSemaphore getOffscreenRenderFinishedSemaphore() { return m_offscreenRenderFinishedSemaphore; }
 };
 

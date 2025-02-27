@@ -33,4 +33,8 @@ private:
 	std::vector<uint32_t> m_indicesData;
 
 	std::vector<RMaterial*> m_materials;
+
+public:
+	std::string vertPath;
+	std::string fragPath;
 };

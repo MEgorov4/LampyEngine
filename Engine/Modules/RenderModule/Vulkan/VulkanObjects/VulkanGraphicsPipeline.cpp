@@ -6,7 +6,7 @@
 
 #include "Vertex.h"
 
-VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkDevice device, VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath) : m_vk_device(device)
+VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkDevice device, VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath, VkDescriptorSetLayout descriptorSetLayout) : m_vk_device(device)
 {
     static uint32_t ID = 0;
     uniqueID = ID++;
@@ -68,6 +68,24 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkDevice device, VkRenderPass ren
     multisampling.sampleShadingEnable = VK_FALSE;
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
+    VkPipelineDepthStencilStateCreateInfo depthStencil{};
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    // указывает, следует ли сравнивать глубину новых фрагментов с буфером глубины
+    depthStencil.depthTestEnable = VK_TRUE;
+    // следует ли записывать в буфер глубины новую глубину фрагментов, прошедших тест глубины
+    depthStencil.depthWriteEnable = VK_TRUE;
+    // определяет сравнение, которое выполняется для сохранения или удаления фрагментов
+    // VK_COMPARE_OP_LESS - меньшая глубина = ближе, поэтому глубина новых фрагментов должна быть меньше
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+    // Позволит записывать фрагменты только если они удовлетворяют данному диапазону
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.minDepthBounds = 0.0f; // Optional
+    depthStencil.maxDepthBounds = 1.0f; // Optional
+    // Настривают операции трафарета
+    depthStencil.stencilTestEnable = VK_FALSE;
+    depthStencil.front = {}; // Optional
+    depthStencil.back = {}; // Optional
+
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     colorBlendAttachment.blendEnable = VK_FALSE;
@@ -94,8 +112,10 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkDevice device, VkRenderPass ren
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+    pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
+    pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
     if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &m_vk_pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
@@ -113,7 +133,7 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkDevice device, VkRenderPass ren
     pipelineInfo.pViewportState = &viewportState;
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
-    pipelineInfo.pDepthStencilState = nullptr; // Optional
+    pipelineInfo.pDepthStencilState = &depthStencil; // Optional
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
 
@@ -142,6 +162,11 @@ VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
     LOG_INFO("VulkanGraphicsPipeline: Graphics pipeline destroyed");
     vkDestroyPipelineLayout(m_vk_device, m_vk_pipelineLayout, nullptr);
     LOG_INFO("VulkanGraphicsPipeline: Pipeline layout destroyed");
+}
+
+void VulkanGraphicsPipeline::clear()
+{
+
 }
 
 VkShaderModule VulkanGraphicsPipeline::createShaderModule(const std::vector<char>& code)

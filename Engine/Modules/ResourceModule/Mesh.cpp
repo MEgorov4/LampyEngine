@@ -71,6 +71,9 @@ RMesh::RMesh(const std::string& path)
 		std::shared_ptr<RMaterial> mat = ResourceManager::load<RMaterial>(std::string(""));
 		m_materials.push_back(mat.get());
 	}*/
+
+	vertPath = "D:/B_Projects/LampyEngine/Resources/Shaders/GLSL/vert.spv";
+	fragPath = "D:/B_Projects/LampyEngine/Resources/Shaders/GLSL/frag.spv";
 }
 
 const std::vector<MeshVertex>& RMesh::getVertexData()
