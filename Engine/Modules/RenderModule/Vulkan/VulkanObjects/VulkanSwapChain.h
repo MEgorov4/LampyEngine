@@ -17,6 +17,7 @@ class VulkanSwapChain
     std::vector<VkImageView> m_vk_imageViews; ///< List of image views for swap chain images.
     SwapChainSupportDetails m_swapChainSupportDetails; ///< Details of swap chain support.
     QueueFamilyIndices m_queueFamilyIndices; ///< Queue family indices for graphics and presentation.
+    VkFormat m_swapChainImageFormat;
 
 public:
     /// <summary>
@@ -51,6 +52,7 @@ public:
     /// </summary>
     /// <returns>Surface format used by the swap chain.</returns>
     VkSurfaceFormatKHR getSurfaceFormat() const { return m_vk_imageFormat; }
+    VkFormat getFormat() const { return m_swapChainImageFormat; }
 
     /// <summary>
     /// Retrieves the swap chain image extent (dimensions).

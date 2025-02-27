@@ -16,7 +16,7 @@ struct UniformBufferObject
 {
     glm::mat4 view;
     glm::mat4 proj;
-    ObjectData object[MAX_OBJECTS];
+    ObjectData objects[MAX_OBJECTS];
 };
 
 class VulkanUniformBuffer : public IVulkanBuffer
@@ -32,6 +32,9 @@ public:
     ~VulkanUniformBuffer();
 
     void cleanupVulkanUniformBuffers();
+    VkBuffer getBufferByIndex(uint32_t index) { return uniformBuffers[index]; }
+
+    void updateUniformBuffer(uint32_t currentImage, VkExtent2D extent);
 private:
     void createUniformBuffer(VkDevice device, VkPhysicalDevice physicalDevice);
 

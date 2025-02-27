@@ -72,6 +72,8 @@ public:
     /// <returns>Handle to the graphics queue.</returns>
     VkQueue getGraphicsQueue() const { return m_graphicsQueue; }
 
+    VkSurfaceKHR getSurface() const { return m_surface; }
+
     /// <summary>
     /// Retrieves the presentation queue.
     /// </summary>

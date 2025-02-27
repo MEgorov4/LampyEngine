@@ -53,7 +53,7 @@ public:
     /// <param name="device">The Vulkan logical device.</param>
     /// <param name="renderPass">The Vulkan render pass.</param>
     /// <returns>Pointer to the Vulkan graphics pipeline.</returns>
-    VulkanGraphicsPipeline* getOrCreatePipeline(const std::string& fragPath, const std::string& vertPath, VkDevice device, VkRenderPass renderPass);
+    VulkanGraphicsPipeline* getOrCreatePipeline(const std::string& fragPath, const std::string& vertPath, VkDevice device, VkRenderPass renderPass, VkDescriptorSetLayout descriptorSetLayout);
 
     /// <summary>
     /// Removes a Vulkan graphics pipeline from the cache if it is no longer referenced.

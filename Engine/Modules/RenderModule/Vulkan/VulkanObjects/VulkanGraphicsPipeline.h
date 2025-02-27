@@ -27,7 +27,7 @@ public:
     /// <param name="vertPath">Path to the vertex shader file.</param>
     /// <param name="fragPath">Path to the fragment shader file.</param>
     /// <exception cref="std::runtime_error">Thrown if pipeline creation fails.</exception>
-    VulkanGraphicsPipeline(VkDevice device, VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath);
+    VulkanGraphicsPipeline(VkDevice device, VkRenderPass renderPass, const std::string& vertPath, const std::string& fragPath, VkDescriptorSetLayout descriptorSetLayout);
 
     /// <summary>
     /// Destroys the Vulkan graphics pipeline and associated resources.
@@ -52,6 +52,7 @@ public:
     /// <returns>Unique ID of the pipeline.</returns>
     uint32_t getUniqueID() { return uniqueID; };
 
+    void clear();
 private:
     /// <summary>
     /// Creates a Vulkan shader module from a given bytecode.

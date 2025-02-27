@@ -18,7 +18,7 @@ void VulkanPipelineCache::clearCache()
     }
 }
 
-VulkanGraphicsPipeline* VulkanPipelineCache::getOrCreatePipeline(const std::string& fragPath, const std::string& vertPath, VkDevice device, VkRenderPass renderPass)
+VulkanGraphicsPipeline* VulkanPipelineCache::getOrCreatePipeline(const std::string& fragPath, const std::string& vertPath, VkDevice device, VkRenderPass renderPass, VkDescriptorSetLayout descriptorSetLayout)
 {
     std::string key = vertPath + '|' + fragPath;
 
@@ -29,7 +29,7 @@ VulkanGraphicsPipeline* VulkanPipelineCache::getOrCreatePipeline(const std::stri
         return it->second.second.get();
     }
 
-    std::unique_ptr<VulkanGraphicsPipeline> newPipeline = std::make_unique<VulkanGraphicsPipeline>(device, renderPass, fragPath, vertPath);
+    std::unique_ptr<VulkanGraphicsPipeline> newPipeline = std::make_unique<VulkanGraphicsPipeline>(device, renderPass, fragPath, vertPath, descriptorSetLayout);
     m_pipelines[key] = std::make_pair(1, std::move(newPipeline));
 
     return m_pipelines[key].second.get();

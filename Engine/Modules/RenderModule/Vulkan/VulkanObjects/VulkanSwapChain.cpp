@@ -107,6 +107,8 @@ void VulkanSwapChain::buildSwapChain()
     m_vk_imageFormat = surfaceFormat;
     m_vk_extent = extent;
 
+    m_swapChainImageFormat = surfaceFormat.format;
+
     createImageViews();
 }
 
