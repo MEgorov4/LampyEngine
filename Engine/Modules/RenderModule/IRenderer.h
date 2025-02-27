@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "../ObjectCoreModule/ObjectModel/Scene.h"
 #include "Vulkan/VulkanObjects/Vertex.h"
 #include "Abstract/RenderObject.h"
 /// <summary>
@@ -11,7 +10,7 @@
 class IRenderer
 {
 protected:
-    std::vector<RenderObject> m_renderObjects;
+    std::vector<RenderObject> m_activeRenderObjects;
 public:
     /// <summary>
     /// Constructs an IRenderer with no assigned scene.
@@ -27,6 +26,7 @@ public:
     /// Renders a single frame.
     /// </summary>
     virtual void render() = 0;
+
 
     /// <summary>
     /// Registers a shader pipeline using the provided vertex and fragment shader paths.
@@ -61,4 +61,6 @@ public:
     /// Waits for the renderer to complete all rendering operations before proceeding.
     /// </summary>
     virtual void waitIdle() = 0;
+
+    void updateRenderList();
 };

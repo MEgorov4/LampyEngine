@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include "Material.h"
+#include "../FilesystemModule/FilesystemModule.h"
 
 using MeshCache = ResourceCache<RMesh>;
 using ShaderCache = ResourceCache<RShader>;
@@ -47,7 +48,7 @@ inline std::shared_ptr<RMesh> ResourceManager::load<RMesh>(const std::string& pa
 		return nullptr;
 	}
 
-	return getInstance().meshCache.load(path);
+	return getInstance().meshCache.load(FS.getEngineAbsolutePath(path));
 }
 
 template<>
@@ -58,7 +59,7 @@ inline std::shared_ptr<RShader> ResourceManager::load<RShader>(const std::string
 		return nullptr;
 	}
 
-	return getInstance().shaderCache.load(path);
+	return getInstance().shaderCache.load(FS.getEngineAbsolutePath(path));
 }
 
 template<>
@@ -69,5 +70,5 @@ inline std::shared_ptr<RTexture> ResourceManager::load<RTexture>(const std::stri
 		return nullptr;
 	}
 
-	return getInstance().textureCache.load(path);
+	return getInstance().textureCache.load(FS.getEngineAbsolutePath(path));
 }

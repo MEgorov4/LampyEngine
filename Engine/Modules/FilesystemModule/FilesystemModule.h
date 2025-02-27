@@ -59,6 +59,7 @@ public:
     std::vector<uint8_t> readBinaryFile(constr filePath);
     std::string readTextFile(constr filePath);
 
+    std::string getEngineAbsolutePath(constr relativePath);
     std::string getCurrentPath();
     std::string getFileName(constr filePath);
     std::string getFileExtensions(constr filePath);

@@ -133,7 +133,7 @@ void ImGuiModule::renderUI() const
         assert(object);
         object->render();
     }
-	
+
     ImGui::Render();
     ImGui::EndFrame();
 }

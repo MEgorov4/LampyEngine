@@ -143,6 +143,11 @@ std::string FilesystemModule::readTextFile(constr filePath)
 	return buffer.str();
 }
 
+std::string FilesystemModule::getEngineAbsolutePath(constr relativePath)
+{
+	return fs::absolute(relativePath).string();
+}
+
 std::string FilesystemModule::getCurrentPath()
 {
 	return fs::current_path().string();

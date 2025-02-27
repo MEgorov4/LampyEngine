@@ -4,6 +4,8 @@
 #include "../../LoggerModule/Logger.h"
 #include "../../ProjectModule/ProjectModule.h"
 #include "ECSLuaScriptsSystem.h"
+#include "../../ResourceModule/ResourceManager.h"
+#include "../../FilesystemModule/FilesystemModule.h"
 
 void ECSModule::startup()
 {
@@ -13,24 +15,35 @@ void ECSModule::startup()
 
 	ProjectConfig& config = ProjectModule::getInstance().getProjectConfig();
 	m_currentWorldFile = config.getEditorStartWorld();
+
 	registerComponents();
+	registerObservers();
 	loadInitialWorldState();
 	ECSluaScriptsSystem::getInstance().registerSystem(m_world);
 }
 
 void ECSModule::loadInitialWorldState()
 {
-	m_world.entity("Bob").set<Position>({ 10, 20, 30 }).set<MeshComponent>({ "../Resources/Meshes/viking_room.obj" });
-	m_world.entity("Alice").set<Position>({ 10, 20, 30 }).set<Scale>({1.0f, 1.0f, 1.0f}).set<Rotation>({1,0,0,0});
-	m_world.entity("Tom").set<Position>({ 10, 20, 30 });
-	m_world.entity("Jerry").set<Position>({ 10, 20, 30 });
-	m_world.entity("Hero");
-	m_world.entity("Hero").set<Position>({ 0, 0, 0 }).set<Camera>({90.f, 0.7f, 0, 100.f, true});
-	m_world.entity("Hero").set<Script>({ ProjectModule::getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"});
-	
-	std::string json = m_world.to_json().c_str();
+	m_world.entity("Room").set<Position>({ 1, 0, 0 })
+		.set<Rotation>({ 0, 0, 0 })
+		.set<Scale>({ 1, 1, 1 })
+		.set<Script>({PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua"})
+		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
+				, "../Resources/Shaders/GLSL/shader.vert"
+				, "../Resources/Shaders/GLSL/shader.frag" });
 
-	LOG_INFO(json);
+	m_world.entity("Plane").set<Position>({ -1, 0, 0 })
+		.set<Rotation>({ 180, 0, 0 })
+		.set<Scale>({ 1, 1, 1 })
+		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
+				, "../Resources/Shaders/GLSL/shader.vert"
+				, "../Resources/Shaders/GLSL/shader.frag" });
+
+	m_world.entity("ViewportCamera")
+		.set<Position>({ 0.0f, 0.0f, 5.0f })
+		.set<Rotation>({ 0.0f, 0.0f, 0.0f })
+		.set<Camera>({ 60.0f, 16.0f / 9.0f, 0.1f, 100.0f, true });
+
 }
 
 void ECSModule::fillDefaultWorld()
@@ -124,11 +137,10 @@ void ECSModule::registerComponents()
 		.member("z", &Position::z);
 
 	m_world.component<Rotation>()
-		.member("w", &Rotation::w)
 		.member("x", &Rotation::x)
 		.member("y", &Rotation::y)
 		.member("z", &Rotation::z);
-	
+
 	m_world.component<Scale>()
 		.member("x", &Scale::x)
 		.member("y", &Scale::y)
@@ -139,19 +151,32 @@ void ECSModule::registerComponents()
 		.member("aspect", &Camera::aspect)
 		.member("farClip", &Camera::farClip)
 		.member("nearClip", &Camera::nearClip);
-	
-	m_world.component<MeshComponent>()
-		.member("meshResourcePath", &MeshComponent::meshResourcePath);
 
+	m_world.component<MeshComponent>()
+		.member("meshResourcePath", &MeshComponent::meshResourcePath)
+		.member("vertShaderPath", &MeshComponent::vertShaderPath)
+		.member("fragShaderPath", &MeshComponent::fragShaderPath);
+}
+
+void ECSModule::registerObservers()
+{
+	m_world.observer<MeshComponent>()
+		.event(flecs::OnSet)
+		.each([](flecs::entity e, MeshComponent& mesh)
+			{
+				mesh.meshResource = ResourceManager::load<RMesh>(mesh.meshResourcePath);
+				mesh.vertShaderResource = ResourceManager::load<RShader>(mesh.vertShaderPath);
+				mesh.fragShaderResource = ResourceManager::load<RShader>(mesh.fragShaderPath);
+			});
 }
 
 void ECSModule::ecsTick(float deltaTime)
 {
 	if (m_tickEnabled)
 	{
-		if(m_world.progress(deltaTime))
+		if (m_world.progress(deltaTime))
 		{
-			
+
 		}
 	}
 }

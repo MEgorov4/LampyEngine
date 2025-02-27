@@ -1,4 +1,5 @@
 #include "OpenGLMesh.h"
+#include "../../../LoggerModule/Logger.h"
 
 OpenGLMesh::OpenGLMesh(const std::shared_ptr<RMesh>& mesh) : IMesh(mesh), m_indexCount(mesh->getIndicesData().size())
 {

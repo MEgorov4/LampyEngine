@@ -6,12 +6,13 @@
 #include "ITexture.h"
 #include "IMesh.h"
 #include "IShader.h"
-#include "../OpenGL/OpenGLTexture.h"
-#include "../OpenGL/OpenGLMesh.h"
+#include "../OpenGL/OpenGLObjects/OpenGLTexture.h"
+#include "../OpenGL/OpenGLObjects/OpenGLMesh.h"
 #include "../OpenGL/OpenGLObjects/OpenGLShader.h"
 
 class TextureFactory
 {
+public:
 	static std::shared_ptr<ITexture> createTexture(const std::shared_ptr<RTexture>& texture)
 	{
 		switch (RC.getGraphicsAPI())
@@ -28,7 +29,8 @@ class TextureFactory
 
 class MeshFactory
 {
-	static std::shared_ptr<IMesh> createTexture(const std::shared_ptr<RMesh>& mesh)
+public:
+	static std::shared_ptr<IMesh> createMesh(const std::shared_ptr<RMesh>& mesh)
 	{
 		switch (RC.getGraphicsAPI())
 		{
@@ -45,7 +47,8 @@ class MeshFactory
 
 class ShaderFactory
 {
-	static std::shared_ptr<IShader> createTexture(const std::shared_ptr<RShader>& vertShader, const std::shared_ptr<RShader>& fragShader)
+public:
+	static std::shared_ptr<IShader> createShader(const std::shared_ptr<RShader>& vertShader, const std::shared_ptr<RShader>& fragShader)
 	{
 		switch (RC.getGraphicsAPI())
 		{

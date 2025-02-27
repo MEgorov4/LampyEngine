@@ -66,10 +66,14 @@ GLuint OpenGLShader::createShaderFromSPIRV(const std::vector<uint8_t> spirvCode,
         char log[512];
         glGetShaderInfoLog(shader, sizeof(log), NULL, log);
         LOG_ERROR("OpenGLShader:createShaderFromSPIRV: Shader specialization error: " + std::string(log));
-        exit(1);
     }
 
     return shader;
+}
+
+void OpenGLShader::unbind()
+{
+    glUseProgram(0);
 }
 
 void OpenGLShader::use()
@@ -80,6 +84,17 @@ void OpenGLShader::use()
 void OpenGLShader::setUniformBlock(const ShaderUniformBlock& data)
 {
     glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ShaderUniformBlock), &data);
+
+    void* ptr = glMapBufferRange(GL_UNIFORM_BUFFER, 0, sizeof(ShaderUniformBlock), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    if (ptr)
+    {
+        memcpy(ptr, &data, sizeof(ShaderUniformBlock));
+        glUnmapBuffer(GL_UNIFORM_BUFFER);
+    }
+    else
+    {
+        LOG_ERROR("Failed to map UBO buffer!");
+    }
+
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }

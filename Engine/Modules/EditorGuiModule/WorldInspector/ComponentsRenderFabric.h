@@ -35,7 +35,7 @@ public:
 
 				float position[3] = { pos->x, pos->y, pos->z };
 
-				if (ImGui::SliderFloat3("##Position", position, -100000, 100000)) {
+				if (ImGui::DragFloat3("##Position", position, 0.01f)) {
 					entity.set<Position>({ position[0], position[1], position[2] });
 				}
 			}
@@ -51,7 +51,7 @@ public:
 	void render(flecs::entity& entity) override
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
-		
+
 		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) {
 			if (auto rot = entity.get<Rotation>()) {
 				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Rotation").x) / 2);
@@ -62,12 +62,11 @@ public:
 				ImGui::Text("Rotation");
 
 				ImGui::SameLine();
-				const glm::vec3 angles = rot->toEuler();
-				float rotation[3] = { angles.x, angles.y, angles.y };
 
-				if (ImGui::SliderFloat3("##Rotation", rotation, -360, 360)) {
-					const auto newRot = entity.get_mut<Rotation>();
-					newRot->fromEuler(glm::vec3(rotation[0], rotation[1], rotation[2]));
+				float rotation[3] = { rot->x, rot->y, rot->z };
+
+				if (ImGui::DragFloat3("##Rotation", rotation, 5.f)) {
+					entity.set<Rotation>({ rotation[0], rotation[1], rotation[2] });
 				}
 			}
 		}
@@ -96,7 +95,7 @@ public:
 
 				float scalev[3] = { scale->x, scale->y, scale->z };
 
-				if (ImGui::SliderFloat3("##Scale", scalev, -1000, 1000)) {
+				if (ImGui::DragFloat3("##Scale", scalev, 0.01f, -100, 100)) {
 					auto sc = entity.get_mut<Scale>();
 					sc->fromGMLVec(glm::vec3(scalev[0], scalev[1], scalev[2]));
 				}
@@ -131,14 +130,21 @@ public:
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {
 						std::string droppedPath = static_cast<const char*>(payload->Data);
+
 						if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".obj") {
-							MeshComponent* meshComponent = entity.get_mut<MeshComponent>();
-							memcpy(droppedPath.data(), meshComponent->meshResourcePath,  sizeof(meshComponent->meshResourcePath));
+							MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
+
+							std::strncpy(meshComponentMut->meshResourcePath, droppedPath.c_str(), sizeof(meshComponentMut->meshResourcePath) - 1);
+							meshComponentMut->meshResourcePath[sizeof(meshComponentMut->meshResourcePath) - 1] = '\0'; // Гарантируем \0 в конце
+
+							entity.modified<MeshComponent>();
+
+							LOG_INFO(std::format("Dropped file: {}", droppedPath));
 						}
-						LOG_INFO(std::format("Dropped file: {}", droppedPath));
 					}
 					ImGui::EndDragDropTarget();
 				}
+
 			}
 
 		}
@@ -150,7 +156,7 @@ public:
 class ScriptRenderer : public IComponentRenderer {
 public:
 	void render(flecs::entity& entity) override {
-		if (ImGui::BeginChildFrame(2, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4))) {
+		if (ImGui::BeginChildFrame(3, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4))) {
 			if (const Script* script = entity.get<Script>()) {
 				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Script").x) / 2);
 

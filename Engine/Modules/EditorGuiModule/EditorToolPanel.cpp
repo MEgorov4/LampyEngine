@@ -1,6 +1,9 @@
 #include "EditorToolPanel.h"
 #include <imgui.h>
 #include "../ObjectCoreModule/ECS/ECSModule.h"
+
+#include "../ObjectCoreModule/ECS/ECSComponents.h"
+
 #include "../ProjectModule/ProjectModule.h"
 #include <filesystem>
 #include <format>

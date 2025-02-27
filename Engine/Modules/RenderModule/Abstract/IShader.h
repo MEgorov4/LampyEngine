@@ -18,5 +18,6 @@ public:
 	virtual ~IShader() = default;
 
 	virtual void use() = 0;
+	virtual void unbind() = 0;
 	virtual void setUniformBlock(const ShaderUniformBlock& data) = 0;
 };

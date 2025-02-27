@@ -78,7 +78,7 @@ void Engine::engineTick()
 		WindowModule::getInstance().getWindow()->pollEvents();
 		m_engineContext->tick(deltaTime);
 		ECSModule::getInstance().ecsTick(deltaTime);
-		RenderModule::getInstance().getRenderer()->render();
+		RenderModule::getInstance().getRenderer()->updateRenderList();
 	}
 	RenderModule::getInstance().getRenderer()->waitIdle();
 }

@@ -9,8 +9,6 @@
 
 #include "../RenderModule/RenderModule.h"
 #include "../ObjectCoreModule/ECS/ECSModule.h"
-// #include "../RenderModule/Vulkan/VulkanRenderer.h"
-// #include "../RenderModule/Vulkan/VulkanObjects/VulkanVertexBufferCache.h"
 
 void ResourceManager::clearAllCache()
 {
@@ -47,7 +45,6 @@ void ResourceManager::shutDown()
 
 void ResourceManager::OnLoadInitialWorldState()
 {
-	// LOG_INFO("On Load Initial World State");
 	checkAllResources();
 }
 
@@ -74,14 +71,4 @@ void ResourceManager::checkAllResources()
 			RenderModule::getInstance().registerVertexData(vertices, meshPath);
 			RenderModule::getInstance().registerIndexData(loadedMesh->getIndicesData(), meshPath);
 		});
-
-	flecs::entity bob = world.entity("Bob");
-	if (!bob.has<Position>()) 
-	{
-		std::cout << "Bob does not have Position component!" << std::endl;
-	}
-	if (!bob.has<MeshComponent>()) 
-	{
-		std::cout << "Bob does not have MeshComponent component!" << std::endl;
-	}
 }

@@ -16,10 +16,14 @@ public:
 	~OpenGLShader();
 
 	GLuint getProgramID() const { return m_programID; }
-
+	GLuint getUBO() const { return m_UBO; }
 	void use() override;
+
 	void setUniformBlock(const ShaderUniformBlock& data) override;
 
 private:	
 	GLuint createShaderFromSPIRV(const std::vector<uint8_t> spirvCode, GLenum shaderType);
+
+	// Унаследовано через IShader
+	void unbind() override;
 };
