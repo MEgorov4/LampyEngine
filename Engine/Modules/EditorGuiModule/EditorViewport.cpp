@@ -25,7 +25,7 @@ void GUIEditorViewport::render()
 {
     if (ImGui::Begin("Viewport", 0, ImGuiWindowFlags_NoScrollbar))
     {
-        m_processInput = ImGui::IsWindowFocused() && ImGui::IsMouseDown(ImGuiMouseButton_Left);
+        m_processInput = ImGui::IsWindowFocused() && ImGui::IsMouseDown(ImGuiMouseButton_Right);
 
         if (m_offscreenImageDescriptor)
         {
@@ -39,6 +39,8 @@ void GUIEditorViewport::onKeyAction(int code, int, int, int)
 {
     if (!m_processInput)
         return;
+
+    m_cameraPos = m_viewportEntity.get<Position>()->toGLMVec();
 
     float speed = m_cameraSpeed;
     glm::vec3 movement(0.0f);
@@ -67,8 +69,15 @@ void GUIEditorViewport::onKeyAction(int code, int, int, int)
 
 void GUIEditorViewport::onMouseAction(double mouseX, double mouseY)
 {
-    if (!m_processInput)
+    if (!m_processInput) {
+        m_firstMouse = true;
         return;
+    }
+
+    const Rotation* rotation = m_viewportEntity.get<Rotation>();
+
+    float pitch = rotation->x;
+    float yaw = rotation->y;
 
     if (m_firstMouse) {
         m_lastX = mouseX;
@@ -77,7 +86,7 @@ void GUIEditorViewport::onMouseAction(double mouseX, double mouseY)
     }
 
     float xoffset = mouseX - m_lastX;
-    float yoffset = m_lastY - mouseY; // Инверсия Y
+    float yoffset = m_lastY - mouseY; 
     m_lastX = mouseX;
     m_lastY = mouseY;
 
@@ -85,21 +94,18 @@ void GUIEditorViewport::onMouseAction(double mouseX, double mouseY)
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
-    m_yaw += xoffset;
-    m_pitch += yoffset;
-
-    if (m_pitch > 89.0f) m_pitch = 89.0f;
-    if (m_pitch < -89.0f) m_pitch = -89.0f;
+    yaw += xoffset;
+    pitch += yoffset;
 
     glm::vec3 direction;
-    direction.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-    direction.y = sin(glm::radians(m_pitch));
-    direction.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 
     m_cameraFront = glm::normalize(direction);
 
 
     if (m_viewportEntity.is_alive()) {
-        m_viewportEntity.set<Rotation>({ m_pitch, m_yaw, 0.0f });
+        m_viewportEntity.set<Rotation>({ pitch, yaw, rotation->z });
     }
 }

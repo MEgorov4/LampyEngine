@@ -4,7 +4,6 @@
 
 #include "IMesh.h"
 #include "IShader.h"
-
 struct RenderObject
 {
 	glm::mat4 modelMatrix{ 1.0f };
@@ -17,4 +16,10 @@ struct RenderObject
 
 	bool isVisible{ true };
 	int renderLayer { 0 };
+
+	~RenderObject()
+	{
+		mesh.reset();
+		shader.reset();
+	}
 };

@@ -113,7 +113,6 @@ void OpenGLRenderer::removeShader(const std::string& vertPath, const std::string
 
 void OpenGLRenderer::registerVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile)
 {
-	m_vertexBuffers.push_back(std::make_unique<OpenGLVertexBuffer>(vertexData));
 }
 
 void OpenGLRenderer::removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile)

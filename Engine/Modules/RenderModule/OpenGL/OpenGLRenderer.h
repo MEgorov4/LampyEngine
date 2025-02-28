@@ -15,7 +15,6 @@ class OpenGLRenderer : public IRenderer
 	std::unique_ptr<OpenGLFramebuffer> m_offscreenFramebuffer;
 	std::unique_ptr<OpenGLShader> m_shader;
 
-	std::vector <std::unique_ptr<OpenGLVertexBuffer>> m_vertexBuffers;
 public:
 	OpenGLRenderer(Window* window);
 

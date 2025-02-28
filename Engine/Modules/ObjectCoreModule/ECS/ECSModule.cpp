@@ -33,7 +33,7 @@ void ECSModule::loadInitialWorldState()
 				, "../Resources/Shaders/GLSL/shader.frag" });
 
 	m_world.entity("Plane").set<Position>({ -1, 0, 0 })
-		.set<Rotation>({ 180, 0, 0 })
+		.set<Rotation>({ 0, 0, 0 })
 		.set<Scale>({ 1, 1, 1 })
 		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
 				, "../Resources/Shaders/GLSL/shader.vert"
