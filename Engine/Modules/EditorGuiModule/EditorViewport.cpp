@@ -41,31 +41,45 @@ void GUIEditorViewport::onKeyAction(int code, int, int, int)
         return;
 
     m_cameraPos = m_viewportEntity.get<Position>()->toGLMVec();
+    glm::quat cameraRotation = m_viewportEntity.get<Rotation>()->toQuat(); 
 
     float speed = m_cameraSpeed;
     glm::vec3 movement(0.0f);
 
-    glm::vec3 cameraRight = glm::normalize(glm::cross(m_cameraFront, m_cameraUp));
+    // Направление вперед (куда смотрит камера)
+    glm::vec3 cameraFront = cameraRotation * glm::vec3(0, 0, -1);
+    cameraFront = glm::normalize(cameraFront);
 
-    if (code == 87) 
-        movement += speed * m_cameraFront;
-    if (code == 83) 
-        movement -= speed * m_cameraFront;
-    if (code == 65) 
+    // Направление вправо (перпендикулярное вперед и вверх)
+    glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, m_cameraUp));
+
+    // Движение вперед/назад относительно направления камеры
+    if (code == 87) // W
+        movement -= speed * cameraFront;
+    if (code == 83) // S
+        movement += speed * cameraFront;
+
+    // Движение влево/вправо относительно поворота камеры
+    if (code == 65) // A
         movement -= speed * cameraRight;
-    if (code == 68) 
+    if (code == 68) // D
         movement += speed * cameraRight;
-    if (code == 32) 
-        movement += speed * m_cameraUp;
-    if (code == 340) 
-        movement -= speed * m_cameraUp;
 
+    // Движение вверх/вниз относительно локального Up камеры
+    glm::vec3 cameraUp = cameraRotation * glm::vec3(0, 1, 0);
+    if (code == 32)  // Space (вверх)
+        movement += speed * cameraUp;
+    if (code == 340) // Shift (вниз)
+        movement -= speed * cameraUp;
+
+    // Применяем движение
     m_cameraPos += movement;
 
     if (m_viewportEntity.is_alive()) {
         m_viewportEntity.set<Position>({ m_cameraPos.x, m_cameraPos.y, m_cameraPos.z });
     }
 }
+
 
 void GUIEditorViewport::onMouseAction(double mouseX, double mouseY)
 {
@@ -85,8 +99,8 @@ void GUIEditorViewport::onMouseAction(double mouseX, double mouseY)
         m_firstMouse = false;
     }
 
-    float xoffset = mouseX - m_lastX;
-    float yoffset = m_lastY - mouseY; 
+    float xoffset = (mouseX - m_lastX);
+    float yoffset = -(m_lastY - mouseY); 
     m_lastX = mouseX;
     m_lastY = mouseY;
 
@@ -96,14 +110,6 @@ void GUIEditorViewport::onMouseAction(double mouseX, double mouseY)
 
     yaw += xoffset;
     pitch += yoffset;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-
-    m_cameraFront = glm::normalize(direction);
-
 
     if (m_viewportEntity.is_alive()) {
         m_viewportEntity.set<Rotation>({ pitch, yaw, rotation->z });

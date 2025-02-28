@@ -65,6 +65,14 @@ RMesh::RMesh(const std::string& path) : BaseResource(path)
 		}
 	}
 
+	std::reverse(m_indicesData.begin(), m_indicesData.end());
+
+	for (auto& vert : m_vertexData)
+	{
+		vert.pos.x = -vert.pos.x;
+		//vert.pos.y = -vert.pos.y;
+	}
+
 	m_materials.resize(materials.size());
 	/*for (const tinyobj::material_t& material : materials)
 	{

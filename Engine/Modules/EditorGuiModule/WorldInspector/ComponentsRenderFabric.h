@@ -98,6 +98,7 @@ public:
 				if (ImGui::DragFloat3("##Scale", scalev, 0.01f, -100, 100)) {
 					auto sc = entity.get_mut<Scale>();
 					sc->fromGMLVec(glm::vec3(scalev[0], scalev[1], scalev[2]));
+					entity.modified<Scale>();
 				}
 			}
 		}
@@ -217,22 +218,37 @@ public:
 				ImGui::AlignTextToFramePadding();
 				ImGui::Text("Field of view:");
 				ImGui::SameLine(labelWidth);
-				if (ImGui::SliderFloat("##FOV", &fov, 30.0f, 180.0f)) camera->fov = fov;
+				if (ImGui::SliderFloat("##FOV", &fov, 30.0f, 180.0f)) {
+					camera->fov = fov;
+					entity.modified<Camera>();
+				}
 
 				ImGui::AlignTextToFramePadding();
 				ImGui::Text("Aspect ratio:");
 				ImGui::SameLine(labelWidth);
-				if (ImGui::SliderFloat("##ASPECT", &aspect, 0.01f, 1.0f)) camera->aspect = aspect;
+				if (ImGui::SliderFloat("##ASPECT", &aspect, 0.01f, 1.0f))
+				{
+					camera->aspect = aspect;
+					entity.modified<Camera>();
+				}
 
 				ImGui::AlignTextToFramePadding();
 				ImGui::Text("Far clip:");
 				ImGui::SameLine(labelWidth);
-				if (ImGui::SliderFloat("##FAR", &farClip, 10.0f, 10000.0f)) camera->farClip = farClip;
+				if (ImGui::SliderFloat("##FAR", &farClip, 10.0f, 10000.0f))
+				{
+					camera->farClip = farClip;
+					entity.modified<Camera>();
+				}
 
 				ImGui::AlignTextToFramePadding();
 				ImGui::Text("Near clip:");
 				ImGui::SameLine(labelWidth);
-				if (ImGui::SliderFloat("##NEAR", &nearClip, 0.01f, 10.0f)) camera->nearClip = nearClip;
+				if (ImGui::SliderFloat("##NEAR", &nearClip, 0.01f, 10.0f))
+				{
+					camera->nearClip = nearClip;
+					entity.modified<Camera>();
+				}
 
 			}
 		}

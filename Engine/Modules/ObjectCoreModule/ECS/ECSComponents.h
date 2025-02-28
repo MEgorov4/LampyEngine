@@ -32,7 +32,7 @@ struct Rotation {
 	}
 
 	glm::vec3 toEuler() const {
-		return glm::eulerAngles(toQuat());
+		return glm::vec3(x, y, z);
 	}
 
 	void fromQuat(const glm::quat& q) {

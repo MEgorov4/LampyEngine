@@ -9,18 +9,23 @@
 /// </summary>
 class IRenderer
 {
+
+private:
+    int m_onECSChanged;
+
 protected:
     std::vector<RenderObject> m_activeRenderObjects;
+    std::vector<RenderObject> m_updateRenderObjects;
 public:
     /// <summary>
     /// Constructs an IRenderer with no assigned scene.
     /// </summary>
-    IRenderer() = default;
+    IRenderer();
 
     /// <summary>
     /// Virtual destructor to ensure proper cleanup of derived renderers.
     /// </summary>
-    virtual ~IRenderer() = default;
+    virtual ~IRenderer();
 
     /// <summary>
     /// Renders a single frame.

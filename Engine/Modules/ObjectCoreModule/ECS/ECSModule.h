@@ -42,6 +42,7 @@ public:
 	void shutDown();
 
 	Event<> OnLoadInitialWorldState;
+	Event<> OnComponentsChanged;
 
 private:
 	void registerComponents();
