@@ -40,8 +40,8 @@ void GUIEditorViewport::onKeyAction(int code, int, int, int)
     if (!m_processInput)
         return;
 
-    m_cameraPos = m_viewportEntity.get<Position>()->toGLMVec();
-    glm::quat cameraRotation = m_viewportEntity.get<Rotation>()->toQuat(); 
+    m_cameraPos = m_viewportEntity.get<PositionComponent>()->toGLMVec();
+    glm::quat cameraRotation = m_viewportEntity.get<RotationComponent>()->toQuat(); 
 
     float speed = m_cameraSpeed;
     glm::vec3 movement(0.0f);
@@ -76,7 +76,7 @@ void GUIEditorViewport::onKeyAction(int code, int, int, int)
     m_cameraPos += movement;
 
     if (m_viewportEntity.is_alive()) {
-        m_viewportEntity.set<Position>({ m_cameraPos.x, m_cameraPos.y, m_cameraPos.z });
+        m_viewportEntity.set<PositionComponent>({ m_cameraPos.x, m_cameraPos.y, m_cameraPos.z });
     }
 }
 
@@ -88,7 +88,7 @@ void GUIEditorViewport::onMouseAction(double mouseX, double mouseY)
         return;
     }
 
-    const Rotation* rotation = m_viewportEntity.get<Rotation>();
+    const RotationComponent* rotation = m_viewportEntity.get<RotationComponent>();
 
     float pitch = rotation->x;
     float yaw = rotation->y;
@@ -112,6 +112,6 @@ void GUIEditorViewport::onMouseAction(double mouseX, double mouseY)
     pitch += yoffset;
 
     if (m_viewportEntity.is_alive()) {
-        m_viewportEntity.set<Rotation>({ pitch, yaw, rotation->z });
+        m_viewportEntity.set<RotationComponent>({ pitch, yaw, rotation->z });
     }
 }

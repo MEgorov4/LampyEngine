@@ -12,7 +12,7 @@ public:
 	void bind() const override;
 	void unbind() const override;
 
-	GLuint getTextureID() { return m_textureID; }
+	uint32_t getTextureID() override { return m_textureID; }
 private:
 	GLuint m_textureID;
 };

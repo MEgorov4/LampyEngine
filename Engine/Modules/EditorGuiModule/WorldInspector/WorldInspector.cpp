@@ -11,12 +11,13 @@ GUIWorldInspector::GUIWorldInspector() : GUIObject()
 		, m_world(ECSModule::getInstance().getCurrentWorld())
 {
 	ComponentRendererFactory& factory = ComponentRendererFactory::getInstance();
-	factory.registerRenderer("Position", []() {return std::make_unique<PositionRenderer>(); });
-	factory.registerRenderer("Rotation", []() {return std::make_unique<RotationRenderer>(); });
-	factory.registerRenderer("Scale", []() {return std::make_unique<ScaleRenderer>(); });
+	factory.registerRenderer("PositionComponent", []() {return std::make_unique<PositionRenderer>(); });
+	factory.registerRenderer("RotationComponent", []() {return std::make_unique<RotationRenderer>(); });
+	factory.registerRenderer("ScaleComponent", []() {return std::make_unique<ScaleRenderer>(); });
 	factory.registerRenderer("Script", []() {return std::make_unique<ScriptRenderer>(); });
 	factory.registerRenderer("MeshComponent", []() {return std::make_unique<MeshComponentRenderer>(); });
-	factory.registerRenderer("Camera", []() {return std::make_unique<CameraRenderer>(); });
+	factory.registerRenderer("CameraComponent", []() {return std::make_unique<CameraRenderer>(); });
+	factory.registerRenderer("DirectionalLightComponent", []() {return std::make_unique<DirectionalLightRenderer>(); });
 }
 
 void GUIWorldInspector::render()
@@ -63,7 +64,7 @@ void GUIWorldInspector::renderEntityTreePopup()
 			{
 				if (strBuffer.size() > 0)
 				{
-					m_world.entity(buffer).set<Position>({0, 0, 0});
+					m_world.entity(buffer).set<PositionComponent>({0, 0, 0});
 				}
 			}
 			ImGui::EndPopup();
@@ -74,8 +75,8 @@ void GUIWorldInspector::renderEntityTreePopup()
 
 void GUIWorldInspector::renderEntityTree()
 {
-	auto query = m_world.query<Position>();
-	query.each([&](flecs::entity e, Position pos)
+	auto query = m_world.query<PositionComponent>();
+	query.each([&](flecs::entity e, PositionComponent pos)
 		{
 			if (ImGui::Selectable(std::format("{}##{}", e.name().c_str(), e.id()).c_str()))
 			{
@@ -98,33 +99,33 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 
 		auto& factory = ComponentRendererFactory::getInstance();
 		
-		if (m_selectedEntity.has<Position>())
+		if (m_selectedEntity.has<PositionComponent>())
 		{
-			auto renderer = factory.createRenderer("Position");
+			auto renderer = factory.createRenderer("PositionComponent");
 			if (renderer) {
 				renderer->render(m_selectedEntity);
 			}
 		}
 		
-		if (m_selectedEntity.has<Rotation>())
+		if (m_selectedEntity.has<RotationComponent>())
 		{
-			auto renderer = factory.createRenderer("Rotation");
+			auto renderer = factory.createRenderer("RotationComponent");
 			if (renderer) {
 				renderer->render(m_selectedEntity);
 			}
 		}
 
-		if (m_selectedEntity.has<Scale>())
+		if (m_selectedEntity.has<ScaleComponent>())
 		{
-			auto renderer = factory.createRenderer("Scale");
+			auto renderer = factory.createRenderer("ScaleComponent");
 			if (renderer) {
 				renderer->render(m_selectedEntity);
 			}
 		}
 
-		if (m_selectedEntity.has<Camera>())
+		if (m_selectedEntity.has<CameraComponent>())
 		{
-			auto renderer = factory.createRenderer("Camera");
+			auto renderer = factory.createRenderer("CameraComponent");
 			if (renderer) {
 				renderer->render(m_selectedEntity);
 			}
@@ -146,6 +147,13 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 			}
 		}
 
+		if (m_selectedEntity.has<DirectionalLightComponent>())
+		{
+			auto renderer = factory.createRenderer("DirectionalLightComponent");
+			if (renderer) {
+				renderer->render(m_selectedEntity);
+			}
+		}
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() -  ImGui::CalcTextSize("New component   Remove entity").x) / 2);
 
 		if (ImGui::Button("New component"))

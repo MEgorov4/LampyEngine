@@ -4,10 +4,15 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inUV;
 layout(location = 2) in vec3 inNormal;
 
-layout(std140, binding = 0) uniform ShaderData {
-    mat4 model;
+layout(std140, binding = 0) uniform CameraData {
     mat4 view;
     mat4 projection;
+    vec4 position;
+};
+
+layout(std140, binding = 1) uniform ModelMatrices
+{
+    mat4 model;
 };
 
 layout(location = 0) out vec2 fragUV;

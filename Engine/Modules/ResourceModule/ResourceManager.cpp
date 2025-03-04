@@ -7,7 +7,6 @@
 
 #include "../../Modules/LoggerModule/Logger.h"
 
-#include "../RenderModule/RenderModule.h"
 #include "../ObjectCoreModule/ECS/ECSModule.h"
 
 void ResourceManager::clearAllCache()
@@ -26,21 +25,21 @@ void ResourceManager::shutDown()
 {
 	clearAllCache();
 
-	auto& world = ECSModule::getInstance().getCurrentWorld();
+	//auto& world = ECSModule::getInstance().getCurrentWorld();
 
-	auto query = world.query<MeshComponent, Position>();
+	//auto query = world.query<MeshComponent, PositionComponent>();
 
-	query.each([&](flecs::entity e, MeshComponent& mesh, Position& pos)
-		{
-			const std::string meshPath = std::string(mesh.meshResourcePath);
-			std::shared_ptr<RMesh> loadedMesh = load<RMesh>(meshPath);
+	//query.each([&](flecs::entity e, MeshComponent& mesh, PositionComponent& pos)
+	//	{
+	//		const std::string meshPath = std::string(mesh.meshResourcePath);
+	//		std::shared_ptr<RMesh> loadedMesh = load<RMesh>(meshPath);
 
-			if (!loadedMesh) return;
+	//		if (!loadedMesh) return;
 
-			std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
-			RenderModule::getInstance().removeVertexData(vertices, meshPath);
-			RenderModule::getInstance().removeIndexData(loadedMesh->getIndicesData(), meshPath);
-		});
+	//		std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
+	//		RenderModule::getInstance().removeVertexData(vertices, meshPath);
+	//		RenderModule::getInstance().removeIndexData(loadedMesh->getIndicesData(), meshPath);
+	//	});
 }
 
 void ResourceManager::OnLoadInitialWorldState()
@@ -57,18 +56,18 @@ ResourceManager::ResourceManager()
 
 void ResourceManager::checkAllResources()
 {
-	auto& world = ECSModule::getInstance().getCurrentWorld();
+	//auto& world = ECSModule::getInstance().getCurrentWorld();
 
-	auto query = world.query<Position, MeshComponent>();
-	query.each([](const flecs::entity& entity, Position& pos, MeshComponent& mesh)
-		{
-			const std::string meshPath = std::string(mesh.meshResourcePath);
-			std::shared_ptr<RMesh> loadedMesh = load<RMesh>(meshPath);
+	//auto query = world.query<PositionComponent, MeshComponent>();
+	//query.each([](const flecs::entity& entity, PositionComponent& pos, MeshComponent& mesh)
+	//	{
+	//		const std::string meshPath = std::string(mesh.meshResourcePath);
+	//		std::shared_ptr<RMesh> loadedMesh = load<RMesh>(meshPath);
 
-			if (!loadedMesh) return;
-			
-			std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
-			RenderModule::getInstance().registerVertexData(vertices, meshPath);
-			RenderModule::getInstance().registerIndexData(loadedMesh->getIndicesData(), meshPath);
-		});
+	//		if (!loadedMesh) return;
+	//		
+	//		std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
+	//		RenderModule::getInstance().registerVertexData(vertices, meshPath);
+	//		RenderModule::getInstance().registerIndexData(loadedMesh->getIndicesData(), meshPath);
+	//	});
 }

@@ -48,6 +48,14 @@ void OpenGLMesh::draw() const
     unbind();
 }
 
+void OpenGLMesh::drawIndexed(GLsizei instanceCount) const
+{
+    bind();
+    glDrawElementsInstanced(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, 0, instanceCount);
+    unbind();
+}
+
+
 void OpenGLMesh::unbind() const
 {
     glBindVertexArray(0);

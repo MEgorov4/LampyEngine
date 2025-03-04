@@ -24,18 +24,24 @@ void ECSModule::startup()
 
 void ECSModule::loadInitialWorldState()
 {
-	m_world.entity("Room").set<Position>({ 0, 0, 0 })
-		.set<Rotation>({ 0, 0, 0 })
-		.set<Scale>({ 1, 1, 1 })
+	m_world.entity("Room").set<PositionComponent>({ 0.f, 0.f, 0.f })
+		.set<RotationComponent>({ 0.f, 0.f, 0.f })
+		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
 		.set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
 		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
 				, "../Resources/Shaders/GLSL/shader.vert"
-				, "../Resources/Shaders/GLSL/shader.frag" });
+				, "../Resources/Shaders/GLSL/shader.frag"
+				, "../Resources/Textures/viking_room.png" });
+
+	m_world.entity("DirectionalLight")
+		.set<PositionComponent>({ 0.f, 2.f, 0.f })
+		.set<RotationComponent>({ 0.f, 0.f, 0.f})
+		.set<DirectionalLightComponent>({10});
 
 	m_world.entity("ViewportCamera")
-		.set<Position>({ 0, 0, -5.f })
-		.set<Rotation>({ 0.0f, 0.0f, 0.0f})
-		.set<Camera>({ 75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true });
+		.set<PositionComponent>({ 0.f, 0.f, -5.f })
+		.set<RotationComponent>({ 0.0f, 0.0f, 0.0f})
+		.set<CameraComponent>({ 75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true });
 
 }
 
@@ -124,59 +130,67 @@ void ECSModule::shutDown()
 
 void ECSModule::registerComponents()
 {
-	m_world.component<Position>()
-		.member("x", &Position::x)
-		.member("y", &Position::y)
-		.member("z", &Position::z);
+	m_world.component<PositionComponent>()
+		.member("x", &PositionComponent::x)
+		.member("y", &PositionComponent::y)
+		.member("z", &PositionComponent::z);
 
-	m_world.component<Rotation>()
-		.member("x", &Rotation::x)
-		.member("y", &Rotation::y)
-		.member("z", &Rotation::z);
+	m_world.component<RotationComponent>()
+		.member("x", &RotationComponent::x)
+		.member("y", &RotationComponent::y)
+		.member("z", &RotationComponent::z);
 
-	m_world.component<Scale>()
-		.member("x", &Scale::x)
-		.member("y", &Scale::y)
-		.member("z", &Scale::z);
+	m_world.component<ScaleComponent>()
+		.member("x", &ScaleComponent::x)
+		.member("y", &ScaleComponent::y)
+		.member("z", &ScaleComponent::z);
 
-	m_world.component<Camera>()
-		.member("fov", &Camera::fov)
-		.member("aspect", &Camera::aspect)
-		.member("farClip", &Camera::farClip)
-		.member("nearClip", &Camera::nearClip);
+	m_world.component<CameraComponent>()
+		.member("fov", &CameraComponent::fov)
+		.member("aspect", &CameraComponent::aspect)
+		.member("farClip", &CameraComponent::farClip)
+		.member("nearClip", &CameraComponent::nearClip);
 
 	m_world.component<MeshComponent>()
 		.member("meshResourcePath", &MeshComponent::meshResourcePath)
 		.member("vertShaderPath", &MeshComponent::vertShaderPath)
-		.member("fragShaderPath", &MeshComponent::fragShaderPath);
+		.member("fragShaderPath", &MeshComponent::fragShaderPath)
+		.member("texturePath", &MeshComponent::texturePath);
 }
 
 void ECSModule::registerObservers()
 {
-	m_world.observer<Position>()
+	m_world.observer<PositionComponent>()
 		.event(flecs::OnSet)
-		.each([=](flecs::entity e, Position& mesh)
+		.each([=](flecs::entity e, PositionComponent& mesh)
 			{
 				OnComponentsChanged();
 			});
 
-	m_world.observer<Rotation>()
+	m_world.observer<RotationComponent>()
 		.event(flecs::OnSet)
-		.each([=](flecs::entity e, Rotation& mesh)
+		.each([=](flecs::entity e, RotationComponent& mesh)
 			{
 				OnComponentsChanged();
 			});
 
-	m_world.observer<Scale>()
+	m_world.observer<ScaleComponent>()
 		.event(flecs::OnSet)
-		.each([=](flecs::entity e, Scale& mesh)
+		.each([=](flecs::entity e, ScaleComponent& mesh)
 			{
 				OnComponentsChanged();
 			});
 
-	m_world.observer<Camera>()
+	m_world.observer<CameraComponent>()
 		.event(flecs::OnSet)
-		.each([=](flecs::entity e, Camera& mesh)
+		.each([=](flecs::entity e, CameraComponent& mesh)
+			{
+				OnComponentsChanged();
+			});
+
+	m_world.observer<DirectionalLightComponent>()
+		.event(flecs::OnSet)
+		.each([=](flecs::entity e, DirectionalLightComponent& dirLight)
 			{
 				OnComponentsChanged();
 			});
@@ -188,6 +202,7 @@ void ECSModule::registerObservers()
 				mesh.meshResource = ResourceManager::load<RMesh>(mesh.meshResourcePath);
 				mesh.vertShaderResource = ResourceManager::load<RShader>(mesh.vertShaderPath);
 				mesh.fragShaderResource = ResourceManager::load<RShader>(mesh.fragShaderPath);
+				mesh.textureResource = ResourceManager::load<RTexture>(mesh.texturePath);
 				OnComponentsChanged();
 			});
 }

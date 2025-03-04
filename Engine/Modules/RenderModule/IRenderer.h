@@ -1,9 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 
 #include "Vulkan/VulkanObjects/Vertex.h"
 #include "Abstract/RenderObject.h"
+#include "Abstract/ITexture.h"
 /// <summary>
 /// Interface for a renderer, defining core rendering operations and resource management.
 /// </summary>
@@ -12,10 +14,18 @@ class IRenderer
 
 private:
     int m_onECSChanged;
-
+    std::shared_ptr<IShader> m_shadowsShader;
+    std::shared_ptr<IShader> m_reflectionsShader;
+    std::shared_ptr<IShader> m_lightsShader;
+    std::shared_ptr<IShader> m_finalShader;
+    
 protected:
-    std::vector<RenderObject> m_activeRenderObjects;
-    std::vector<RenderObject> m_updateRenderObjects;
+    RenderPipelineData m_activeRenderPipelineData;
+    RenderPipelineData m_updateRenderPipelineData;
+
+    std::shared_ptr<ITexture> m_albedoGeneric;
+    std::shared_ptr<ITexture> m_emissionGeneric;
+
 public:
     /// <summary>
     /// Constructs an IRenderer with no assigned scene.
@@ -31,7 +41,6 @@ public:
     /// Renders a single frame.
     /// </summary>
     virtual void render() = 0;
-
 
     /// <summary>
     /// Registers a shader pipeline using the provided vertex and fragment shader paths.
@@ -68,4 +77,5 @@ public:
     virtual void waitIdle() = 0;
 
     void updateRenderList();
+    void postInit();
 };

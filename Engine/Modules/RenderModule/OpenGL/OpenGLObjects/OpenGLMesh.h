@@ -22,5 +22,6 @@ private:
 
 	void bind() const override;
 	void draw() const override;
+	void drawIndexed(GLsizei instanceCount) const override;
 	void unbind() const override;
 };

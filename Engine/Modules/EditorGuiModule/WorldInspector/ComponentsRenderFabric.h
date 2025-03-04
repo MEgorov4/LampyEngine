@@ -23,20 +23,20 @@ public:
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
 
 		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) {
-			if (const Position* pos = entity.get<Position>()) {
-				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Position").x) / 2);
+			if (const PositionComponent* pos = entity.get<PositionComponent>()) {
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("PositionComponent").x) / 2);
 
 				ImGui::SetCursorPosX(0);
 				ImGui::Separator();
 
-				ImGui::Text("Position");
+				ImGui::Text("PositionComponent");
 
 				ImGui::SameLine();
 
 				float position[3] = { pos->x, pos->y, pos->z };
 
-				if (ImGui::DragFloat3("##Position", position, 0.01f)) {
-					entity.set<Position>({ position[0], position[1], position[2] });
+				if (ImGui::DragFloat3("##PositionComponent", position, 0.01f)) {
+					entity.set<PositionComponent>({ position[0], position[1], position[2] });
 				}
 			}
 		}
@@ -53,20 +53,20 @@ public:
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
 
 		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) {
-			if (auto rot = entity.get<Rotation>()) {
-				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Rotation").x) / 2);
+			if (auto rot = entity.get<RotationComponent>()) {
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("RotationComponent").x) / 2);
 
 				ImGui::SetCursorPosX(0);
 				ImGui::Separator();
 
-				ImGui::Text("Rotation");
+				ImGui::Text("RotationComponent");
 
 				ImGui::SameLine();
 
 				float rotation[3] = { rot->x, rot->y, rot->z };
 
-				if (ImGui::DragFloat3("##Rotation", rotation, 5.f)) {
-					entity.set<Rotation>({ rotation[0], rotation[1], rotation[2] });
+				if (ImGui::DragFloat3("##RotationComponent", rotation, 5.f)) {
+					entity.set<RotationComponent>({ rotation[0], rotation[1], rotation[2] });
 				}
 			}
 		}
@@ -83,22 +83,22 @@ public:
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
 
 		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) {
-			if (const Scale* scale = entity.get<Scale>()) {
-				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Scale").x) / 2);
+			if (const ScaleComponent* scale = entity.get<ScaleComponent>()) {
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("ScaleComponent").x) / 2);
 
 				ImGui::SetCursorPosX(0);
 				ImGui::Separator();
 
-				ImGui::Text("Scale");
+				ImGui::Text("ScaleComponent");
 
 				ImGui::SameLine();
 
 				float scalev[3] = { scale->x, scale->y, scale->z };
 
-				if (ImGui::DragFloat3("##Scale", scalev, 0.01f, -100, 100)) {
-					auto sc = entity.get_mut<Scale>();
+				if (ImGui::DragFloat3("##ScaleComponent", scalev, 0.01f, -100, 100)) {
+					auto sc = entity.get_mut<ScaleComponent>();
 					sc->fromGMLVec(glm::vec3(scalev[0], scalev[1], scalev[2]));
-					entity.modified<Scale>();
+					entity.modified<ScaleComponent>();
 				}
 			}
 		}
@@ -191,17 +191,41 @@ public:
 	}
 };
 
+class DirectionalLightRenderer : public IComponentRenderer {
+public:
+	void render(flecs::entity& entity) override {
+		if (ImGui::BeginChildFrame(4, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4))) {
+			if (const DirectionalLightComponent* dirLightComponent = entity.get<DirectionalLightComponent>())
+			{
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("DirectionalLight").x) / 2);
+
+				ImGui::SetWindowFontScale(1.2);
+				ImGui::Text("DirectionalLight");
+				ImGui::SetWindowFontScale(1);
+
+				float intencity = dirLightComponent->intencity;
+				if (ImGui::DragFloat("##dirLightIntencity", &intencity, 0.01, 0.0f, 1000.f))
+				{
+					entity.set<DirectionalLightComponent>({intencity});
+				}
+			}
+
+		}
+		ImGui::EndChildFrame();
+	}
+};
+
 class CameraRenderer : public IComponentRenderer
 {
 public:
 	void render(flecs::entity& entity) override
 	{
 		if (ImGui::BeginChildFrame(3, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 2.25))) {
-			if (Camera* camera = entity.get_mut<Camera>()) {
-				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Camera").x) / 2);
+			if (CameraComponent* camera = entity.get_mut<CameraComponent>()) {
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("CameraComponent").x) / 2);
 
 				ImGui::SetWindowFontScale(1.2);
-				ImGui::Text("Camera");
+				ImGui::Text("CameraComponent");
 				ImGui::SetWindowFontScale(1);
 
 				ImGui::SetCursorPosX(0);
@@ -220,7 +244,7 @@ public:
 				ImGui::SameLine(labelWidth);
 				if (ImGui::SliderFloat("##FOV", &fov, 30.0f, 180.0f)) {
 					camera->fov = fov;
-					entity.modified<Camera>();
+					entity.modified<CameraComponent>();
 				}
 
 				ImGui::AlignTextToFramePadding();
@@ -229,7 +253,7 @@ public:
 				if (ImGui::SliderFloat("##ASPECT", &aspect, 0.01f, 1.0f))
 				{
 					camera->aspect = aspect;
-					entity.modified<Camera>();
+					entity.modified<CameraComponent>();
 				}
 
 				ImGui::AlignTextToFramePadding();
@@ -238,7 +262,7 @@ public:
 				if (ImGui::SliderFloat("##FAR", &farClip, 10.0f, 10000.0f))
 				{
 					camera->farClip = farClip;
-					entity.modified<Camera>();
+					entity.modified<CameraComponent>();
 				}
 
 				ImGui::AlignTextToFramePadding();
@@ -247,7 +271,7 @@ public:
 				if (ImGui::SliderFloat("##NEAR", &nearClip, 0.01f, 10.0f))
 				{
 					camera->nearClip = nearClip;
-					entity.modified<Camera>();
+					entity.modified<CameraComponent>();
 				}
 
 			}

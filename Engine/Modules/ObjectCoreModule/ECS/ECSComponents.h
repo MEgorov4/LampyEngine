@@ -8,8 +8,9 @@
 
 #include "../../ResourceModule/Mesh.h"
 #include "../../ResourceModule/Shader.h"
+#include "../../ResourceModule/Texture.h"
 
-struct Position {
+struct PositionComponent {
 	float x = 0.0f, y = 0.0f, z = 0.0f;
 
 	glm::vec3 toGLMVec() const { return glm::vec3(x, y, z); }
@@ -22,7 +23,7 @@ struct Position {
 	}
 };
 
-struct Rotation {
+struct RotationComponent {
 	float x = 0.0f;
 	float y = 0.0f;
 	float z = 0.0f;
@@ -48,7 +49,7 @@ struct Rotation {
 	}
 };
 
-struct Scale {
+struct ScaleComponent {
 	float x = 1.0f, y = 1.0f, z = 1.0f;
 
 	glm::vec3 toGLMVec() const {return glm::vec3(x, y , z);}
@@ -61,7 +62,7 @@ struct Scale {
 	}
 };
 
-struct Camera
+struct CameraComponent
 {
 	float fov;
 	float aspect;
@@ -75,9 +76,26 @@ struct MeshComponent
 	char meshResourcePath[256];
 	char vertShaderPath[256];
 	char fragShaderPath[256];
+	char texturePath[256];
 
 	std::optional<std::shared_ptr<RMesh>> meshResource;
 
 	std::optional<std::shared_ptr<RShader>> vertShaderResource;
 	std::optional<std::shared_ptr<RShader>> fragShaderResource;
+
+	std::optional <std::shared_ptr<RTexture>> textureResource;
 };
+
+struct PointLightComponent
+{
+	float radius;
+	float intencity;
+};
+
+struct DirectionalLightComponent
+{
+	float intencity;
+};
+
+// Tags
+struct EditorOnlyTag {};

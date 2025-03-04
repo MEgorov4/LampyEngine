@@ -2,7 +2,7 @@
 
 #include <GL/glew.h>
 #include <imgui.h>
-
+#include <glm/gtx/string_cast.hpp>
 #include "../../LoggerModule/Logger.h"
 #include "../../ShaderCompilerModule/ShaderCompiler.h"
 #include "../../ImGuiModule/OpenGLBackends/imgui_impl_opengl3.h"
@@ -12,6 +12,8 @@
 #include "OpenGLObjects/OpenGLShader.h"
 #include "OpenGLObjects/OpenGLVertexBuffer.h"
 #include "OpenGLObjects/OpenGLMesh.h"
+#include "OpenGLObjects/OpenGLMesh2D.h"
+#include "OpenGLObjects/OpenGLTexture.h"
 
 OpenGLRenderer::OpenGLRenderer(Window* window) : m_window(window)
 {
@@ -20,7 +22,7 @@ OpenGLRenderer::OpenGLRenderer(Window* window) : m_window(window)
 
 void OpenGLRenderer::init()
 {
-	if (!glewInit())
+	if (glewInit() == GL_SUCCESS_NV)
 	{
 		LOG_INFO("OpenGLRenderer: Failed to initialize GLEW");
 	}
@@ -43,6 +45,13 @@ void OpenGLRenderer::init()
 
 	m_offscreenFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080);
 
+	m_shadowFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080, true);
+	m_reflectionFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080);
+	m_lightFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080);
+	m_customFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080);
+	m_finalFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080);
+
+	m_quadMesh2D = std::make_unique<OpenGLMesh2D>();
 	initImGui();
 
 	LOG_INFO("OpenGLRenderer: OpenGL initialized successfully");
@@ -55,7 +64,10 @@ void OpenGLRenderer::initImGui()
 	ImGui_ImplOpenGL3_Init("#version 450");
 }
 
+void OpenGLRenderer::debugMessageHandle(std::string& message)
+{
 
+}
 
 void OpenGLRenderer::render()
 {
@@ -66,39 +78,116 @@ void OpenGLRenderer::render()
 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-	glfwSwapBuffers(m_window->getGLFWWindow());
-
-	m_offscreenFramebuffer->bind();
 	renderWorld();
-	m_offscreenFramebuffer->unbind();
+
+	glfwSwapBuffers(m_window->getGLFWWindow());
 }
 
 void OpenGLRenderer::renderWorld()
 {
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
+	m_shadowFramebuffer->bind();
+	glClear(GL_DEPTH_BUFFER_BIT);
+	renderPass(m_activeRenderPipelineData.shadowPass);
+	m_shadowFramebuffer->unbind();
 
-	for (auto& renderObject : m_activeRenderObjects)
+	m_reflectionFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	renderPass(m_activeRenderPipelineData.reflectionPass);
+	m_reflectionFramebuffer->unbind();
+
+
+	m_lightFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	renderPass(m_activeRenderPipelineData.lightPass);
+	m_lightFramebuffer->unbind();
+
+
+	m_customFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	renderPass(m_activeRenderPipelineData.customPass);
+	m_customFramebuffer->unbind();
+
+
+	glDisable(GL_DEPTH_TEST);
+	m_finalFramebuffer->bind();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	renderPass(m_activeRenderPipelineData.finalPass);
+	m_finalFramebuffer->unbind();
+	glEnable(GL_DEPTH_TEST);
+
+	glDisable(GL_DEPTH_TEST);
+}
+
+void OpenGLRenderer::renderPass(const RenderPassData& renderPassData)
+{
+
+	ShaderUniformBlock_CameraData cameraData =
+	{ m_activeRenderPipelineData.viewMatrix
+	, m_activeRenderPipelineData.projMatrix
+	, m_activeRenderPipelineData.cameraPosition };
+
+	std::unordered_map<std::string, GLuint> textures;
+
+	if (renderPassData.renderPassType == FINAL)
 	{
-		if (renderObject.shader)
+		textures["customMap"] = m_customFramebuffer->getColorTexture();
+		textures["lightMap"] = m_lightFramebuffer->getDepthTexture();
+		textures["objectAlbedo"] = m_albedoGeneric->getTextureID();
+		textures["objectEmission"] = m_emissionGeneric->getTextureID();
+		textures["reflectionMap"] = m_reflectionFramebuffer->getColorTexture();
+		textures["shadowMap"] = m_shadowFramebuffer->getDepthTexture();
+	}
+	for (auto& [shader, meshes] : renderPassData.batches)
+	{
+		shader->use();
+
+		if (renderPassData.renderPassType == FINAL)
 		{
-			renderObject.shader->use();
-
-			glBindBufferBase(GL_UNIFORM_BUFFER, 0, dynamic_cast<OpenGLShader*>(renderObject.shader.get())->getUBO());
-
-			ShaderUniformBlock block = { renderObject.modelMatrix, renderObject.viewMatrix, renderObject.projectionMatrix };
-			renderObject.shader->setUniformBlock(block);
-
-			if (renderObject.mesh)
+			shader->bindTextures(textures);
+			if (renderPassData.renderPassType == FINAL)
 			{
-				renderObject.mesh->draw();
+				m_quadMesh2D->draw();
+			}
+		}
+		else
+		{
+
+			if (shader->hasUniformBlock("CameraData"))
+			{
+				shader->setUniformData("CameraData", &cameraData, sizeof(ShaderUniformBlock_CameraData));
+			}
+			if (shader->hasUniformBlock("DirectionalLightData"))
+			{
+				ShaderUniformBlock_DirectionalLightData dirLightData = 
+				{m_activeRenderPipelineData.directionalLight.direction, m_activeRenderPipelineData.directionalLight.color};
+
+				shader->setUniformData("DirectionalLightData", &dirLightData, sizeof(ShaderUniformBlock_DirectionalLightData));
+			}
+			for (auto& [mesh, objects] : meshes)
+			{
+				for (auto& object : objects)
+				{
+					if (shader->hasUniformBlock("ModelMatrices"))
+					{
+						ShaderUniformBlock_ModelData modelData{ object.modelMatrix };
+						shader->setUniformData("ModelMatrices", &modelData, sizeof(ShaderUniformBlock_ModelData));
+					}
+
+					if (mesh)
+					{
+						mesh->draw();
+					}
+				}
 			}
 		}
 	}
 
-	glDisable(GL_DEPTH_TEST);
 }
 
 void OpenGLRenderer::registerShader(const std::string& vertPath, const std::string& fragPath)
@@ -131,7 +220,7 @@ void OpenGLRenderer::removeIndexData(const std::vector<uint32_t>& indexData, con
 
 void* OpenGLRenderer::getOffscreenImageDescriptor()
 {
-	return reinterpret_cast<void*>(static_cast<uintptr_t>(m_offscreenFramebuffer->getTexture()));
+	return reinterpret_cast<void*>(static_cast<uintptr_t>(m_finalFramebuffer->getColorTexture()));
 }
 
 void OpenGLRenderer::waitIdle()

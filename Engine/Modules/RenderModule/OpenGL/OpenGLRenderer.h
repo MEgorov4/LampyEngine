@@ -8,13 +8,23 @@
 class OpenGLFramebuffer;
 class OpenGLShader;
 class OpenGLVertexBuffer;
+class OpenGLMesh2D;
 
 class OpenGLRenderer : public IRenderer
 {
 	Window* m_window;
-	std::unique_ptr<OpenGLFramebuffer> m_offscreenFramebuffer;
-	std::unique_ptr<OpenGLShader> m_shader;
 
+	std::unique_ptr<OpenGLFramebuffer> m_offscreenFramebuffer;
+	std::unique_ptr<OpenGLFramebuffer> m_shadowFramebuffer;
+	std::unique_ptr<OpenGLFramebuffer> m_reflectionFramebuffer;
+	std::unique_ptr<OpenGLFramebuffer> m_lightFramebuffer;
+	std::unique_ptr<OpenGLFramebuffer> m_finalFramebuffer;
+	std::unique_ptr<OpenGLFramebuffer> m_customFramebuffer;
+	
+	std::unique_ptr<OpenGLMesh2D> m_quadMesh2D;
+
+	GLuint m_quadVAO;
+	GLuint m_quadVBO;
 public:
 	OpenGLRenderer(Window* window);
 
@@ -40,5 +50,10 @@ private:
 	void init();
 	void initImGui();
 
+	void debugMessageHandle(std::string& message);
+
 	void renderWorld();
+
+	void renderPass(const RenderPassData& renderPassData);
+
 };

@@ -280,7 +280,7 @@ void LuaScriptModule::registerECSModule()
 	m_luaState.new_usertype<flecs::world>("World",
 		"entity", [](flecs::world& w, const std::string& name) -> flecs::entity {
 			auto entity = w.entity(name.c_str());
-			entity.set<Position>({});
+			entity.set<PositionComponent>({});
 			return entity;
 		},
 		"find", [](flecs::world& w, const std::string& name) -> flecs::entity {
@@ -288,10 +288,10 @@ void LuaScriptModule::registerECSModule()
 		}
 	);
 
-	m_luaState.new_usertype<Position>("Position",
-		"x", &Position::x,
-		"y", &Position::y,
-		"z", &Position::z);
+	m_luaState.new_usertype<PositionComponent>("PositionComponent",
+		"x", &PositionComponent::x,
+		"y", &PositionComponent::y,
+		"z", &PositionComponent::z);
 
 	m_luaState.new_usertype<flecs::entity>("Entity",
 		"id", &flecs::entity::id,
@@ -303,16 +303,16 @@ void LuaScriptModule::registerECSModule()
 		},
 
 		"get_position", [this](flecs::entity& e) -> glm::vec3 {
-			if (auto* position = e.get<Position>()) {
+			if (auto* position = e.get<PositionComponent>()) {
 				return position->toGLMVec();
 			}
 			return glm::vec3();
 		},
 
 		"set_position", [](flecs::entity& e, glm::vec3 pos) {
-			if (e.has<Position>())
+			if (e.has<PositionComponent>())
 			{
-				e.set<Position>({pos.x, pos.y, pos.z});
+				e.set<PositionComponent>({pos.x, pos.y, pos.z});
 			}
 		}
 	);

@@ -18,4 +18,6 @@ void RenderModule::startup(Window* window)
 		m_renderer = std::make_unique<OpenGLRenderer>(window);
 		break;
 	}
+
+	m_renderer->postInit();
 }
