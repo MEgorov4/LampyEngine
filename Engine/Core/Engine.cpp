@@ -12,6 +12,7 @@
 #include "../Modules/LoggerModule/Logger.h"
 #include "../Modules/LuaScriptModule/LuaScriptModule.h"
 #include "../Modules/ResourceModule/ResourceManager.h"
+#include "../Modules/PhysicsModule/PhysicsModule.h"
 // #include "../Modules/ResourceModule/Shader.h"
 
 Engine::Engine(){}
@@ -52,6 +53,8 @@ void Engine::startupModules()
 	LuaScriptModule::getInstance().startup();
 
 	ECSModule::getInstance().OnLoadInitialWorldState();
+
+	PhysicsModule::getInstance().startup();
 }
 
 void Engine::startupEngineContextObject()
@@ -76,8 +79,11 @@ void Engine::engineTick()
 		lastTime = currentTime;
 
 		WindowModule::getInstance().getWindow()->pollEvents();
-		m_engineContext->tick(deltaTime);
+
+		PhysicsModule::getInstance().tick(deltaTime);
 		ECSModule::getInstance().ecsTick(deltaTime);
+
+		m_engineContext->tick(deltaTime);
 		RenderModule::getInstance().getRenderer()->render();
 	}
 	RenderModule::getInstance().getRenderer()->waitIdle();
@@ -91,6 +97,7 @@ void Engine::shutDownEngineContextObject()
 
 void Engine::shutDownModules()
 {
+	PhysicsModule::getInstance().shutDown();
 	ECSModule::getInstance().OnLoadInitialWorldState.unsubscribe(idOnLoadInitialWorldState);
 	ECSModule::getInstance().shutDown();
 	AudioModule::getInstance().shutDown();

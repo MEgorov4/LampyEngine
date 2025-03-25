@@ -10,6 +10,8 @@
 #include "../../ResourceModule/Shader.h"
 #include "../../ResourceModule/Texture.h"
 
+class btRigidBody;
+
 struct PositionComponent {
 	float x = 0.0f, y = 0.0f, z = 0.0f;
 
@@ -84,6 +86,12 @@ struct MeshComponent
 	std::optional<std::shared_ptr<RShader>> fragShaderResource;
 
 	std::optional <std::shared_ptr<RTexture>> textureResource;
+};
+
+struct RigidbodyComponent 
+{
+	std::optional<std::shared_ptr<btRigidBody>> body;
+	float mass = 0.01f;
 };
 
 struct PointLightComponent

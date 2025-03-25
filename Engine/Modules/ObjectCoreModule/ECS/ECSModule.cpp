@@ -6,6 +6,8 @@
 #include "ECSLuaScriptsSystem.h"
 #include "../../ResourceModule/ResourceManager.h"
 #include "../../FilesystemModule/FilesystemModule.h"
+#include "../../PhysicsModule/PhysicsModule.h"
+#include <btBulletDynamicsCommon.h>
 
 void ECSModule::startup()
 {
@@ -27,11 +29,12 @@ void ECSModule::loadInitialWorldState()
 	m_world.entity("Room").set<PositionComponent>({ 0.f, 0.f, 0.f })
 		.set<RotationComponent>({ 0.f, 0.f, 0.f })
 		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
-		.set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
+		// .set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
 		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
 				, "../Resources/Shaders/GLSL/shader.vert"
 				, "../Resources/Shaders/GLSL/shader.frag"
-				, "../Resources/Textures/viking_room.png" });
+				, "../Resources/Textures/viking_room.png" })
+		.set<RigidbodyComponent>({});
 
 	m_world.entity("DirectionalLight")
 		.set<PositionComponent>({ 0.f, 2.f, 0.f })
@@ -105,13 +108,18 @@ void ECSModule::startSystems()
 	LOG_INFO("ECSModule: Start systems");
 
 	ECSluaScriptsSystem::getInstance().startSystem(m_world);
+	PhysicsModule::getInstance().registrateBodies();
 	m_tickEnabled = true;
+	PhysicsModule::getInstance().setTickEnabled(true);
 }
 
 void ECSModule::stopSystems()
 {
 	LOG_INFO("ECSModule: Stop systems");
 	m_tickEnabled = false;
+	PhysicsModule::getInstance().setTickEnabled(false);
+
+	PhysicsModule::getInstance().clearPhysicsWorld();
 
 	ECSluaScriptsSystem::getInstance().stopSystem(m_world);
 	clearWorld();
@@ -213,7 +221,18 @@ void ECSModule::ecsTick(float deltaTime)
 	{
 		if (m_world.progress(deltaTime))
 		{
+			auto& world = ECSModule::getInstance().getCurrentWorld();
 
+			auto query = world.query<RigidbodyComponent, PositionComponent>();
+
+			query.each([&](const flecs::entity& e, RigidbodyComponent& rigidbody, PositionComponent& transform)
+				{
+					btTransform bulletTransform;
+					rigidbody.body.value()->getMotionState()->getWorldTransform(bulletTransform);
+					btVector3 pos = bulletTransform.getOrigin();
+
+					transform = { pos.x(), pos.y(), pos.z() };
+				});
 		}
 	}
 }

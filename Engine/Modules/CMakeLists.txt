@@ -7,6 +7,7 @@ add_subdirectory(WindowModule)
 add_subdirectory(AudioModule)
 add_subdirectory(InputModule)
 add_subdirectory(RenderModule)
+add_subdirectory(PhysicsModule)
 
 add_subdirectory(ProjectModule)
 

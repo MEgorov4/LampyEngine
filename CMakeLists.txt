@@ -27,6 +27,7 @@ find_package(portable-file-dialogs REQUIRED)
 find_package(fltk REQUIRED)
 find_package(stb REQUIRED)
 find_package(clip REQUIRED)
+find_package(Bullet REQUIRED)
 
 function(format_source_group)
     foreach(_source IN ITEMS ${ARGN})

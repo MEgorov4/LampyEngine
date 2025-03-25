@@ -13,4 +13,5 @@ target_link_libraries(ObjectCoreModule PUBLIC
     ProjectModule
     flecs::flecs_static
     LuaScriptModule
+    PhysicsModule
 )
