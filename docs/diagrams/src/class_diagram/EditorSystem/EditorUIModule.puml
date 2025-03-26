@@ -1,0 +1,107 @@
+@startuml
+
+package EditorUIModule
+{
+package GUIObjects {
+    !include ImGuiModule.puml
+    class GUIContentBrowser extends ImGuiModule.GUIObject
+    {
+        -DirectoryInterator m_dirIter;
+        -string m_rootPath;
+        -string m_currentPath;
+        -vector<string> m_files;
+        -vector<string> m_folders;
+
+        +GUIContentBrowser();
+        +~GUIContentBrowser() override = default;
+        +void render() override;
+
+        -void updateContent();
+    }
+
+    class GUIWorldInspector extends ImGuiModule.GUIObject
+    {
+        -flecs::world& m_world;
+        -flecs::entity m_selectedEntity;
+
+        +GUIWSorldInspector();
+        +virtual ~GUIWorldInspector() override = default;
+        +virtual void render() override;
+
+        -void renderEntityTreePopup();
+        -void renderEntityTree();
+        -void renderSelectedEntityDefaults();
+    }
+
+    class GUIEditorConsole extends ImGuiModule.GUIObject
+    {
+        +GUIEditorConsole();
+        +~GUIEditorConsole() override = default;
+
+        +void render() override;
+
+        -void processCommand(const string& command);
+    }
+
+    class GUIEditorToolPanel extends ImGuiModule.GUIObject
+    {
+        -ECSModule& m_ecsModule;
+
+        +GUIEditorToolPanel();
+        +virtual ~GUIEditorToolPanel() override = default;
+        +virtual void render() override;
+
+        -void renderSaveWorldPopup();
+    }
+
+    class GUIEditorViewport extends ImGuiModule.GUIObject
+    {
+        -void* m_offscreenImageDescriptor;
+
+        +GUIEditorViewport();
+        +virtual ~GUIEditorViewport() override;
+        +virtual void render() override;
+    }
+
+    class GUIMainMenuBar extends ImGuiModule.GUIObject
+    {
+        +GUIMainMenuBar();
+        +virtual ~GUIMainMenuBar() = default;
+        +Event<string> OnOpenButtonClicked;
+        +virtual void render() override;
+    }
+
+    class GUIOutputLog extends ImGuiModule.GUIObject
+    {
+        -vector<string> m_messages;
+        -int m_loggerSubscriberID;
+
+        +GUIOutputLog();
+        +~GUIOutputLog();
+
+        +void render() override;
+        +void clear(); 
+
+        -void receiveLogMessage(const string& message);
+    }
+}
+    class EditorUIModule <<singletone>>
+    {
+        -unique_ptr<GUIEditorToolPanel> m_toolPanel;
+        -unique_ptr<GUIMainMenuBar> m_mainMenuBar;
+        -unique_ptr<GUIOutputLog> m_outputLog;
+        -unique_ptr<GUIContentBrowser> m_contentBrowser;
+        -unique_ptr<GUIWorldInspector> m_worldInspector;
+        -unique_ptr<GUIEditorViewport> m_editorViewport;
+        -unique_ptr<GUIEditorConsole> m_console;
+
+        +static EditorUIModule& getInstance();
+        +void startup();
+        +void render();
+        +void shutdown();
+
+        +GUIMainMenuBar* getMenuBar();
+    }
+    EditorUIModule <.. GUIObjects
+}
+@enduml

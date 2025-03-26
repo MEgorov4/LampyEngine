@@ -1,0 +1,42 @@
+@startuml
+package LoggerModule
+{
+    enum LogVerbosity
+    {
+        Verbose,
+        Debug,
+        Info,
+        Warning,
+        Error,
+        Fatal
+    }
+
+    class Logger <<singletone>>
+    {
+        -Logger() = default;
+        -~Logger() = default;
+        -Logger(const Logger&) = delete;
+        -Logger& operator=(const Logger&) = delete;
+
+        -string toString(LogVerbosity verbosity) const;
+        -mutex m_mutex;        
+
+        +Event<string> OnMessagePushed;
+        +static Logger& Get();
+
+        +void Log(LogVerbosity verbosity, const string& message)
+    }
+
+    Logger *-- LogVerbosity
+
+note right of Logger
+    Macros:
+    - LOG_VERBOSE(msg)
+    - LOG_DEBUG(msg)
+    - LOG_INFO(msg)
+    - LOG_WARNING(msg)
+    - LOG_ERROR(msg)
+    - LOG_FATAL(msg)
+end note
+}
+@enduml

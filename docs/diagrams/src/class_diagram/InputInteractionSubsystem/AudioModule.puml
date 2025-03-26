@@ -1,0 +1,17 @@
+@startuml
+package AudioModule
+{
+    class AudioModule <<singletone>>
+    {
+        -ALCdevice* m_device;
+        -ALCcontext* m_audioThread;
+
+        +static AudioModule& getInstance();
+        +void statrup();
+        +void shutdown();
+        +void playSoundAsync(shared_ptr<RSound> sound);
+        +void playSoundSync(shared_ptr<RSound> sound);
+        +void playSoundAsyncInPos(shared_ptr<RSound> sound, const vec3& pos);
+    }
+}
+@enduml

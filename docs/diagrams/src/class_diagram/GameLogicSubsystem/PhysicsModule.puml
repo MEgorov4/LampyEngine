@@ -1,0 +1,9 @@
+@startuml
+package PhysicsModule
+{
+    class PhysicsModule <<singletone>>
+    {
+        -BulletBT* m_PhysicsWorld;
+    }
+}
+@enduml

@@ -1,0 +1,18 @@
+@startuml
+package InputModule 
+{
+    class InputModule <<singletone>>
+    {
+        +Event<int, int, int, int> OnKeyAction;
+        +Event<double, double> OnScrollAction;
+        +Event<double, double> OnMousePosAction;
+
+        +InputModule();
+        +~InputModule();
+
+        +static InputModule& getInstance();
+        +void startup(Window* window);
+        +void shutdown();
+    }
+}
+@enduml

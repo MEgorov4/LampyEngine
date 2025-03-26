@@ -1,0 +1,36 @@
+@startuml
+
+package ImGuiModule
+{
+    class GUIObject 
+    {
+        -uint32_t m_objectID;
+
+        +GUIObject();
+        +GUIObject(const GUIObject& T) = delete;
+        +GUIObject& operator=(const GUIObject& T) = delete;
+        +virtual ~GUIObject();
+
+        +virtual void render();
+        +uint32_t getID() const;
+    }
+
+    class ImGuiModule <<singletone>>
+    {
+        -vector<GUIObject*> m_GuiObjects;
+        -ImGuiModule() = default;
+
+        +~ImGuiModule() = default;
+        +void startup();
+        +void shutdown();
+
+        +static ImGuiModule& getInstance();
+        +void setImGuiStyle();
+        +void renderUI() const;
+        +void addObject(GUIObject* object);
+        +void removeObject(uint32_t id);
+    }
+
+    ImGuiModule *-- GUIObject
+}
+@enduml

@@ -77,7 +77,7 @@ struct MeshComponent
 	char vertShaderPath[256];
 	char fragShaderPath[256];
 	char texturePath[256];
-
+	
 	std::optional<std::shared_ptr<RMesh>> meshResource;
 
 	std::optional<std::shared_ptr<RShader>> vertShaderResource;

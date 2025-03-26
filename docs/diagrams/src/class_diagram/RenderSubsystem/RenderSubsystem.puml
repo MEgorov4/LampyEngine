@@ -1,0 +1,83 @@
+@startuml ClassDiagram
+
+skinparam packageStyle rectangle
+!include AbstractRenderObjects.puml
+!include RenderPipelineObjects.puml
+!include OpenGLRendererObjects.puml
+!include VulkanRendererObjects.puml
+
+
+RenderPipelineObjects "AbstractRenderObjects" *-down- AbstractRenderObjects
+
+'Render objects which constructs by resources
+
+package RenderSubsystem
+{
+    class RenderModule <<singletone>>
+    {
+        -unique_ptr<IRenderer> m_Renderer;
+
+        +void startup(Window* window);
+        +void shutdown();
+    }
+
+    class IRenderer
+    {
+        -RenderPipelineData m_actualRenderPipeline;
+        -RenderPipelineData m_updateRenderPipeline;
+    
+        -void updateRenderPipeline();
+
+        +void postInit();
+
+        +virtual void render() = 0;
+        +virtual void waitIdle() = 0;
+    }
+    IRenderer "RenderPipelineData" *-right-- RenderPipelineData
+
+    class OpenGLRenderer extends IRenderer 
+    {
+        -Window* m_window;
+
+        -unique_ptr<OpenGLFramebuffer> m_offscreenFramebuffer;
+        -unique_ptr<OpenGLFramebuffer> m_shadowFramebuffer;
+        -unique_ptr<OpenGLFramebuffer> m_reflectionFramebuffer;
+        -unique_ptr<OpenGLFramebuffer> m_lightFramebuffer;
+        -unique_ptr<OpenGLFramebuffer> m_finalFramebuffer;
+        -unique_ptr<OpenGLFramebuffer> m_customFramebuffer;
+
+        -unique_ptr<OpenGLMesh2D> m_quadMesh2D;
+
+        -GLuint m_quadVAO;
+        -GLuint m_quadVBO;
+
+        +OpenGLRenderer(Window* window);
+        +void render() override;
+        +void waitIdle() override;
+    }
+    OpenGLRenderer "OpenGLRendererObjects" *-down- OpenGLRendererObjects
+    class VulkanRenderer extends IRenderer
+    {
+        -Window* m_window;
+        -unique_ptr<VulkanInstance> m_instance;
+        -unique_ptr<VulkanSurface> m_surface;
+        -unique_ptr<VulkanLogicalDevice> m_logicalDevice;
+        -unique_ptr<VulkanSwapChain> m_swapChain;
+        -unique_ptr<VulkanRenderPass> m_renderPass;
+        -unique_ptr<VulkanFramebuffers> m_framebuffers;
+        -unique_ptr<VulkanCommandePool> m_commandPool;
+        -unique_ptr<VulkanCommandBuffers> m_commandBuffers;
+        -unique_ptr<VulkanSynchronizationManager> m_syncManager;
+
+        +void render() override;
+        +void waintIdle() override;
+    }
+    VulkanRenderer "VulkanRendererObjects " *-down- VulkanRendererObjects
+}
+
+
+RenderModule *- IRenderer
+
+
+
+@enduml

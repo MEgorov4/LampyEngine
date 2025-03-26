@@ -1,0 +1,17 @@
+@startuml
+package ShaderCompilerModule
+{
+    class ShaderCompiler <<singletone>>
+    {
+        -ShaderCompiler() = default;
+        ~-ShaderCompiler() = default;
+        -ShaderCompiler(const ShaderCompier&) = delete;
+        -ShaderCompiler& operator=(cont ShaderCompiler&) = delete;
+        -vector<Event<bool, string>> m_task;
+
+        +string compileShader(const string& shaderPath);
+        +const Event& compileShadersAsync(const vector<string>& shaderPaths);
+        +bool isShaderPrecompiled(const std::string& shaderPath);
+    }
+}
+@enduml

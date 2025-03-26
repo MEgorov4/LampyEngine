@@ -7,8 +7,6 @@
 #include "../../ObjectCoreModule/ECS/ECSModule.h"
 #include "FileActionFactory.h"
 
-namespace fs = std::filesystem;
-
 GUIContentBrowser::GUIContentBrowser()
 	: GUIObject()
 	, m_rootPath(ProjectModule::getInstance().getProjectConfig().getResourcesPath())

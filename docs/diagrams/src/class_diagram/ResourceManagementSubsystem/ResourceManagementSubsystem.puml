@@ -1,0 +1,11 @@
+@startuml
+package ResourceManagementSubsystem
+{
+    !include FilesystemModule.puml
+    !include ResourceModule.puml
+    !include ShaderCompilerModule.puml
+
+    ResourceModule <.left. FilesystemModule
+    ResourceModule <.up. ShaderCompilerModule
+}
+@enduml

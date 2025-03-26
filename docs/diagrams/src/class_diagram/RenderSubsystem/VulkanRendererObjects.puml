@@ -1,0 +1,251 @@
+@startuml
+package RenderSubsystem.VulkanRendererObjects
+{
+    class IVulkanBuffer 
+    {
+        ~virtual void createBuffer(VkDevice, VkPhysicalDevice, 
+        VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory&);
+        ~virtual uint32_t findMemoryType(VkPhysicalDevice, uint32_t, VkMemoryPropertyFlags);
+        ~virtual void copyBuffer(VkDevice, VkQueue, VkCommandPool, VkBuffer, VkBuffer, VkDeviceSize);
+    }
+
+    class VulkanBuffer 
+    {
+        ~VkDevice m_device;
+        ~VkBuffer m_buffer;
+        ~VkDeviceMemory m_memory;
+
+        +VulkanBuffer(VkDevice device);
+        +void cleanupVulkanBuffer();
+        +virtual ~VulkanBuffer();
+        +VkBuffer getBuffer();
+    }
+
+    VulkanBuffer <|-down- IVulkanBuffer
+
+    class VulkanCommandBuffers
+    {
+        -vector<VkCommandBuffer> m_vk_commandBuffers;
+
+        +VulkanCommandBuffers(VkDevice, VkCommandPool, uint32_t);
+        +const vector<VkCommandBuffer>& getCommandBuffers() const;
+    }
+
+    class VulkanCommandPool
+    {
+        -VkCommandPool m_vk_commndPool;
+        -VkDevice m_device;
+
+        +VulkanCommandPool(VkDevice, uint32_t);
+        +~VulkanCommandPool();
+        +VkCommandPool getCommandPool() const;
+    }
+
+    class VulkanDescriptorPool
+    {
+        -VkDescriptorPool m_vk_descriptorPool;
+        -VkDevice m_logicalDevice;
+
+        +VulkanDescriptorPool(VkDevice);
+        +~VulkanDescriptorPool();
+        +VkDescriptorPool getDescriptorPool();
+    }
+
+    class VulkanFramebuffer
+    {
+        -vector<VkFramebuffer> m_framebuffers;
+        -VkDevice m_device;
+
+        +VulkanFramebuffers(VkDevice, VkRenderPass, VkExtent2D, const vector<VkImageView>&);
+
+        +~VulkanFramebuffers();
+        +const vector<VkFramebuffer>& getFramebuffers() const;
+
+        ~void recreateFramebuffers(VkRenderPass, VkExtent2D, const vector<VkImageView>& imageViews);
+        ~void createFramebuffers(VkRenderPass, VkExtent2D, vector<VkImageView>);
+        ~void clearFramebuffers();
+    }
+
+    class VulkanGraphicsPipeline
+    {
+        -VkPipeline m_vk_pipeline;
+        -VkPipelineLayout m_vk_pipelineLayout;
+        -VkDevice m_vk_device;
+        -uint32_t uniqueID;
+
+        +VulkanGraphicsPipeline(VkDevice, VkRenderPass, const string&, const string& , VkDescriptorSetLayout)
+        +~VulkanGraphicsPipeline();
+        +VkPipeline getPipeline() const;
+        +VkPipelineLayout getPipelineLayout() const;
+        +uint32_t getUniqueID() const;
+
+        +void clear();
+
+        -VkShaderModule createShaderModule(const vector<char>& code);
+    }
+
+    class VulkanIndexBuffer
+    {
+        -uint32_t m_indexCount;    
+
+        +VulkanIndexBuffer(VkDevice, VkPhysicalDevice, const vector<uint32_t>&, VkQWueue, VkCommandPool);
+
+        +~VulkanIndexBuffer();
+        ~uint32_t getIndexCount();
+
+        -void createIndexBuffer(VkDevice, VkPhysicalDevice, const vector<uint32_t>&, VkQueue, VkCommandPool);
+    }
+    VulkanIndexBuffer <|-left- VulkanBuffer
+
+    class VulkanInstance
+    {
+        -VkInstance m_vk_instance;
+        -VkDebugUtilsMessengerEXT m_debugMessenger;     
+        -bool m_enableValidationLayers;
+        -vector<const char*> m_validationLayers;
+
+        +explicit VulkanInstance(vector<const char*>, bool);
+
+        +~VulkanInstance();
+
+        +VkInstance getInstance() const;
+
+        -bool checkValidationLayerSuppport();
+        -void setupDebugMessenger();
+
+        -VkResoult createDebugUtilsMessengerEXT(VkInstance, const VkDebugUtilsMessengerCreateInfoEXT*, const VkAllocationCallbacks*, VkDebugUtilsMessengerEXT*)
+        -void destroyDebugUtilsMessengerEXT(VkInstance, VkDebugUtilsMessengerEXT, const VkAllocationCallbacks*)
+    }
+
+    class VulkanLogicalDevice
+    {
+        -VkPhysicalDevice m_vk_physicalDevice;
+        -VkDevice m_vk_logicalDevice;
+        -VkSurfaceKHR m_surface;
+        -VkQueue m_graphicsQueue;
+        -VkQueue m_presentQueue;
+        -QueueFamilyIndices m_queueFamilyIndices;
+        -SwapChainSupportDetails m_swapChainSupportDetails;
+
+        const vector<const char*> deviceExtensions;
+
+        +VulkanLogicalDevice(VkInstance, VkSurfaceKHR);
+        +~VulkanLogicalDevice();
+
+        +VkQueue getGraphicsQueue() const;
+        +VkSurfaceKHR getSurface() const;
+
+        +VkQueue getPresentQueue() const;
+        +VkPhysicalDevice getPhysicalDevice() const;
+        +VkDevice getLogicalDevice() const;
+        +QueueFamilyIndices getDeviceFamilyIndices();
+        +SwapChainSupportDetails getDeviceSwapChainSupportDetails();
+        +void deviceWaitIdl() const;
+
+        -void selectPhysicalDevice(VkInstance, VkSurfaceKHR);
+        -bool isDeviceSuitable(VkPhysicalDevice, VkSurfaceKHR);
+        -bool checkDeviceExtensionSupport(VkPhysicalDevice);
+        -QueueFamilyIndices findQueueFamilies(VkPhysicalDevice, VkSurfaceKHR);
+        -SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice, VkSurfaceKHR);
+
+        -void createLogicalDevice();
+    }
+
+    class VulkanRenderPass
+    {
+        -VkRenderPass m_vk_renderPass;
+        -VkDevice m_vk_device;
+
+        +VulkanRenderPass(VkDevice, VkFormat);
+        +~VulkanRenderPass();
+        +VkRenderPass getRenderPass() const;
+    }
+
+    class VulkanSurface
+    {
+        -VkInstance m_vk_instance;
+        -VkSurfaceKHR m_vk_surface;
+
+        +VulkanSurface(VkInstance, VkSurfaceKHR);
+        +~VulkanSurface();
+        +VkSurfaceKHR getSurface() const;
+    }
+
+    class VulkanSwapChain
+    {
+        -VkSwapchainKHR m_vk_swapChain;
+        -VkDevice m_vk_device;
+        -VkSurfaceKHR m_vk_surface;
+        -VkSurfaceFormatKHR m_vk_imageFormat;
+        -VkExtent2D m_vk_extent;
+        -vector<VkImage> m_vk_images;
+        -vector<VkImageView> m_vk_imageViews;
+        -SwapChainSupportDetails m_swapChainSupportDetails;
+        -QueueFamilyIndices m_queueFamilyIndices;
+        -VkFormat m_swapChainImageFormat;
+
+        +VulkanSwapChain(VkDevice, VkSurfaceKHR, VkExtent2D, SwapChainSupportDetails, QueueFamilyIndices);
+        +~VulkanSwapChain();
+        +void recreateSwapChain();
+
+        +VkSwapchainKHR getSwapChain() const;
+        +VkSurfaceFormatKHR getSurfaceFormat() const;
+        +VkFormat getFormat() const;
+        +VkExtent2D getExtent() const;
+        +void setExtent(const VkExtent2D&);
+        +const vector<VkImageView>& getImageViews() const;
+    }
+    class VulkanSynchronisationManager
+    {
+        -VkDevice m_device; 
+        -vector<VkSemaphore> m_imageAvailableSemaphores; 
+        -vector<VkSemaphore> m_renderFinishedSemaphores; 
+        -vector<VkFence> m_inFlightFences; 
+
+        -vector<VkSemaphore> offscreenSemaphores;
+        -vector<VkSemaphore> offscreenFinishedSemaphores;
+        -VkSemaphore m_offscreenRenderFinishedSemaphore;
+
+
+        +VulkanSynchronisationManager(VkDevice, uint32_t);
+        +~VulkanSynchronisationManager();
+
+        +VkSemaphore& getImageAvailableSemaphore(uint32_t);
+
+
+    }
+
+    class VulkanUniformBuffer 
+    {
+        -vector<VkBuffer> m_uniformBuffer;
+        -vector<VkDeviceMemory> m_uniformBuffersMemory;
+        -vector<void*> m_uniformBuffersMapped;
+
+        -VkDevice m_device;
+
+        +VulkanUniformBuffer(VkDevice, VkPhysicalDevice);
+        +~VulkanUniformBuffer();
+
+        +void cleanupVulkanUniformBuffers();
+        +VkBuffer getBufferByIndex(uint32_t index);
+        +void updateUniformBuffer(uint32_t currentImage, VkExtent2D);
+        
+        -void createUniformBuffer(VkDevice device, VkPhysicalDevice physicalDevice);
+    }
+
+    VulkanUniformBuffer <|-left- IVulkanBuffer
+
+    class VulkanVertexBuffer
+    {
+        -uint32_t m_verticesCount;
+
+        +VulkanVertexBuffer(VkDevice, VkPhysicalDevice, const vector<Vertex>&, VkQueue, VkCommandPool);
+        +~VulkanVertexBuffer();
+        +uint32_t getVerticesCount();
+
+        -void createVertexBuffer(VkDevice, VkPhysicalDevice, const vector<Vertex>&, VkQueue, VkCommandPool);
+    }
+
+    VulkanVertexBuffer <|-right- VulkanBuffer
+}
+@enduml

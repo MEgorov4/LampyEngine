@@ -24,8 +24,6 @@ struct RenderObject
 {
 	glm::mat4 modelMatrix{ 1.0f };
 
-	std::shared_ptr<IMesh> mesh;
-
 	bool isVisible{ true };
 	int renderLayer{ 0 };
 };
@@ -38,11 +36,14 @@ enum RenderPassType
 	FINAL,
 	CUSTOM
 };
+
 struct RenderPassData
 {
 	RenderPassType renderPassType{ CUSTOM };
 	std::unordered_map<std::shared_ptr<IShader>, std::unordered_map<std::shared_ptr<IMesh>, std::vector<RenderObject>>> batches;
 
+
+	
 	void clear()
 	{
 		batches.clear();

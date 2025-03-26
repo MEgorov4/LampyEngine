@@ -1,0 +1,129 @@
+@startuml
+package ResourceModule 
+{
+    package Resources 
+    {
+        class BaseResource
+        {
+            +BaseResource(const string& path);
+            +string getGUID() const;
+            +void setGUID(string& newGUID);
+            ~string GUID;
+        }
+
+        struct MeshVertex
+        {
+            +vec3 pos;
+            +vec2 uv;
+            +vec3 normal;
+            +bool operator==(const MeshVertex& other) const;
+        }
+    
+        class RMesh 
+        {
+            -vector<MeshVertex> m_vertexData;
+            -vector<uint32_t> m_indicesData;
+            -vector<RMaterial*> m_materials;
+            +RMesh(const string& path);
+            +const vector<MeshVertex>& getVertexData();
+            +const vector<uint32_t>& getIndicesData();
+            +string vertPath;
+            +string fragPath;
+        }
+        BaseResource <|-- RMesh
+        RMesh o-- MeshVertex
+
+        struct MaterialInfo
+        {
+            +void* albedo;
+            +void* metalic;
+            +void* reflective;
+            +void* emissive;
+            +void* normalMap;
+        }
+
+        class RMaterial 
+        {
+            -MaterialInfo m_materialInfo;
+            +RMaterial(const string& path);
+            +const MaterialInfo& getMaterialInfo() const;
+        }
+        BaseResource <|-- RMaterial
+        RMaterial o-- MaterialInfo
+
+        struct TextureInfo
+        {
+            +vector<uint8_t> pixels;
+            +int texWidth;
+            +int texHeight;
+            +int texChannels;
+        }
+
+        class RTexture 
+        {
+            -TextureInfo m_textureInfo;
+            +RTexture(const string& path);
+            +~RTexture();
+            +const TextureInfo& getTextureInfo() const;
+        }
+        BaseResource <|-- RTexture
+        RTexture o-- TextureInfo
+
+        struct ShaderInfo 
+        {
+            +vector<uint8_t> buffer;
+            +size_t fileSize;
+        }
+
+        class RShader
+        {
+            -ShaderInfo m_shaderInfo;
+            +RShader(const string& path);
+            +const ShaderInfo& getShaderInfo() const;
+        }
+
+        BaseResource <|-- RShader
+        RShader o-- ShaderInfo
+    }
+
+    package ResourceManagement
+    {
+        class ResourceCache<T>
+        {
+            -unordered_map<string, shared_ptr<T>> m_cache;
+            +shared_ptr<T> load(const string& path);
+            +unload(const string& path);
+            +void clear();
+            +void removeUnused();
+        }
+
+        class ResourceRegistry
+        {
+            -unordered_map<string, shared_ptr<BaseResource>> registry;
+            +void registrerResource(const string& guid, shared_ptr<BaseResource> resource);
+            +void unregisterResourceByGUID(const string& guid);
+            +shared_ptr<BaseResource> getResource(const string& guid)const;
+        }
+
+        class ResourceModule <<singletone>>
+        {
+            -ResourceModule();
+            -MeshCache m_meshCache;
+            -ShaderCache m_shaderCache;
+            -TextureCache m_textureCache;
+            -MaterialCache m_materialCache;
+            +static ResourceModule& getInstance()
+            <<template class T>>
+            +static shared_ptr<T>
+            +void clearAllCache();
+            +void startup();
+            +void shutDown();
+            +void OnLoadInitialWorldState();
+            -void checkAllResources();
+        }
+        ResourceModule o- ResourceRegistry
+        ResourceModule o-- ResourceCache
+    }
+    ResourceManagement o-up- Resources
+}
+@enduml

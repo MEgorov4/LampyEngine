@@ -1,0 +1,13 @@
+@startuml
+
+
+package GameLogicSubsystem
+{
+    !include ECSModule.puml
+    !include LuaScriptModule.puml
+    !include PhysicsModule.puml
+
+    ECSModule <.up. LuaScriptModule
+    ECSModule <.up. PhysicsModule
+}
+@enduml

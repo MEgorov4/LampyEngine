@@ -1,0 +1,97 @@
+@startuml
+package RenderSubsystem.OpenGLRendererObjects
+{
+    class OpenGLFramebuffer
+    {
+        -GLuint fbo;
+        -int m_width;
+        -int m_height;
+
+        -GLuint m_colorTexture;
+        -GLuint m_depthTexture;
+        -GLuint rbo;
+
+        -bool m_depth;
+
+        +OpenGLFramebuffer(int width, int height, bool useDepth = true);
+        +~OpenGLFramebuffer();
+
+        +void bind();
+        +void unbind();
+        +void resize(int newWidth, int newHeight);
+
+        +void addColorAttachment(GLenum format, GLenum type);
+        +void addDepthAttachment(bool asTexture);
+
+        +GLuint getColorTexture() const;
+        +GLuint getDepthTexture() const;
+        +GLuint getFBO() const;
+    }
+
+    class OpenGLMesh
+    {
+        -GLuint m_VAO;
+        -GLuint m_VBO;
+        -GLuint m_IBO;
+        -GLsizei m_indexCount;
+        
+        -void bind() const override;
+        -void draw() const override;
+        -void drawIndexed(GLsizei instanceCount) const override;
+        +OpenGLMesh(const shared_ptr<RMesh>& mesh);
+        +virtual ~OpenGLMesh();
+
+        +GLuint getVAO() const;
+        +GLuint getVBO() const;
+        +GLuint getIBO() const;
+        +GLuint getIndexCount() const;
+
+    }
+
+    class OpenGLShader
+    {
+        -GLuint m_programID;
+        -GLuint m_cameraUBO;
+        -GLuint m_directionalLightUBO;
+        -GLuint m_pointLightUBO;
+
+        -unordered_map<string, GLuint> m_uniformBlocks;
+        -unordered_map<string, GLuint> m_ubos;
+        -unordered_map<string, GLuint> m_textureBindings;
+
+
+        +OpenGLShader(const shared_ptr<RShader>& vertShader, const shared_ptr<RShader>& fragShader);
+        +~OpenGLShader();
+
+        +GLuint getProgramID() const;
+        +void bind() override;
+    }
+
+    class OpenGLTexture
+    {
+        -GLuint m_textureID;
+
+        +OpenGLTexture(const shared_ptr<RTexture>& texture);
+        +virtual ~OpenGLTexture();
+
+        +void bind() const override;
+        +void unbind() const override;
+
+        +uint32_t getTextureID() override;
+    }
+
+    class OpenGLVertexBuffer
+    {
+        -GLuint m_VAO;
+        -GLuint m_VBO;
+        -GLsizei m_vertexCount;
+
+        +OpenGLVertexBuffer(const vector<Vertex>& vertices);
+        +~OpenGLVertexBuffer();
+
+        +void bind() const;
+        +void unbind() const;
+        +void draw(GLenum mode) const;
+    }
+}
+@enduml

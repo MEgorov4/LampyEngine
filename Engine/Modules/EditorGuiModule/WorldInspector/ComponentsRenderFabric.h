@@ -22,9 +22,9 @@ public:
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
 
-		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) {
+		if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5f, ImGui::GetWindowSize().y / 3.f))) {
 			if (const PositionComponent* pos = entity.get<PositionComponent>()) {
-				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("PositionComponent").x) / 2);
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("PositionComponent").x) / 2.f);
 
 				ImGui::SetCursorPosX(0);
 				ImGui::Separator();

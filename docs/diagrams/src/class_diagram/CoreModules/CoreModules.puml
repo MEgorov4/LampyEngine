@@ -1,0 +1,8 @@
+@startuml
+package CoreModules
+{
+    !include EngineContextModule.puml
+    !include EventModule.puml
+    !include LoggerModule.puml
+}
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+package LuaScriptModule
+{
+    class LuaScriptModule <<singletone>>
+    {
+        -LuaScriptModule() = default;
+        -LuaScriptModule& operator=(const LuaScriptModule&) = delete;
+        -LuaScriptModule(const LuaScriptModule&) = delete;
+
+        -sol::state m_luaState;
+
+        +static LuaScriptModule& getInstance();
+
+        +void startup();
+        +void shutdown();
+
+        +void processCommand(const string& command);
+        +solstate& getLuaState();
+
+        -void registerLoggerModule()
+        -void registerEventModule();
+        -void registerInputModule();
+        -void registerMathTypes();
+        -void registerECSModule();
+        -void registerResourceModule(0;)
+    }
+}
+@enduml

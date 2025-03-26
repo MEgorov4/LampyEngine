@@ -1,0 +1,66 @@
+@startuml
+package RenderSubsystem.RenderPipelineObjects {
+    struct DirectionalLight 
+    {
+        +vec4 direction;
+        +vec4 color;
+        +float intensity;
+    }
+
+    struct PointLight
+    {
+        +vec4 position;
+        +vec4 color;
+        +float intensity;
+    }
+
+    struct RenderObject
+    {
+        +mat4 modelMatrix;
+        +bool isVisible;
+        +int renderLayer;
+    }    
+
+    enum RenderPassType
+    {
+        SHADOW,
+        REFLECTION,
+        LIGHT,
+        FINAL,
+        CUSTOM
+    }
+
+    struct RenderPassData 
+    {
+        +RenderPassType renderPassType;
+        +unordered_map<shared_ptr<IShader>,unordered_map<shared_ptr<IMesh>,vector<RenderObject>>> batches;
+        +void clear();
+    }
+
+    struct RenderPipelineData
+    {
+        +mat4 projMatrix;
+        +mat4 viewMatrix;
+        +vec4 cameraPosition;
+
+        +DirectionalLight directionalLight;
+        +vector<PointLight> pointLights; 
+
+        +RenderPassData shadowPass {SHADOW};
+        +RenderPassData reflectionPass {REFLECTION};
+        +RenderPassData lightPass {LIGHT};
+        +RenderPassData finalPass {FINAL};
+        +RenderPassData customPass {CUSTOM};
+
+        +void clear();
+    }
+
+    RenderPassData --> RenderPassType
+
+    RenderPipelineData -> RenderObject
+    RenderPipelineData --> DirectionalLight
+    RenderPipelineData --> PointLight
+    RenderPipelineData -left> RenderPassData
+}
+
+@enduml

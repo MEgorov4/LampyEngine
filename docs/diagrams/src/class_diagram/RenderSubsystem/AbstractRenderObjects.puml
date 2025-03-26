@@ -1,0 +1,86 @@
+@startuml
+
+package RenderSubsystem.AbstractRenderObjects
+{
+    abstract class IMaterial
+    {
+        +vec3 baseColor;
+        +void* metallic;
+        +void* roughnes;
+        +float specular;
+        +float albedo;
+        +float reflectivity;
+
+        +virtual void bind();
+        +virtual void unbind();
+    }
+    abstract class IMesh
+    {
+        +virtual void draw();
+        +virtual void drawIndexed(int count);
+    }
+    abstract class IShader
+    {
+        +virtual void bind();
+        +virtual void unbind();
+    }
+    abstract class ITexture
+    {
+        +virtual void bind();
+        +virtual void unbind();
+        +virtual void* getTexture();
+    }
+}
+
+package RenderSubsystem.AbstractRenderObjects {
+
+
+    class OpenGLMaterial extends IMaterial
+    {
+        +void bind() override;
+        +void unbind() override;
+    }
+
+    class OpenGLMesh extends IMesh
+    {
+        +void draw() override;
+        +void drawIndexed() override;
+    }
+
+    class OpenGLShader extends IShader
+    {
+        +void bind() override;
+        +void unbind() override;
+    }
+
+    class OpenGLTexture extends ITexture
+    {
+        +void bind() override;
+        +void unbind() override;    
+    }
+
+    class VulkanMaterial extends IMaterial
+    {
+        +void bind() override;
+        +void unbind() override;
+    }
+    class VulkanMesh  extends IMesh
+    {
+        +void draw() override;
+        +void drawIndexed() override;
+    }
+    class VulkanShader extends IShader
+    {
+        +void bind() override;
+        +void unbind() override;
+    }
+    class VulkanTexture extends ITexture
+    {
+        +void bind() override;
+        +void unbind() override;    
+    }
+
+}
+
+
+@enduml

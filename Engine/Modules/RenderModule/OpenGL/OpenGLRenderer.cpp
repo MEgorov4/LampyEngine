@@ -105,13 +105,11 @@ void OpenGLRenderer::renderWorld()
 	renderPass(m_activeRenderPipelineData.lightPass);
 	m_lightFramebuffer->unbind();
 
-
 	m_customFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	renderPass(m_activeRenderPipelineData.customPass);
 	m_customFramebuffer->unbind();
-
 
 	glDisable(GL_DEPTH_TEST);
 	m_finalFramebuffer->bind();
