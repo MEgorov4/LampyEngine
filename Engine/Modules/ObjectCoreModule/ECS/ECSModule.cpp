@@ -4,6 +4,7 @@
 #include "../../LoggerModule/Logger.h"
 #include "../../ProjectModule/ProjectModule.h"
 #include "ECSLuaScriptsSystem.h"
+#include "ECSPhysicsSystem.h"
 #include "../../ResourceModule/ResourceManager.h"
 #include "../../FilesystemModule/FilesystemModule.h"
 #include "../../PhysicsModule/PhysicsModule.h"
@@ -22,6 +23,7 @@ void ECSModule::startup()
 	registerObservers();
 	loadInitialWorldState();
 	ECSluaScriptsSystem::getInstance().registerSystem(m_world);
+	ECSPhysicsSystem::getInstance().registerSystem(m_world);
 }
 
 void ECSModule::loadInitialWorldState()
@@ -46,6 +48,17 @@ void ECSModule::loadInitialWorldState()
 		.set<RotationComponent>({ 0.0f, 0.0f, 0.0f})
 		.set<CameraComponent>({ 75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true });
 
+	RigidbodyComponent rig = {};
+	rig.mass = 0.f;
+	m_world.entity("SecondRoom").set<PositionComponent>({ 0.f, -3.f, 0.f })
+		.set<RotationComponent>({ 0.f, 0.f, 0.f })
+		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
+		// .set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
+		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
+				, "../Resources/Shaders/GLSL/shader.vert"
+				, "../Resources/Shaders/GLSL/shader.frag"
+				, "../Resources/Textures/viking_room.png" })
+		.set<RigidbodyComponent>(rig);
 }
 
 void ECSModule::fillDefaultWorld()
@@ -164,6 +177,9 @@ void ECSModule::registerComponents()
 		.member("vertShaderPath", &MeshComponent::vertShaderPath)
 		.member("fragShaderPath", &MeshComponent::fragShaderPath)
 		.member("texturePath", &MeshComponent::texturePath);
+
+	m_world.component<RigidbodyComponent>()
+		.member("mass", &RigidbodyComponent::mass);
 }
 
 void ECSModule::registerObservers()
@@ -221,18 +237,7 @@ void ECSModule::ecsTick(float deltaTime)
 	{
 		if (m_world.progress(deltaTime))
 		{
-			auto& world = ECSModule::getInstance().getCurrentWorld();
 
-			auto query = world.query<RigidbodyComponent, PositionComponent>();
-
-			query.each([&](const flecs::entity& e, RigidbodyComponent& rigidbody, PositionComponent& transform)
-				{
-					btTransform bulletTransform;
-					rigidbody.body.value()->getMotionState()->getWorldTransform(bulletTransform);
-					btVector3 pos = bulletTransform.getOrigin();
-
-					transform = { pos.x(), pos.y(), pos.z() };
-				});
 		}
 	}
 }

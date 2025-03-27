@@ -36,6 +36,8 @@ RMesh::RMesh(const std::string& path) : BaseResource(path)
 
 	std::unordered_map<MeshVertex, uint32_t> uniqueVertices{};
 
+	aabbMin = glm::vec3(std::numeric_limits<float>::max());
+	aabbMax = glm::vec3(std::numeric_limits<float>::lowest());
 	for (const tinyobj::shape_t& shape : shapes)
 	{
 		for (const tinyobj::index_t& index : shape.mesh.indices)
@@ -47,6 +49,9 @@ RMesh::RMesh(const std::string& path) : BaseResource(path)
 				attrib.vertices[3 * index.vertex_index + 1],
 				attrib.vertices[3 * index.vertex_index + 2]
 			};
+
+			aabbMin = glm::min(aabbMin, vertex.pos);
+			aabbMax = glm::max(aabbMax, vertex.pos);
 
 			vertex.uv = {
 				attrib.texcoords[2 * index.texcoord_index + 0], 
@@ -92,4 +97,14 @@ const std::vector<MeshVertex>& RMesh::getVertexData()
 const std::vector<uint32_t>& RMesh::getIndicesData()
 {
 	return m_indicesData;
+}
+
+const glm::vec3& RMesh::getAABBCenter() const
+{
+	return (aabbMin + aabbMax) * 0.5f;
+}
+
+const glm::vec3& RMesh::getAABBSize() const
+{
+	return aabbMax - aabbMin;
 }

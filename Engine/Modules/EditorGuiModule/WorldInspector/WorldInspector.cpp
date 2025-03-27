@@ -18,6 +18,7 @@ GUIWorldInspector::GUIWorldInspector() : GUIObject()
 	factory.registerRenderer("MeshComponent", []() {return std::make_unique<MeshComponentRenderer>(); });
 	factory.registerRenderer("CameraComponent", []() {return std::make_unique<CameraRenderer>(); });
 	factory.registerRenderer("DirectionalLightComponent", []() {return std::make_unique<DirectionalLightRenderer>(); });
+	factory.registerRenderer("RigidbodyComponent", []() { return std::make_unique<RigidbodyRenderer>(); });
 }
 
 void GUIWorldInspector::render()
@@ -154,6 +155,14 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 				renderer->render(m_selectedEntity);
 			}
 		}
+		if (m_selectedEntity.has<RigidbodyComponent>())
+		{
+			auto renderer = factory.createRenderer("RigidbodyComponent");
+			if (renderer) {
+				renderer->render(m_selectedEntity);
+			}
+		}
+
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() -  ImGui::CalcTextSize("New component   Remove entity").x) / 2);
 
 		if (ImGui::Button("New component"))

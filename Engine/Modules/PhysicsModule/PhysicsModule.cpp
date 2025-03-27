@@ -3,7 +3,7 @@
 #include <btBulletDynamicsCommon.h>
 #include "../LoggerModule/Logger.h"
 #include "../ObjectCoreModule/ECS/ECSModule.h"
-#include "../ObjectCoreModule/ECS/ECsComponents.h"
+#include "../ObjectCoreModule/ECS/ECSPhysicsSystem.h"
 
 PhysicsModule::PhysicsModule()
 {
@@ -41,28 +41,29 @@ void PhysicsModule::tick(float deltaTime)
 	if (m_tickEnabled)
 	{
 		// LOG_INFO(std::format("Physics update: {}", deltaTime));
-		m_physicsWorld->stepSimulation(deltaTime, 10);
+		m_physicsWorld->stepSimulation(deltaTime, 10, 1.0f / 60.0f);
 	}
 }
 
 void PhysicsModule::setupWorldProperties()
 {
-	m_physicsWorld->setGravity(btVector3(0, -0.81f, 0));
+	m_physicsWorld->setGravity(btVector3(0, -0.51f, 0));
 }
 
 void PhysicsModule::registrateBodies()
 {
+	LOG_INFO("Physics Module: Rigistrate Rigidbodies");
+
 	auto& world = ECSModule::getInstance().getCurrentWorld();
 
-	auto query = world.query<RigidbodyComponent, PositionComponent>();
+	auto query = world.query<RigidbodyComponent, PositionComponent, MeshComponent>();
 
-	query.each([&](const flecs::entity& e, RigidbodyComponent& rigidbody, PositionComponent& transform)
+	query.each([&](const flecs::entity& e, RigidbodyComponent& rigidbody, PositionComponent& transform, MeshComponent& mesh)
 		{
-			LOG_INFO("Physics Module: Rigistrate Rigidbodies");
-
 			if (!rigidbody.body.has_value())
 			{
-				btCollisionShape* shape = new btBoxShape(btVector3(1, 1, 1));
+				const glm::vec3& AABB = mesh.meshResource.value()->getAABBSize();
+				btCollisionShape* shape = new btBoxShape(btVector3(AABB.x, AABB.z, AABB.y) * 0.5f);
 
 				btTransform startTransform;
 				startTransform.setIdentity();
@@ -92,21 +93,15 @@ void PhysicsModule::setTickEnabled(bool tickEnabled)
 
 void PhysicsModule::clearPhysicsWorld()
 {
-	/*auto& world = ECSModule::getInstance().getCurrentWorld();
-	world.each([&](flecs::entity e, RigidbodyComponent& rb)
-		{
-			rb.body.emplace();
-		});*/
-
 	int numBodies = m_physicsWorld->getNumCollisionObjects();
-	for (int i = numBodies - 1; i >= 0; --i) 
+	for (int i = numBodies - 1; i >= 0; --i)
 	{
 		btCollisionObject* obj = m_physicsWorld->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
 
-		if (body) 
+		if (body)
 		{
-			if (body->getMotionState()) 
+			if (body->getMotionState())
 			{
 				delete body->getMotionState(); // Удаляем motion state
 			}
@@ -116,12 +111,4 @@ void PhysicsModule::clearPhysicsWorld()
 		m_physicsWorld->removeCollisionObject(obj);
 		// delete obj; // Удаляем сам объект
 	}
-
-	/*world.each([&](flecs::entity e, RigidbodyComponent& rb) 
-		{
-			if (rb.body) 
-			{
-				std::cout << "ERROR: RigidbodyComponent.body is not null!" << std::endl;
-			}
-		});*/
 }

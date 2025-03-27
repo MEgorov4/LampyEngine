@@ -5,8 +5,10 @@
 #include <flecs.h>
 #include "../../ObjectCoreModule/ECS/ECSModule.h"
 #include "../../ObjectCoreModule/ECS/ECSLuaScriptsSystem.h"
+#include "../../ObjectCoreModule/ECS/ECSPhysicsSystem.h"
 #include "../../ProjectModule/ProjectModule.h"
 #include "../../FilesystemModule/FilesystemModule.h"
+#include <btBulletDynamicsCommon.h>
 
 class IComponentRenderer
 {
@@ -274,6 +276,40 @@ public:
 					entity.modified<CameraComponent>();
 				}
 
+			}
+		}
+		ImGui::EndChildFrame();
+	}
+};
+
+class RigidbodyRenderer : public IComponentRenderer
+{
+public:
+	void render(flecs::entity& entity) override
+	{
+		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+
+		if (ImGui::BeginChildFrame(5, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) 
+		{
+			if (RigidbodyComponent* body = entity.get_mut<RigidbodyComponent>()) 
+			{
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("RigidbodyComponent").x) / 2);
+
+				ImGui::SetWindowFontScale(1.2);
+				ImGui::Text("RigidbodyComponent");
+				ImGui::SetWindowFontScale(1);
+
+				ImGui::SetCursorPosX(0);
+				ImGui::Separator();
+
+				ImGui::Text("mass");
+				ImGui::SameLine();
+
+				float mass = body->mass;
+				if (ImGui::DragFloat("mass", &mass, 0.1f, 0.f, 100000000.f)) 
+				{
+					body->mass = mass;
+				}
 			}
 		}
 		ImGui::EndChildFrame();

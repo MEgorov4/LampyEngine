@@ -28,12 +28,16 @@ public:
 	const std::vector<MeshVertex>& getVertexData();
 	const std::vector<uint32_t>& getIndicesData();
 
+	const glm::vec3& getAABBCenter() const;
+	const glm::vec3& getAABBSize() const;
 private:
 	std::vector<MeshVertex> m_vertexData;
 	std::vector<uint32_t> m_indicesData;
 
 	std::vector<RMaterial*> m_materials;
 
+	glm::vec3 aabbMin;
+	glm::vec3 aabbMax;
 public:
 	std::string vertPath;
 	std::string fragPath;
