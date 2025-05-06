@@ -1,6 +1,7 @@
 #include "PhysicsModule.h"
 
 #include <btBulletDynamicsCommon.h>
+#include "BulletDebugDrawer.h"
 #include "../LoggerModule/Logger.h"
 #include "../ObjectCoreModule/ECS/ECSModule.h"
 #include "../ObjectCoreModule/ECS/ECSPhysicsSystem.h"
@@ -18,6 +19,8 @@ PhysicsModule::~PhysicsModule()
 void PhysicsModule::startup()
 {
 	LOG_INFO("PhysicsModule: Startup");
+
+	m_debugDrawer.reset(new BulletDebugDrawer());
 
 	m_collisionConfig.reset(new btDefaultCollisionConfiguration());
 	m_dispatcher.reset(new btCollisionDispatcher(m_collisionConfig.get()));
@@ -43,11 +46,16 @@ void PhysicsModule::tick(float deltaTime)
 		// LOG_INFO(std::format("Physics update: {}", deltaTime));
 		m_physicsWorld->stepSimulation(deltaTime, 10, 1.0f / 60.0f);
 	}
+	if (m_shouldDebugDraw)
+	{
+		m_physicsWorld->debugDrawWorld();
+	}
 }
 
 void PhysicsModule::setupWorldProperties()
 {
-	m_physicsWorld->setGravity(btVector3(0, -0.51f, 0));
+	m_physicsWorld->setGravity(btVector3(0, -9.81f, 0));
+	m_physicsWorld->setDebugDrawer(m_debugDrawer.get());
 }
 
 void PhysicsModule::registrateBodies()
@@ -56,9 +64,9 @@ void PhysicsModule::registrateBodies()
 
 	auto& world = ECSModule::getInstance().getCurrentWorld();
 
-	auto query = world.query<RigidbodyComponent, PositionComponent, MeshComponent>();
+	auto query = world.query<RigidbodyComponent, PositionComponent, RotationComponent, MeshComponent>();
 
-	query.each([&](const flecs::entity& e, RigidbodyComponent& rigidbody, PositionComponent& transform, MeshComponent& mesh)
+	query.each([&](const flecs::entity& e, RigidbodyComponent& rigidbody, PositionComponent& transform, RotationComponent& rotation, MeshComponent& mesh)
 		{
 			if (!rigidbody.body.has_value())
 			{
@@ -69,9 +77,13 @@ void PhysicsModule::registrateBodies()
 				startTransform.setIdentity();
 				startTransform.setOrigin(btVector3({ transform.x, transform.y, transform.z }));
 
+				btQuaternion rotationQuat;
+				rotationQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);  // Поворот по осям Z, Y, X
+				startTransform.setRotation(rotationQuat);
+
 				btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
 
-				btScalar mass = rigidbody.mass;
+				btScalar mass = rigidbody.isStatic ? 0.f : rigidbody.mass;
 				btVector3 inertia(0, 0, 0);
 				shape->calculateLocalInertia(mass, inertia);
 
@@ -111,4 +123,9 @@ void PhysicsModule::clearPhysicsWorld()
 		m_physicsWorld->removeCollisionObject(obj);
 		// delete obj; // Удаляем сам объект
 	}
+}
+
+void PhysicsModule::enableDebugDraw(bool newFlag)
+{
+	m_shouldDebugDraw = newFlag;
 }

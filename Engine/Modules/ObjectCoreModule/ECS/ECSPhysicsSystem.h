@@ -10,6 +10,7 @@ struct RigidbodyComponent
 {
 	std::optional<std::shared_ptr<btRigidBody>> body;
 	float mass = 0.01f;
+	bool isStatic = false;
 };
 
 class ECSPhysicsSystem {

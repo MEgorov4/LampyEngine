@@ -12,4 +12,5 @@ target_link_libraries(PhysicsModule PUBLIC
     Bullet::Bullet
     PRIVATE
     glm::glm
+    RenderModule
 )

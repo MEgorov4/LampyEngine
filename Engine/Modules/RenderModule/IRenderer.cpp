@@ -140,4 +140,9 @@ void IRenderer::postInit()
 	m_emissionGeneric = TextureFactory::createOrGetTexture(DET);
 
 	m_onECSChanged = ECSModule::getInstance().OnComponentsChanged.subscribe(std::bind_front(&IRenderer::updateRenderList, this));
+
+
+	std::shared_ptr<RShader> debugLineShaderVert = ResourceManager::load<RShader>("../Resources/Shaders/GLSL/Core/debugLine.vert");
+	std::shared_ptr<RShader> debugLineShaderFrag = ResourceManager::load<RShader>("../Resources/Shaders/GLSL/Core/debugLine.frag");
+	m_debugLineShader = ShaderFactory::createOrGetShader(debugLineShaderVert, debugLineShaderFrag);
 }

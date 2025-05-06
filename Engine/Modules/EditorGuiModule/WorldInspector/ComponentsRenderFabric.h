@@ -302,14 +302,28 @@ public:
 				ImGui::SetCursorPosX(0);
 				ImGui::Separator();
 
+				
+
+				float mass = body->mass;
+				bool isStatic = body->isStatic;
+
+				ImGui::Text("static");
+				ImGui::SameLine();
+
+				if (ImGui::Checkbox("##static", &isStatic))
+				{
+					body->isStatic = isStatic;
+				}
+
 				ImGui::Text("mass");
 				ImGui::SameLine();
 
-				float mass = body->mass;
-				if (ImGui::DragFloat("mass", &mass, 0.1f, 0.f, 100000000.f)) 
+				ImGui::BeginDisabled(isStatic);
+				if (ImGui::DragFloat("##mass", &mass, 0.1f, 0.f, 100000000.f)) 
 				{
 					body->mass = mass;
 				}
+				ImGui::EndDisabled();
 			}
 		}
 		ImGui::EndChildFrame();

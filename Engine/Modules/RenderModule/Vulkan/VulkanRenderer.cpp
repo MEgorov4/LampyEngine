@@ -200,6 +200,11 @@ void VulkanRenderer::recreateSwapChainAndDependent()
 	createSwapChainAndDependent();
 }
 
+void VulkanRenderer::drawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color)
+{
+	LOG_INFO("draw Line Vulkan...");
+}
+
 
 void VulkanRenderer::cleanSwapChainAndDependent()
 {

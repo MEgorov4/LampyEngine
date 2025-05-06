@@ -139,6 +139,7 @@ public:
     /// </summary>
     void recreateSwapChainAndDependent();
 
+    virtual void drawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color) override;
 private:
     /// <summary>
     /// Initializes Vulkan and sets up core components.

@@ -49,12 +49,25 @@ void ECSModule::loadInitialWorldState()
 		.set<CameraComponent>({ 75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true });
 
 	RigidbodyComponent rig = {};
-	rig.mass = 0.f;
-	m_world.entity("SecondRoom").set<PositionComponent>({ 0.f, -3.f, 0.f })
+	rig.mass = 0.01f;
+	rig.isStatic = false;
+	m_world.entity("SecondRoom").set<PositionComponent>({ 2.5f, 0.f, 1.5f })
 		.set<RotationComponent>({ 0.f, 0.f, 0.f })
 		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
 		// .set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
 		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
+				, "../Resources/Shaders/GLSL/shader.vert"
+				, "../Resources/Shaders/GLSL/shader.frag"
+				, "../Resources/Textures/viking_room.png" })
+		.set<RigidbodyComponent>(rig);
+
+	rig.mass = 0.f;
+	rig.isStatic = true;
+	m_world.entity("Ground").set<PositionComponent>({ 0.f, -3.f, 0.f })
+		.set<RotationComponent>({ 0.f, 0.f, 0.f })
+		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
+		// .set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
+		.set<MeshComponent>({ "../Resources/Meshes/BaseGeometry/ground.obj"
 				, "../Resources/Shaders/GLSL/shader.vert"
 				, "../Resources/Shaders/GLSL/shader.frag"
 				, "../Resources/Textures/viking_room.png" })

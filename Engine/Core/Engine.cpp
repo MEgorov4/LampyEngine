@@ -55,6 +55,9 @@ void Engine::startupModules()
 	ECSModule::getInstance().OnLoadInitialWorldState();
 
 	PhysicsModule::getInstance().startup();
+
+	// Enable debug info
+	PhysicsModule::getInstance().enableDebugDraw(true);
 }
 
 void Engine::startupEngineContextObject()
