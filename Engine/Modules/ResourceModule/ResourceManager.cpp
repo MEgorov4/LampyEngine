@@ -7,13 +7,35 @@
 
 #include "../../Modules/LoggerModule/Logger.h"
 
+#include "../MemoryModule/DoubleStackAllocator.h"
 #include "../ObjectCoreModule/ECS/ECSModule.h"
 
-void ResourceManager::clearAllCache()
+ResourceManager::ResourceManager()
 {
-	meshCache.clear();
-	shaderCache.clear();
-	textureCache.clear();
+	size_t meshCacheSize = sizeof(RMesh);
+	size_t meshNum = 100;
+
+	size_t shaderCacheSize = sizeof(RShader);
+	size_t shaderNum = 100;
+
+	size_t textureCacheSize = sizeof(RTexture);
+	size_t textureNum = 100;
+
+	size_t sumResources = meshCacheSize * meshNum + shaderCacheSize * shaderNum + textureCacheSize * textureNum;
+	size_t sumReverse = 1024 * 1024 * 5;
+	m_doubleStackAllocator = new DoubleStackAllocator(sumResources + sumReverse);
+
+	if (m_doubleStackAllocator)
+	{
+		void* meshCacheAddress = m_doubleStackAllocator->allocateStart(meshCacheSize * meshNum);
+		meshCache = MeshCache(meshCacheSize, meshNum, meshCacheAddress);
+
+		void* shaderCacheAddress = m_doubleStackAllocator->allocateStart(shaderCacheSize * shaderNum);
+		shaderCache = ShaderCache(shaderCacheSize, shaderNum, shaderCacheAddress);
+
+		void* textureCacheAddress = m_doubleStackAllocator->allocateStart(textureCacheSize * textureNum);
+		textureCache = TextureCache(textureCacheSize, textureNum, textureCacheAddress);
+	}
 }
 
 void ResourceManager::startup()
@@ -24,6 +46,8 @@ void ResourceManager::startup()
 void ResourceManager::shutDown()
 {
 	clearAllCache();
+
+	delete m_doubleStackAllocator;
 
 	//auto& world = ECSModule::getInstance().getCurrentWorld();
 
@@ -42,16 +66,21 @@ void ResourceManager::shutDown()
 	//	});
 }
 
+void ResourceManager::clearAllCache()
+{
+	meshCache.clear();
+	shaderCache.clear();
+	textureCache.clear();
+}
+
 void ResourceManager::OnLoadInitialWorldState()
 {
 	checkAllResources();
 }
 
-ResourceManager::ResourceManager()
+DoubleStackAllocator* ResourceManager::getDoubleStackAllocator() const
 {
-	meshCache = MeshCache();
-	shaderCache = ShaderCache();
-	textureCache = TextureCache();
+	return m_doubleStackAllocator;
 }
 
 void ResourceManager::checkAllResources()

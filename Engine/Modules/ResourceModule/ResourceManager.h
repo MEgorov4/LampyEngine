@@ -8,6 +8,9 @@
 #include "Texture.h"
 #include "Material.h"
 #include "../FilesystemModule/FilesystemModule.h"
+#include "../MemoryModule/DoubleStackAllocator.h"
+
+class DoubleStackAllocator;
 
 using MeshCache = ResourceCache<RMesh>;
 using ShaderCache = ResourceCache<RShader>;
@@ -24,14 +27,20 @@ public:
 
 	template<class T>
 	static std::shared_ptr<T> load(const std::string& path);
+	template<class T>
+	static void unload(const std::string& path);
 
 	void clearAllCache();
 
 	void startup();
 	void shutDown();
 	void OnLoadInitialWorldState();
+
+	DoubleStackAllocator* getDoubleStackAllocator() const;
 private:
 	ResourceManager();
+
+	DoubleStackAllocator* m_doubleStackAllocator;
 
 	MeshCache meshCache;
 	ShaderCache shaderCache;
@@ -71,4 +80,22 @@ inline std::shared_ptr<RTexture> ResourceManager::load<RTexture>(const std::stri
 	}
 
 	return getInstance().textureCache.load(FS.getEngineAbsolutePath(path));
+}
+
+template<>
+inline void ResourceManager::unload<RMesh>(const std::string& path)
+{
+	getInstance().meshCache.unload(FS.getEngineAbsolutePath(path));
+}
+
+template<>
+inline void ResourceManager::unload<RShader>(const std::string& path)
+{
+	getInstance().shaderCache.unload(FS.getEngineAbsolutePath(path));
+}
+
+template<>
+inline void ResourceManager::unload<RTexture>(const std::string& path)
+{
+	getInstance().textureCache.unload(FS.getEngineAbsolutePath(path));
 }

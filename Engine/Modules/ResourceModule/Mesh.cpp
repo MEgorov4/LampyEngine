@@ -89,14 +89,14 @@ RMesh::RMesh(const std::string& path) : BaseResource(path)
 	fragPath = "D:/B_Projects/LampyEngine/Resources/Shaders/GLSL/frag.spv";
 }
 
-const std::vector<MeshVertex>& RMesh::getVertexData()
+const std::vector<MeshVertex> RMesh::getVertexData()
 {
-	return m_vertexData;
+	return std::vector<MeshVertex>(m_vertexData.begin(), m_vertexData.end());
 }
 
-const std::vector<uint32_t>& RMesh::getIndicesData()
+const std::vector<uint32_t> RMesh::getIndicesData()
 {
-	return m_indicesData;
+	return std::vector<uint32_t>(m_indicesData.begin(), m_indicesData.end());
 }
 
 const glm::vec3& RMesh::getAABBCenter() const

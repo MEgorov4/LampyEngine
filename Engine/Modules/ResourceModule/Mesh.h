@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "BaseResource.h"
+#include "../MemoryModule/GarbageAllocator.h"
 
 class RMaterial;
 
@@ -19,26 +20,27 @@ struct MeshVertex
 	}
 };
 
+using GarbageString = std::basic_string<char, std::char_traits<char>, GarbageAllocator<char>>;
 
 class RMesh : public BaseResource
 {
 public:
 	RMesh(const std::string& path);
 
-	const std::vector<MeshVertex>& getVertexData();
-	const std::vector<uint32_t>& getIndicesData();
+	const std::vector<MeshVertex> getVertexData();
+	const std::vector<uint32_t> getIndicesData();
 
 	const glm::vec3& getAABBCenter() const;
 	const glm::vec3& getAABBSize() const;
 private:
-	std::vector<MeshVertex> m_vertexData;
-	std::vector<uint32_t> m_indicesData;
+	std::vector<MeshVertex, GarbageAllocator<MeshVertex>> m_vertexData;
+	std::vector<uint32_t, GarbageAllocator<uint32_t>> m_indicesData;
 
-	std::vector<RMaterial*> m_materials;
+	std::vector<RMaterial*, GarbageAllocator<RMaterial*>> m_materials;
 
 	glm::vec3 aabbMin;
 	glm::vec3 aabbMax;
 public:
-	std::string vertPath;
-	std::string fragPath;
+	GarbageString vertPath;
+	GarbageString fragPath;
 };

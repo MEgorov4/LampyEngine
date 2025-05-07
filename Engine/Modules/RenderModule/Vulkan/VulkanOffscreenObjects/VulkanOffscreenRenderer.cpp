@@ -150,7 +150,7 @@ void VulkanOffscreenRenderer::recordWorldRenderCommands(VkCommandBuffer commandB
 
 			vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-			VulkanGraphicsPipeline* graphicsPipeline = vulkanCache->getOrCreatePipeline(loadedMesh->vertPath, loadedMesh->fragPath, device, renderPass, descriptorSetLayout);
+			VulkanGraphicsPipeline* graphicsPipeline = vulkanCache->getOrCreatePipeline(std::string(loadedMesh->vertPath), std::string(loadedMesh->fragPath), device, renderPass, descriptorSetLayout);
 
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipeline());
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipelineLayout(), 0, 1, &descriptorSets[currentFrame], 0, nullptr);

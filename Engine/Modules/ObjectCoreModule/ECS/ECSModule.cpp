@@ -137,6 +137,18 @@ void ECSModule::startSystems()
 	PhysicsModule::getInstance().registrateBodies();
 	m_tickEnabled = true;
 	PhysicsModule::getInstance().setTickEnabled(true);
+
+	/*auto& world = ECSModule::getInstance().getCurrentWorld();
+
+	auto query = world.query<MeshComponent>();
+
+	query.each([&](const flecs::entity& e, MeshComponent& mesh)
+		{
+			ResourceManager::unload<RMesh>(mesh.meshResourcePath);
+			ResourceManager::unload<RShader>(mesh.vertShaderPath);
+			ResourceManager::unload<RShader>(mesh.fragShaderPath);
+			ResourceManager::unload<RTexture>(mesh.texturePath);
+		});*/
 }
 
 void ECSModule::stopSystems()

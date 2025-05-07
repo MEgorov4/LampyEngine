@@ -2,6 +2,7 @@ add_subdirectory(EventModule)
 add_subdirectory(FilesystemModule)
 add_subdirectory(LoggerModule)
 
+add_subdirectory(MemoryModule)
 add_subdirectory(ResourceModule)
 add_subdirectory(WindowModule)
 add_subdirectory(AudioModule)
