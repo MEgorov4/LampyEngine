@@ -55,12 +55,12 @@ package RenderSubsystem.RenderPipelineObjects {
         +void clear();
     }
 
-    RenderPassData --> RenderPassType
+    RenderPassData --o RenderPassType
+    RenderPassData --o RenderObject
 
-    RenderPipelineData -> RenderObject
-    RenderPipelineData --> DirectionalLight
-    RenderPipelineData --> PointLight
-    RenderPipelineData -left> RenderPassData
+    RenderPipelineData --* DirectionalLight
+    RenderPipelineData --* PointLight
+    RenderPipelineData -left* RenderPassData
 }
 
 @enduml

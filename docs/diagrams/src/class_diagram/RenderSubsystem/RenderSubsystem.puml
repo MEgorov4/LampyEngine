@@ -11,7 +11,7 @@ RenderPipelineObjects "AbstractRenderObjects" *-down- AbstractRenderObjects
 
 'Render objects which constructs by resources
 
-package RenderSubsystem
+package RenderSubsystem.MainRenderInterface
 {
     class RenderModule <<singletone>>
     {
@@ -33,7 +33,7 @@ package RenderSubsystem
         +virtual void render() = 0;
         +virtual void waitIdle() = 0;
     }
-    IRenderer "RenderPipelineData" *-right-- RenderPipelineData
+    IRenderer "RenderPipelineData" *-- RenderPipelineData
 
     class OpenGLRenderer extends IRenderer 
     {
@@ -55,7 +55,7 @@ package RenderSubsystem
         +void render() override;
         +void waitIdle() override;
     }
-    OpenGLRenderer "OpenGLRendererObjects" *-down- OpenGLRendererObjects
+    OpenGLRenderer "OpenGLRendererObjects" *-- OpenGLRendererObjects
     class VulkanRenderer extends IRenderer
     {
         -Window* m_window;
@@ -72,7 +72,7 @@ package RenderSubsystem
         +void render() override;
         +void waintIdle() override;
     }
-    VulkanRenderer "VulkanRendererObjects " *-down- VulkanRendererObjects
+    VulkanRenderer "VulkanRendererObjects " *-- VulkanRendererObjects
 }
 
 

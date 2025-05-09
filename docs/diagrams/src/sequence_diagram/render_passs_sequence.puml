@@ -1,0 +1,42 @@
+@startuml
+title Упрощённая диаграмма последовательности рендеринга OpenGL
+
+actor "Render Loop" as Loop
+participant "OpenGLRenderer" as Renderer
+participant "Framebuffer" as FBO
+participant "RenderPassData" as Pass
+
+Loop -> Renderer : render()
+group Init + Clear
+  Renderer -> FBO : glBindFramebuffer(0)
+  Renderer -> Renderer : glClear(COLOR | DEPTH)
+end
+
+group Рендер-проходы
+  Renderer -> FBO : bind(shadow)
+  Renderer -> Renderer : renderPass(shadowPass)
+  FBO -> FBO : unbind()
+
+  Renderer -> FBO : bind(reflection)
+  Renderer -> Renderer : renderPass(reflectionPass)
+  FBO -> FBO : unbind()
+
+  Renderer -> FBO : bind(light)
+  Renderer -> Renderer : renderPass(lightPass)
+  FBO -> FBO : unbind()
+
+  Renderer -> FBO : bind(custom)
+  Renderer -> Renderer : renderPass(customPass)
+  FBO -> FBO : unbind()
+
+  Renderer -> FBO : bind(final)
+  Renderer -> Renderer : renderPass(finalPass)
+  FBO -> FBO : unbind()
+end
+
+group Завершение
+  Renderer -> Renderer : ImGui Render
+  Renderer -> Loop : glfwSwapBuffers()
+end
+
+@enduml

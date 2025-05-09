@@ -1,11 +1,5 @@
 @startuml
 
-skinparam packageTitleFontSize 200
-skinparam packageTitleFontName Arial
-skinparam packageBorderColor Gray
-skinparam packageBackgroundColor #F0F0F0
-
-skinparam 
 package LampyEngine {
     package EngineCore
     {

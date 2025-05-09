@@ -1,7 +1,8 @@
 @startuml
-
+left to right direction
 package RenderSubsystem.AbstractRenderObjects
 {
+    
     abstract class IMaterial
     {
         +vec3 baseColor;
@@ -82,5 +83,39 @@ package RenderSubsystem.AbstractRenderObjects {
 
 }
 
+package RenderSubsystem.AbstractRenderObjects 
+{
+    class TextureFactory
+    {
+        -static unordered_map<string, weak_ptr<ITexture>> textureCache;
+        +static shared_ptr<ITexture> createOrGetTexture(shared_ptr<RTexture>& texture)
+    }
+
+    ITexture -up-* TextureFactory
+
+    class ShaderFactory
+    {
+        -static unordered_map<string, weak_ptr<IShader>> shaderCache;
+        +static shared_ptr<IShader> createOrGetShader(shared_ptr<RShader>& fragShader, shared_ptr<RShader>& vertShader)
+    }
+
+    IShader -up-* ShaderFactory
+
+    class MeshFactory
+    {
+        -static unordered_map<string, weak_ptr<IMesh>> meshCache;
+        +static shared_ptr<IMesh> createOrGetMesh(shared_ptr<RMesh>& mesh)
+    }
+
+    IMesh -up-* MeshFactory
+
+    class MaterialFactory
+    {
+        -static unordered_map<string, weak_ptr<IMaterial>> materialCache;
+        +static shared_ptr<IMesh> createOrGetMaterial(shared_ptr<RMaterial>& material)
+    }
+
+    IMaterial -up-* MaterialFactory
+}
 
 @enduml

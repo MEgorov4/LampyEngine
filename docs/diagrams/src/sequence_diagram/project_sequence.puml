@@ -1,0 +1,24 @@
+@startuml
+Engine -> Editor  : minorInit()
+Editor -> Editor : startupEditorModules()
+Editor -> ProjectModule : startup()
+ProjectModule -> ProjectBrowser.exe : sub-process
+
+
+alt openProject
+    ProjectBrowser.exe -> ProjectModule : openProject(JSON_SUCCESS_RESULT)
+else createProject
+    ProjectBrowser.exe -> ProjectModule : createProject(JSON_SUCCESS_RESULT)
+else failed or exit
+    ProjectBrowser.exe -> ProjectModule : failedResult(JSON_FAILED_RESULT)
+end
+
+
+note right
+{ "projectName": "path", "projectPath": "path",
+  "buildPath": "path", "configPath": "path", "resourcesPath": "path",
+  "logsPath": "path", "editorStartWorld": "path",
+  "gameStartWorld": "default", "result": "success|failed" }
+end note
+
+@enduml

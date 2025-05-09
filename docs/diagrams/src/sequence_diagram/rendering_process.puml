@@ -1,0 +1,28 @@
+@startuml
+participant Engine
+participant RenderModule
+participant IRenderer
+participant ECSModule
+
+== Инициализация ==
+
+Engine -> RenderModule: startup()
+RenderModule -> IRenderer: setupWorldChangesHandler()
+IRenderer -> ECSModule: subscribe(updateRenderList)
+
+== Изменения в ECS ==
+
+ECSModule -> IRenderer: updateRenderList()
+IRenderer -> IRenderer: clear(m_updateRenderPipelineData)
+IRenderer -> ECSModule: getCurrentWorld()
+IRenderer -> IRenderer: fill m_updateRenderPipelineData
+IRenderer -> IRenderer: swap(m_activeRenderPipelineData, m_updateRenderPipelineData)
+
+== Игровой цикл ==
+
+loop every frame
+  RenderModule -> IRenderer: render()
+  IRenderer -> IRenderer: uses m_activeRenderPipelineData
+end
+@enduml
+

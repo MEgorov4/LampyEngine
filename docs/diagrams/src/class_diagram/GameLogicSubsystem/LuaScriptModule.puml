@@ -1,14 +1,21 @@
 @startuml
 package LuaScriptModule
 {
+    class LuaInterpreter
+    {
+        -sol::state m_luaState;
+
+        +sol::state& getLuaState();
+    }
+
     class LuaScriptModule <<singletone>>
     {
         -LuaScriptModule() = default;
         -LuaScriptModule& operator=(const LuaScriptModule&) = delete;
         -LuaScriptModule(const LuaScriptModule&) = delete;
 
-        -sol::state m_luaState;
-
+        -unique_ptr<LuaInterpreter> m_luaInterp;
+        
         +static LuaScriptModule& getInstance();
 
         +void startup();
@@ -24,5 +31,7 @@ package LuaScriptModule
         -void registerECSModule();
         -void registerResourceModule(0;)
     }
+
+    LuaInterpreter -right-* LuaScriptModule
 }
 @enduml
