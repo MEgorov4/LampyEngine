@@ -25,6 +25,7 @@ class OpenGLRenderer : public IRenderer
 
 	GLuint m_quadVAO;
 	GLuint m_quadVBO;
+
 public:
 	OpenGLRenderer(Window* window);
 
@@ -46,6 +47,8 @@ public:
 
 	void waitIdle() override;
 
+	virtual void drawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color) override;
+	void compileDebugLineShader();
 private:
 	void init();
 	void initImGui();

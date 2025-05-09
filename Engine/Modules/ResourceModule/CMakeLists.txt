@@ -13,4 +13,6 @@ target_link_libraries(ResourceModule PUBLIC
     RenderModule
     stb::stb
     tinyobjloader::tinyobjloader
+    PRIVATE
+    MemoryModule
 )

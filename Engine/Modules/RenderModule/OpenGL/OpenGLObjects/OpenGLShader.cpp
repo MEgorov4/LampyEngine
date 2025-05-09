@@ -6,8 +6,8 @@
 OpenGLShader::OpenGLShader(const std::shared_ptr<RShader>& vertShader, const std::shared_ptr<RShader>& fragShader)
 	: IShader(vertShader, fragShader)
 {
-	std::vector<uint8_t> vertCode = vertShader->getShaderInfo().buffer;
-	std::vector<uint8_t> fragCode = fragShader->getShaderInfo().buffer;
+	std::vector<uint8_t> vertCode = vertShader->getBuffer();
+	std::vector<uint8_t> fragCode = fragShader->getBuffer();
 
 	GLuint vertShaderID = createShaderFromSPIRV(vertCode, GL_VERTEX_SHADER);
 	GLuint fragShaderID = createShaderFromSPIRV(fragCode, GL_FRAGMENT_SHADER);

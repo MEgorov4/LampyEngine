@@ -4,12 +4,12 @@
 #pragma once
 
 #include "BaseResource.h"
-
+#include "../MemoryModule/GarbageAllocator.h"
 #include <vector>
 
 struct TextureInfo
 {
-	std::vector<uint8_t> pixels;
+	std::vector<uint8_t, GarbageAllocator<uint8_t>> pixels;
 	int texWidth;
 	int texHeight;
 	int texChannels;

@@ -21,6 +21,8 @@ fltk/1.3.9
 stb/cci.20240531
 dacap-clip/1.9
 
+bullet3/3.25
+
 gtest/1.15.0
 [generators]
 CMakeDeps

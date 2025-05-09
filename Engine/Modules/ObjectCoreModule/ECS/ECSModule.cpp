@@ -4,8 +4,11 @@
 #include "../../LoggerModule/Logger.h"
 #include "../../ProjectModule/ProjectModule.h"
 #include "ECSLuaScriptsSystem.h"
+#include "ECSPhysicsSystem.h"
 #include "../../ResourceModule/ResourceManager.h"
 #include "../../FilesystemModule/FilesystemModule.h"
+#include "../../PhysicsModule/PhysicsModule.h"
+#include <btBulletDynamicsCommon.h>
 
 void ECSModule::startup()
 {
@@ -20,6 +23,7 @@ void ECSModule::startup()
 	registerObservers();
 	loadInitialWorldState();
 	ECSluaScriptsSystem::getInstance().registerSystem(m_world);
+	ECSPhysicsSystem::getInstance().registerSystem(m_world);
 }
 
 void ECSModule::loadInitialWorldState()
@@ -27,11 +31,12 @@ void ECSModule::loadInitialWorldState()
 	m_world.entity("Room").set<PositionComponent>({ 0.f, 0.f, 0.f })
 		.set<RotationComponent>({ 0.f, 0.f, 0.f })
 		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
-		.set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
+		// .set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
 		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
 				, "../Resources/Shaders/GLSL/shader.vert"
 				, "../Resources/Shaders/GLSL/shader.frag"
-				, "../Resources/Textures/viking_room.png" });
+				, "../Resources/Textures/viking_room.png" })
+		.set<RigidbodyComponent>({});
 
 	m_world.entity("DirectionalLight")
 		.set<PositionComponent>({ 0.f, 2.f, 0.f })
@@ -43,6 +48,30 @@ void ECSModule::loadInitialWorldState()
 		.set<RotationComponent>({ 0.0f, 0.0f, 0.0f})
 		.set<CameraComponent>({ 75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true });
 
+	RigidbodyComponent rig = {};
+	rig.mass = 0.01f;
+	rig.isStatic = false;
+	m_world.entity("SecondRoom").set<PositionComponent>({ 2.5f, 0.f, 1.5f })
+		.set<RotationComponent>({ 0.f, 0.f, 0.f })
+		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
+		// .set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
+		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
+				, "../Resources/Shaders/GLSL/shader.vert"
+				, "../Resources/Shaders/GLSL/shader.frag"
+				, "../Resources/Textures/viking_room.png" })
+		.set<RigidbodyComponent>(rig);
+
+	rig.mass = 0.f;
+	rig.isStatic = true;
+	m_world.entity("Ground").set<PositionComponent>({ 0.f, -3.f, 0.f })
+		.set<RotationComponent>({ 0.f, 0.f, 0.f })
+		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
+		// .set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
+		.set<MeshComponent>({ "../Resources/Meshes/BaseGeometry/ground.obj"
+				, "../Resources/Shaders/GLSL/shader.vert"
+				, "../Resources/Shaders/GLSL/shader.frag"
+				, "../Resources/Textures/viking_room.png" })
+		.set<RigidbodyComponent>(rig);
 }
 
 void ECSModule::fillDefaultWorld()
@@ -105,13 +134,30 @@ void ECSModule::startSystems()
 	LOG_INFO("ECSModule: Start systems");
 
 	ECSluaScriptsSystem::getInstance().startSystem(m_world);
+	PhysicsModule::getInstance().registrateBodies();
 	m_tickEnabled = true;
+	PhysicsModule::getInstance().setTickEnabled(true);
+
+	/*auto& world = ECSModule::getInstance().getCurrentWorld();
+
+	auto query = world.query<MeshComponent>();
+
+	query.each([&](const flecs::entity& e, MeshComponent& mesh)
+		{
+			ResourceManager::unload<RMesh>(mesh.meshResourcePath);
+			ResourceManager::unload<RShader>(mesh.vertShaderPath);
+			ResourceManager::unload<RShader>(mesh.fragShaderPath);
+			ResourceManager::unload<RTexture>(mesh.texturePath);
+		});*/
 }
 
 void ECSModule::stopSystems()
 {
 	LOG_INFO("ECSModule: Stop systems");
 	m_tickEnabled = false;
+	PhysicsModule::getInstance().setTickEnabled(false);
+
+	PhysicsModule::getInstance().clearPhysicsWorld();
 
 	ECSluaScriptsSystem::getInstance().stopSystem(m_world);
 	clearWorld();
@@ -156,6 +202,9 @@ void ECSModule::registerComponents()
 		.member("vertShaderPath", &MeshComponent::vertShaderPath)
 		.member("fragShaderPath", &MeshComponent::fragShaderPath)
 		.member("texturePath", &MeshComponent::texturePath);
+
+	m_world.component<RigidbodyComponent>()
+		.member("mass", &RigidbodyComponent::mass);
 }
 
 void ECSModule::registerObservers()

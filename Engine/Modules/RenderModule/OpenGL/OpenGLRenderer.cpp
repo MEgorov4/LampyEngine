@@ -226,3 +226,41 @@ void OpenGLRenderer::waitIdle()
 	glFinish();
 }
 
+void OpenGLRenderer::drawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color)
+{
+	static GLuint VAO = 0, VBO = 0;
+
+	if (VAO == 0)
+	{
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &VBO);
+
+		glBindVertexArray(VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		glBindVertexArray(0);
+	}
+
+	GLfloat vertices[] = {
+		from.x, from.y, from.z,
+		to.x, to.y, to.z
+	};
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+	glBindVertexArray(VAO);
+
+	m_debugLineShader->use();
+
+	OpenGLShader* shaderOpenGL = dynamic_cast<OpenGLShader*>(m_debugLineShader.get());
+	glUniform3fv(glGetUniformLocation(shaderOpenGL->getProgramID(), "lineColor"), 1, &color[0]);
+	LOG_INFO(std::format("{}", shaderOpenGL->getProgramID()));
+
+	glDrawArrays(GL_LINES, 0, 2);
+
+	glBindVertexArray(0);
+}
