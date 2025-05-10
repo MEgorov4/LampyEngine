@@ -13,9 +13,6 @@ public:
 	PoolAllocator(size_t objectSize, size_t chunksPerBlock, void* placement = nullptr);
 	~PoolAllocator();
 
-	PoolAllocator(const PoolAllocator&) = delete;
-	PoolAllocator& operator=(const PoolAllocator&) = delete;
-
 	void* allocate();
 	void deallocate(void* ptr);
 private:
