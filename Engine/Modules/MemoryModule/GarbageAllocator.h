@@ -11,6 +11,9 @@ public:
     GarbageAllocator() noexcept = default;
 	GarbageAllocator(DoubleStackAllocator* doubleStack);
 
+    GarbageAllocator(const GarbageAllocator&) = delete;
+    GarbageAllocator& operator=(const GarbageAllocator&) = delete;
+
     template <typename U>
     GarbageAllocator(const GarbageAllocator<U>& other)
         : m_doubleStack(other.m_doubleStack) {

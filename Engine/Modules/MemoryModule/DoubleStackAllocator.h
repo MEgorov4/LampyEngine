@@ -7,6 +7,9 @@ public:
 	DoubleStackAllocator(size_t size);
 	~DoubleStackAllocator();
 
+	DoubleStackAllocator(const DoubleStackAllocator&) = delete;
+	DoubleStackAllocator& operator=(const DoubleStackAllocator&) = delete;
+
 	void* allocateStart(size_t size);
 	void* allocateEnd(size_t size);
 
