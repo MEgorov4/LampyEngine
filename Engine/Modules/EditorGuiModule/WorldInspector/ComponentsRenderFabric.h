@@ -124,7 +124,7 @@ public:
 				ImGui::SetCursorPosX(0);
 				ImGui::Separator();
 
-				ImGui::Text("Path:");
+				ImGui::Text("Mesh path:");
 				ImGui::SameLine();
 
 				std::string resPath = ProjectModule::getInstance().getProjectConfig().getResourcesPath();
@@ -138,7 +138,28 @@ public:
 							MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
 
 							std::strncpy(meshComponentMut->meshResourcePath, droppedPath.c_str(), sizeof(meshComponentMut->meshResourcePath) - 1);
-							meshComponentMut->meshResourcePath[sizeof(meshComponentMut->meshResourcePath) - 1] = '\0'; // Гарантируем \0 в конце
+							meshComponentMut->meshResourcePath[sizeof(meshComponentMut->meshResourcePath) - 1] = '\0'; 
+
+							entity.modified<MeshComponent>();
+
+							LOG_INFO(std::format("Dropped file: {}", droppedPath));
+						}
+					}
+					ImGui::EndDragDropTarget();
+				}
+
+				ImGui::Text("Texture path:");
+				ImGui::SameLine();
+				ImGui::Text(FS.getFileName(meshComponent->texturePath).c_str());
+				if (ImGui::BeginDragDropTarget()) {
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {
+						std::string droppedPath = static_cast<const char*>(payload->Data);
+
+						if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".png") {
+							MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
+
+							std::strncpy(meshComponentMut->meshResourcePath, droppedPath.c_str(), sizeof(meshComponentMut->meshResourcePath) - 1);
+							meshComponentMut->meshResourcePath[sizeof(meshComponentMut->meshResourcePath) - 1] = '\0';
 
 							entity.modified<MeshComponent>();
 
@@ -208,7 +229,7 @@ public:
 				float intencity = dirLightComponent->intencity;
 				if (ImGui::DragFloat("##dirLightIntencity", &intencity, 0.01, 0.0f, 1000.f))
 				{
-					entity.set<DirectionalLightComponent>({intencity});
+					entity.set<DirectionalLightComponent>({ intencity });
 				}
 			}
 
@@ -289,9 +310,9 @@ public:
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
 
-		if (ImGui::BeginChildFrame(5, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3))) 
+		if (ImGui::BeginChildFrame(5, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3)))
 		{
-			if (RigidbodyComponent* body = entity.get_mut<RigidbodyComponent>()) 
+			if (RigidbodyComponent* body = entity.get_mut<RigidbodyComponent>())
 			{
 				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("RigidbodyComponent").x) / 2);
 
@@ -302,7 +323,7 @@ public:
 				ImGui::SetCursorPosX(0);
 				ImGui::Separator();
 
-				
+
 
 				float mass = body->mass;
 				bool isStatic = body->isStatic;
@@ -319,7 +340,7 @@ public:
 				ImGui::SameLine();
 
 				ImGui::BeginDisabled(isStatic);
-				if (ImGui::DragFloat("##mass", &mass, 0.1f, 0.f, 100000000.f)) 
+				if (ImGui::DragFloat("##mass", &mass, 0.1f, 0.f, 100000000.f))
 				{
 					body->mass = mass;
 				}

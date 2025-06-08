@@ -47,7 +47,17 @@ void GUIEditorToolPanel::render()
 				ECSModule::getInstance().saveCurrentWorld();
 			}
 		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Save world as"))
+		{
+			ImGui::OpenPopup("SelectFolder");
+		}
+
 		renderSaveWorldPopup();
+
+
 	}
 	ImGui::End();
 }

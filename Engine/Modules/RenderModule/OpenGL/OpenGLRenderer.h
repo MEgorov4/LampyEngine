@@ -19,6 +19,7 @@ class OpenGLRenderer : public IRenderer
 	std::unique_ptr<OpenGLFramebuffer> m_reflectionFramebuffer;
 	std::unique_ptr<OpenGLFramebuffer> m_lightFramebuffer;
 	std::unique_ptr<OpenGLFramebuffer> m_finalFramebuffer;
+	std::unique_ptr<OpenGLFramebuffer> m_textureFramebuffer;
 	std::unique_ptr<OpenGLFramebuffer> m_customFramebuffer;
 	
 	std::unique_ptr<OpenGLMesh2D> m_quadMesh2D;
@@ -31,24 +32,11 @@ public:
 
 	void render() override;
 
-	void registerShader(const std::string& vertPath, const std::string& fragPath) override;
-
-	void removeShader(const std::string& vertPath, const std::string& fragPath) override;
-
-	void registerVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile) override;
-
-	void removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile) override;
-
-	void registerIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) override;
-
-	void removeIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) override;
-
 	void* getOffscreenImageDescriptor() override;
 
 	void waitIdle() override;
 
 	virtual void drawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color) override;
-	void compileDebugLineShader();
 private:
 	void init();
 	void initImGui();

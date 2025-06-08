@@ -21,12 +21,28 @@ void ECSModule::startup()
 
 	registerComponents();
 	registerObservers();
+
 	loadInitialWorldState();
+
+
 	ECSluaScriptsSystem::getInstance().registerSystem(m_world);
 	ECSPhysicsSystem::getInstance().registerSystem(m_world);
+
 }
 
 void ECSModule::loadInitialWorldState()
+{
+	if (isWorldSetted())
+	{
+		loadWorldFromFile(m_currentWorldFile);
+	}
+	else
+	{
+		fillDefaultWorld();
+	}
+}
+
+void ECSModule::fillDefaultWorld()
 {
 	m_world.entity("Room").set<PositionComponent>({ 0.f, 0.f, 0.f })
 		.set<RotationComponent>({ 0.f, 0.f, 0.f })
@@ -35,84 +51,45 @@ void ECSModule::loadInitialWorldState()
 		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
 				, "../Resources/Shaders/GLSL/shader.vert"
 				, "../Resources/Shaders/GLSL/shader.frag"
-				, "../Resources/Textures/viking_room.png" })
-		.set<RigidbodyComponent>({});
+				, "../Resources/Textures/viking_room.png" });
 
 	m_world.entity("DirectionalLight")
 		.set<PositionComponent>({ 0.f, 2.f, 0.f })
-		.set<RotationComponent>({ 0.f, 0.f, 0.f})
-		.set<DirectionalLightComponent>({10});
+		.set<RotationComponent>({ 0.f, 0.f, 0.f })
+		.set<DirectionalLightComponent>({ 10 });
 
 	m_world.entity("ViewportCamera")
 		.set<PositionComponent>({ 0.f, 0.f, -5.f })
-		.set<RotationComponent>({ 0.0f, 0.0f, 0.0f})
+		.set<RotationComponent>({ 0.0f, 0.0f, 0.0f })
 		.set<CameraComponent>({ 75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true });
-
-	RigidbodyComponent rig = {};
-	rig.mass = 0.01f;
-	rig.isStatic = false;
-	m_world.entity("SecondRoom").set<PositionComponent>({ 2.5f, 0.f, 1.5f })
-		.set<RotationComponent>({ 0.f, 0.f, 0.f })
-		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
-		// .set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
-		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
-				, "../Resources/Shaders/GLSL/shader.vert"
-				, "../Resources/Shaders/GLSL/shader.frag"
-				, "../Resources/Textures/viking_room.png" })
-		.set<RigidbodyComponent>(rig);
-
-	rig.mass = 0.f;
-	rig.isStatic = true;
-	m_world.entity("Ground").set<PositionComponent>({ 0.f, -3.f, 0.f })
-		.set<RotationComponent>({ 0.f, 0.f, 0.f })
-		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
-		// .set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
-		.set<MeshComponent>({ "../Resources/Meshes/BaseGeometry/ground.obj"
-				, "../Resources/Shaders/GLSL/shader.vert"
-				, "../Resources/Shaders/GLSL/shader.frag"
-				, "../Resources/Textures/viking_room.png" })
-		.set<RigidbodyComponent>(rig);
-}
-
-void ECSModule::fillDefaultWorld()
-{
-	std::string json = m_world.to_json().c_str();
-
-	LOG_INFO(json);
 }
 
 void ECSModule::saveCurrentWorld()
 {
+	LOG_DEBUG("ECSModule: saveCurrentWorld");
 	std::string strJson = m_world.to_json().c_str();
 
-	std::ofstream file(m_currentWorldFile);
-	if (file.is_open())
-	{
-		file << strJson;
-		file.close();
-	}
+	FS.writeTextFile(m_currentWorldFile, strJson);
+
+	m_currentWorldData = strJson;
 }
 
 void ECSModule::loadWorldFromFile(const std::string& path)
 {
+	LOG_DEBUG("ECSModule: loadWorldFromFile path: " + path);
 	m_currentWorldFile = path;
 
-	std::ifstream file(path);
-	std::string strData;
-	if (file.is_open())
-	{
-		std::string line;
-		while (std::getline(file, line))
-		{
-			strData += line;
-		}
-		file.close();
-	}
+	std::string strData = FS.readTextFile(path);
+
 	m_world.from_json(strData.c_str());
+	m_currentWorldData = m_currentWorldData = m_world.to_json();
+
 }
 
 void ECSModule::setCurrentWorldPath(const std::string& path)
 {
+	LOG_DEBUG("ECSModule: setCurrentWorldPath path: " + path);
+
 	m_currentWorldFile = path;
 	clearWorld();
 	loadWorldFromFile(m_currentWorldFile);
@@ -248,21 +225,29 @@ void ECSModule::registerObservers()
 		.event(flecs::OnSet)
 		.each([=](flecs::entity e, MeshComponent& mesh)
 			{
-				mesh.meshResource = ResourceManager::load<RMesh>(mesh.meshResourcePath);
-				mesh.vertShaderResource = ResourceManager::load<RShader>(mesh.vertShaderPath);
-				mesh.fragShaderResource = ResourceManager::load<RShader>(mesh.fragShaderPath);
-				mesh.textureResource = ResourceManager::load<RTexture>(mesh.texturePath);
+				std::shared_ptr<RMesh> resMesh = ResourceManager::load<RMesh>(mesh.meshResourcePath);
+				if (resMesh && mesh.meshResource != resMesh) mesh.meshResource = resMesh;
+
+				std::shared_ptr<RShader> resVertShader = ResourceManager::load<RShader>(mesh.vertShaderPath);
+				std::shared_ptr<RShader> resFragShader = ResourceManager::load<RShader>(mesh.fragShaderPath);
+				if ((resVertShader && mesh.vertShaderResource != resVertShader) && (resFragShader && mesh.fragShaderResource != resFragShader))
+				{
+					mesh.vertShaderResource = resVertShader;
+					mesh.fragShaderResource = resFragShader;
+				}
+
+				std::shared_ptr<RTexture> resTexturePath = ResourceManager::load<RTexture>(mesh.texturePath);
+				if (resTexturePath && mesh.textureResource != resTexturePath)
+					mesh.textureResource = resTexturePath;
+
 				OnComponentsChanged();
 			});
 }
 
 void ECSModule::ecsTick(float deltaTime)
 {
-	if (m_tickEnabled)
+	if (m_tickEnabled && m_world.progress(deltaTime))
 	{
-		if (m_world.progress(deltaTime))
-		{
 
-		}
 	}
 }

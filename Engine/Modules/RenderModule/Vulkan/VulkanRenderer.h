@@ -95,44 +95,8 @@ public:
     /// </summary>
     virtual void waitIdle() override;
 
-    /// <summary>
-    /// Registers a shader pipeline.
-    /// </summary>
-    /// <param name="vertPath">Path to the vertex shader file.</param>
-    /// <param name="fragPath">Path to the fragment shader file.</param>
-    virtual void registerShader(const std::string& vertPath, const std::string& fragPath) override;
-
-    /// <summary>
-    /// Removes a shader pipeline.
-    /// </summary>
-    /// <param name="vertPath">Path to the vertex shader file.</param>
-    /// <param name="fragPath">Path to the fragment shader file.</param>
-    virtual void removeShader(const std::string& vertPath, const std::string& fragPath) override;
-
-    /// <summary>
-    /// Registers vertex data and creates a Vulkan vertex buffer if needed.
-    /// </summary>
-    /// <param name="vertexData">Vertex data to register.</param>
-    virtual void registerVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile) override;
-
-    /// <summary>
-    /// Removes vertex data and releases associated buffers if no longer needed.
-    /// </summary>
-    /// <param name="vertexData">Vertex data to remove.</param>
-    virtual void removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile) override;
     virtual void* getOffscreenImageDescriptor() override;
 
-    /// <summary>
-    /// Registers index data and creates a Vulkan index buffer if needed.
-    /// </summary>
-    /// <param name="indexData">index data to register.</param>
-    virtual void registerIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) override;
-
-    /// <summary>
-    /// Removes index data and releases associated buffers if no longer needed.
-    /// </summary>
-    /// <param name="indexData">index data to remove.</param>
-    virtual void removeIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile) override;
 
     /// <summary>
     /// Recreates the swap chain and all dependent resources.

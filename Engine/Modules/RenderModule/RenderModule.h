@@ -29,63 +29,10 @@ public:
     /// </summary>
     /// <param name="window">Pointer to the application window.</param>
     void startup(Window* window);
-
-    /// <summary>
-    /// Registers a shader pipeline using the provided vertex and fragment shader paths.
-    /// </summary>
-    /// <param name="vertPath">Path to the vertex shader file.</param>
-    /// <param name="fragPath">Path to the fragment shader file.</param>
-    void registerShader(const std::string& vertPath, const std::string& fragPath)
-    {
-        m_renderer->registerShader(vertPath, fragPath);
-    }
-
-    /// <summary>
-    /// Removes a previously registered shader pipeline.
-    /// </summary>
-    /// <param name="vertPath">Path to the vertex shader file.</param>
-    /// <param name="fragPath">Path to the fragment shader file.</param>
-    void removeShader(const std::string& vertPath, const std::string& fragPath)
-    {
-        m_renderer->removeShader(vertPath, fragPath);
-    }
-
     /// <summary>
     /// Registers vertex data, creating a Vulkan vertex buffer if needed.
     /// </summary>
-    /// <param name="vertexData">Vertex data to register.</param>
-    void registerVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile)
-    {
-        m_renderer->registerVertexData(vertexData, pathToFile);
-    }
 
-    /// <summary>
-    /// Removes vertex data and releases associated buffers if no longer needed.
-    /// </summary>
-    /// <param name="vertexData">Vertex data to remove.</param>
-    void removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile)
-    {
-        m_renderer->removeVertexData(vertexData, pathToFile);
-    }
-
-    /// <summary>
-    /// Registers index data, creating a Vulkan index buffer if needed.
-    /// </summary>
-    /// <param name="indexData">Vertex data to register.</param>
-    void registerIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile)
-    {
-        m_renderer->registerIndexData(indexData, pathToFile);
-    }
-
-    /// <summary>
-    /// Removes index data and releases associated buffers if no longer needed.
-    /// </summary>
-    /// <param name="indexData">index data to remove.</param>
-    void removeIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile)
-    {
-        m_renderer->removeIndexData(indexData, pathToFile);
-    }
-    
     /// <summary>
     /// Retrieves a pointer to the active renderer.
     /// </summary>

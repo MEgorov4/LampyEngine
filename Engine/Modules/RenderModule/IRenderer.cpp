@@ -71,45 +71,55 @@ void IRenderer::updateRenderList()
 			model = glm::rotate(model, radiansRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			model = glm::scale(model, scale.toGLMVec());
-	
+
 			renderObject.modelMatrix = model;
 
 			std::shared_ptr<IShader> customShader;
 			std::shared_ptr<IMesh> customMesh;
-
-			if (mesh.vertShaderPath && mesh.fragShaderResource)
+			std::shared_ptr<ITexture> texture;
+			if (mesh.meshResource)
 			{
-				customShader = ShaderFactory::createOrGetShader(mesh.vertShaderResource.value(), mesh.fragShaderResource.value());
-				if (mesh.meshResource)
+				customMesh = MeshFactory::createOrGetMesh(mesh.meshResource.value());
+
+				if (mesh.textureResource)
 				{
-					customMesh = MeshFactory::createOrGetMesh(mesh.meshResource.value());
+					renderObject.texture = TextureFactory::createOrGetTexture(mesh.textureResource.value());
+				}
+				m_updateRenderPipelineData
+					.shadowPass
+					.batches[m_shadowsShader][customMesh]
+					.push_back(renderObject);
+
+				m_updateRenderPipelineData
+					.reflectionPass
+					.batches[m_reflectionsShader][customMesh]
+					.push_back(renderObject);
+
+				m_updateRenderPipelineData
+					.lightPass
+					.batches[m_lightsShader][customMesh]
+					.push_back(renderObject);
+
+				m_updateRenderPipelineData
+					.texturePass
+					.batches[m_textureShader][customMesh]
+					.push_back(renderObject);
+
+				m_updateRenderPipelineData
+					.finalPass
+					.batches[m_finalShader][customMesh]
+					.push_back(renderObject);
+
+				if (mesh.vertShaderPath && mesh.fragShaderResource)
+				{
+					customShader = ShaderFactory::createOrGetShader(mesh.vertShaderResource.value(), mesh.fragShaderResource.value());
+					m_updateRenderPipelineData
+						.customPass
+						.batches[customShader][customMesh]
+						.push_back(renderObject);
 				}
 			}
 
-			m_updateRenderPipelineData
-				.customPass
-				.batches[customShader][customMesh]
-				.push_back(renderObject);
-
-			m_updateRenderPipelineData
-				.shadowPass
-				.batches[m_shadowsShader][customMesh]
-				.push_back(renderObject);
-
-			m_updateRenderPipelineData
-				.reflectionPass
-				.batches[m_reflectionsShader][customMesh]
-				.push_back(renderObject);
-
-			m_updateRenderPipelineData
-				.lightPass
-				.batches[m_lightsShader][customMesh]
-				.push_back(renderObject);
-
-			m_updateRenderPipelineData
-				.finalPass
-				.batches[m_finalShader][customMesh]
-				.push_back(renderObject);
 		});
 
 	std::swap(m_activeRenderPipelineData, m_updateRenderPipelineData);
@@ -128,6 +138,10 @@ void IRenderer::postInit()
 	std::shared_ptr<RShader> LSHRV = ResourceManager::load<RShader>("../Resources/Shaders/GLSL/Core/light.vert");
 	std::shared_ptr<RShader> LSHRF = ResourceManager::load<RShader>("../Resources/Shaders/GLSL/Core/light.frag");
 	m_lightsShader = ShaderFactory::createOrGetShader(LSHRV, LSHRF);
+
+	std::shared_ptr<RShader> TSHRV = ResourceManager::load<RShader>("../Resources/Shaders/GLSL/Core/texture.vert");
+	std::shared_ptr<RShader> TSHRF = ResourceManager::load<RShader>("../Resources/Shaders/GLSL/Core/texture.frag");
+	m_textureShader = ShaderFactory::createOrGetShader(TSHRV, TSHRF);
 
 	std::shared_ptr<RShader> FSHRV = ResourceManager::load<RShader>("../Resources/Shaders/GLSL/Core/final.vert");
 	std::shared_ptr<RShader> FSHRF = ResourceManager::load<RShader>("../Resources/Shaders/GLSL/Core/final.frag");

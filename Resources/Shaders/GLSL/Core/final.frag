@@ -13,6 +13,7 @@ layout(binding = 6) uniform sampler2D objectSpecular;
 layout(binding = 7) uniform sampler2D objectRoughness;
 layout(binding = 8) uniform sampler2D objectEmission;
 
+
 void main() {
     vec3 albedo = texture(objectAlbedo, fragUV).rgb;
     vec3 normal = texture(objectNormal, fragUV).rgb * 2.0 - 1.0;
@@ -25,5 +26,5 @@ void main() {
     vec3 light = texture(lightMap, fragUV).rgb;
     vec3 custom = texture(customMap, fragUV).rgb;
 
-    outColor = vec4((light * shadow + reflection + emission) * albedo * custom, 1.0);
+    outColor = vec4(albedo, 1.0);
 }

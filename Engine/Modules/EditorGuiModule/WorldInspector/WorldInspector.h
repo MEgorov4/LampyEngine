@@ -17,6 +17,7 @@ private:
 	void renderEntityTreePopup();
 	void renderEntityTree();
 	void renderSelectedEntityDefaults();
+	void renderAddComponentPopup();
 };
 
 

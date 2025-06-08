@@ -78,7 +78,7 @@ void PhysicsModule::registrateBodies()
 				startTransform.setOrigin(btVector3({ transform.x, transform.y, transform.z }));
 
 				btQuaternion rotationQuat;
-				rotationQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);  // Поворот по осям Z, Y, X
+				rotationQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ Z, Y, X
 				startTransform.setRotation(rotationQuat);
 
 				btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
@@ -92,7 +92,7 @@ void PhysicsModule::registrateBodies()
 
 				rigidbody.body.emplace(body);
 
-				// Добавляем тело в мир
+				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ
 				m_physicsWorld->addRigidBody(body);
 			}
 		});
@@ -115,13 +115,13 @@ void PhysicsModule::clearPhysicsWorld()
 		{
 			if (body->getMotionState())
 			{
-				delete body->getMotionState(); // Удаляем motion state
+				delete body->getMotionState(); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ motion state
 			}
-			delete body->getCollisionShape(); // Удаляем коллизионную форму
+			delete body->getCollisionShape(); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 		}
 
 		m_physicsWorld->removeCollisionObject(obj);
-		// delete obj; // Удаляем сам объект
+		// delete obj; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	}
 }
 

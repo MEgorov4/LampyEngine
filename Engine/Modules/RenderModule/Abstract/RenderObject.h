@@ -5,6 +5,7 @@
 
 #include "IMesh.h"
 #include "IShader.h"
+#include "ITexture.h"
 
 struct DirectionalLight
 {
@@ -23,6 +24,8 @@ struct PointLight
 struct RenderObject
 {
 	glm::mat4 modelMatrix{ 1.0f };
+	
+	std::shared_ptr<ITexture> texture;
 
 	bool isVisible{ true };
 	int renderLayer{ 0 };
@@ -34,15 +37,14 @@ enum RenderPassType
 	REFLECTION,
 	LIGHT,
 	FINAL,
-	CUSTOM
+	CUSTOM,
+	TEXTURE
 };
 
 struct RenderPassData
 {
 	RenderPassType renderPassType{ CUSTOM };
 	std::unordered_map<std::shared_ptr<IShader>, std::unordered_map<std::shared_ptr<IMesh>, std::vector<RenderObject>>> batches;
-
-
 	
 	void clear()
 	{
@@ -64,6 +66,7 @@ struct RenderPipelineData
 	RenderPassData reflectionPass{ REFLECTION };
 	RenderPassData lightPass{ LIGHT };
 	RenderPassData finalPass{ FINAL };
+	RenderPassData texturePass{ TEXTURE };
 	RenderPassData customPass{ CUSTOM };
 
 	void clear()
@@ -72,6 +75,7 @@ struct RenderPipelineData
 		reflectionPass.clear();
 		lightPass.clear();
 		finalPass.clear();
+		texturePass.clear();
 		customPass.clear();
 	}
 };

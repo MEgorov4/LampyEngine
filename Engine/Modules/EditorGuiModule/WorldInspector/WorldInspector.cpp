@@ -8,7 +8,7 @@
 #include "ComponentsRenderFabric.h"
 
 GUIWorldInspector::GUIWorldInspector() : GUIObject()
-		, m_world(ECSModule::getInstance().getCurrentWorld())
+, m_world(ECSModule::getInstance().getCurrentWorld())
 {
 	ComponentRendererFactory& factory = ComponentRendererFactory::getInstance();
 	factory.registerRenderer("PositionComponent", []() {return std::make_unique<PositionRenderer>(); });
@@ -65,7 +65,7 @@ void GUIWorldInspector::renderEntityTreePopup()
 			{
 				if (strBuffer.size() > 0)
 				{
-					m_world.entity(buffer).set<PositionComponent>({0, 0, 0});
+					m_world.entity(buffer).set<PositionComponent>({ 0, 0, 0 });
 				}
 			}
 			ImGui::EndPopup();
@@ -90,16 +90,16 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 {
 	if (m_selectedEntity.is_valid())
 	{
-	
+
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(m_selectedEntity.name()).x) / 2);
 		ImGui::SetWindowFontScale(1.2f);
 		ImGui::TextColored(ImVec4(0.5882353186607361f, 0.5372549295425415f, 0.1764705926179886f, 1.0f), m_selectedEntity.name());
 		ImGui::SetWindowFontScale(1);
 		ImGui::SetCursorPosX(0);
-		
+
 
 		auto& factory = ComponentRendererFactory::getInstance();
-		
+
 		if (m_selectedEntity.has<PositionComponent>())
 		{
 			auto renderer = factory.createRenderer("PositionComponent");
@@ -107,7 +107,7 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 				renderer->render(m_selectedEntity);
 			}
 		}
-		
+
 		if (m_selectedEntity.has<RotationComponent>())
 		{
 			auto renderer = factory.createRenderer("RotationComponent");
@@ -153,6 +153,7 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 			auto renderer = factory.createRenderer("DirectionalLightComponent");
 			if (renderer) {
 				renderer->render(m_selectedEntity);
+
 			}
 		}
 		if (m_selectedEntity.has<RigidbodyComponent>())
@@ -163,12 +164,14 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 			}
 		}
 
-		ImGui::SetCursorPosX((ImGui::GetWindowWidth() -  ImGui::CalcTextSize("New component   Remove entity").x) / 2);
+		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("New component   Remove entity").x) / 2);
 
 		if (ImGui::Button("New component"))
 		{
-			LOG_INFO("GUIWWorldInspector: Add component button pressed");
+			ImGui::OpenPopup("AddComponent");
 		}
+
+		renderAddComponentPopup();
 
 		ImGui::SameLine();
 
@@ -178,5 +181,32 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 		}
 	}
 }
+
+void GUIWorldInspector::renderAddComponentPopup()
+{
+	ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 3));
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 2), 0, ImVec2(0.5f, 0.5f));
+	ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse
+		| ImGuiWindowFlags_NoResize
+		| ImGuiWindowFlags_NoMove;
+
+	if (ImGui::BeginPopupModal("AddComponent", 0, flags))
+	{
+		if (ImGui::BeginChild("SearchTree", ImVec2(ImGui::GetWindowWidth() * 0.3f, 0)))
+		{
+
+			if (ImGui::Button("Close"))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::Text("SearchTree");
+
+			ImGui::EndChild();
+		}
+		ImGui::EndPopup();
+	}
+}
+
 
 

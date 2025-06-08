@@ -187,11 +187,6 @@ void VulkanRenderer::cleanupVulkan()
 	m_instance.reset();
 }
 
-void VulkanRenderer::removeIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile)
-{
-	m_offscreenRenderer->removeIndexData(indexData, pathToFile);
-}
-
 void VulkanRenderer::recreateSwapChainAndDependent()
 {
 	m_logicalDevice->deviceWaitIdle();
@@ -248,40 +243,12 @@ void VulkanRenderer::waitIdle()
 {
 	m_logicalDevice->deviceWaitIdle();
 }
-
-void VulkanRenderer::registerShader(const std::string& vertPath, const std::string& fragPath)
-{
-	m_pipelineCache->getOrCreatePipeline(vertPath,
-		fragPath,
-		m_logicalDevice->getLogicalDevice(),
-		m_offscreenRenderer->getOffscreenRenderPass(), nullptr);
-}
-
-void VulkanRenderer::removeShader(const std::string& vertPath, const std::string& fragPath)
-{
-	m_pipelineCache->removePipeline(vertPath, fragPath);
-}
-
-void VulkanRenderer::registerVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile)
-{
-	m_offscreenRenderer->registerVertexData(vertexData, pathToFile);
-}
-
-void VulkanRenderer::removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile)
-{
-	m_offscreenRenderer->removeVertexData(vertexData, pathToFile);
-}
-
 void* VulkanRenderer::getOffscreenImageDescriptor()
 {
 	// return nullptr;
 	return m_offscreenRenderer->getColorImageDescriptor(m_currentFrame);
 }
 
-void VulkanRenderer::registerIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile)
-{
-	m_offscreenRenderer->registerIndexData(indexData, pathToFile);
-}
 
 void VulkanRenderer::drawFrame()
 {

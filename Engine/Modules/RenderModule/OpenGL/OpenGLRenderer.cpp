@@ -48,6 +48,7 @@ void OpenGLRenderer::init()
 	m_shadowFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080, true);
 	m_reflectionFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080);
 	m_lightFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080);
+	m_textureFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080);
 	m_customFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080);
 	m_finalFramebuffer = std::make_unique<OpenGLFramebuffer>(1920, 1080);
 
@@ -66,7 +67,7 @@ void OpenGLRenderer::initImGui()
 
 void OpenGLRenderer::debugMessageHandle(std::string& message)
 {
-
+	LOG_DEBUG("OpenGLRenderer: " + message);
 }
 
 void OpenGLRenderer::render()
@@ -87,29 +88,35 @@ void OpenGLRenderer::renderWorld()
 {
 	glEnable(GL_DEPTH_TEST);
 
-	m_shadowFramebuffer->bind();
-	glClear(GL_DEPTH_BUFFER_BIT);
-	renderPass(m_activeRenderPipelineData.shadowPass);
-	m_shadowFramebuffer->unbind();
+	//m_shadowFramebuffer->bind();
+	//glClear(GL_DEPTH_BUFFER_BIT);
+	//renderPass(m_activeRenderPipelineData.shadowPass);
+	//m_shadowFramebuffer->unbind();
 
-	m_reflectionFramebuffer->bind();
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//m_reflectionFramebuffer->bind();
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	//renderPass(m_activeRenderPipelineData.reflectionPass);
+	//m_reflectionFramebuffer->unbind();
+
+
+	//m_lightFramebuffer->bind();
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	//renderPass(m_activeRenderPipelineData.lightPass);
+	//m_lightFramebuffer->unbind();
+
+	m_textureFramebuffer->bind();
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	renderPass(m_activeRenderPipelineData.reflectionPass);
-	m_reflectionFramebuffer->unbind();
-
-
-	m_lightFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	renderPass(m_activeRenderPipelineData.lightPass);
-	m_lightFramebuffer->unbind();
+	renderPass(m_activeRenderPipelineData.texturePass);
+	m_textureFramebuffer->unbind();
 
-	m_customFramebuffer->bind();
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	renderPass(m_activeRenderPipelineData.customPass);
-	m_customFramebuffer->unbind();
+	//m_customFramebuffer->bind();
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	//renderPass(m_activeRenderPipelineData.customPass);
+	//m_customFramebuffer->unbind();
 
 	glDisable(GL_DEPTH_TEST);
 	m_finalFramebuffer->bind();
@@ -134,9 +141,9 @@ void OpenGLRenderer::renderPass(const RenderPassData& renderPassData)
 
 	if (renderPassData.renderPassType == FINAL)
 	{
-		textures["customMap"] = m_customFramebuffer->getColorTexture();
+		textures["customMap"] = m_emissionGeneric->getTextureID();
 		textures["lightMap"] = m_lightFramebuffer->getDepthTexture();
-		textures["objectAlbedo"] = m_albedoGeneric->getTextureID();
+		textures["objectAlbedo"] = m_textureFramebuffer->getColorTexture();
 		textures["objectEmission"] = m_emissionGeneric->getTextureID();
 		textures["reflectionMap"] = m_reflectionFramebuffer->getColorTexture();
 		textures["shadowMap"] = m_shadowFramebuffer->getDepthTexture();
@@ -148,22 +155,18 @@ void OpenGLRenderer::renderPass(const RenderPassData& renderPassData)
 		if (renderPassData.renderPassType == FINAL)
 		{
 			shader->bindTextures(textures);
-			if (renderPassData.renderPassType == FINAL)
-			{
-				m_quadMesh2D->draw();
-			}
+			m_quadMesh2D->draw();
 		}
 		else
 		{
-
 			if (shader->hasUniformBlock("CameraData"))
 			{
 				shader->setUniformData("CameraData", &cameraData, sizeof(ShaderUniformBlock_CameraData));
 			}
 			if (shader->hasUniformBlock("DirectionalLightData"))
 			{
-				ShaderUniformBlock_DirectionalLightData dirLightData = 
-				{m_activeRenderPipelineData.directionalLight.direction, m_activeRenderPipelineData.directionalLight.color};
+				ShaderUniformBlock_DirectionalLightData dirLightData =
+				{ m_activeRenderPipelineData.directionalLight.direction, m_activeRenderPipelineData.directionalLight.color };
 
 				shader->setUniformData("DirectionalLightData", &dirLightData, sizeof(ShaderUniformBlock_DirectionalLightData));
 			}
@@ -171,49 +174,34 @@ void OpenGLRenderer::renderPass(const RenderPassData& renderPassData)
 			{
 				for (auto& object : objects)
 				{
+
 					if (shader->hasUniformBlock("ModelMatrices"))
 					{
 						ShaderUniformBlock_ModelData modelData{ object.modelMatrix };
 						shader->setUniformData("ModelMatrices", &modelData, sizeof(ShaderUniformBlock_ModelData));
+						if (object.texture)
+						{
+							textures["albedoTexture"] = object.texture.get()->getTextureID();
+							shader->bindTextures(textures);
+						}
+						else
+						{
+							textures["albedoTexture"] = m_albedoGeneric->getTextureID();
+							shader->bindTextures(textures);
+						}
 					}
+
 
 					if (mesh)
 					{
 						mesh->draw();
 					}
+					textures.clear();
 				}
 			}
 		}
 	}
 
-}
-
-void OpenGLRenderer::registerShader(const std::string& vertPath, const std::string& fragPath)
-{
-
-}
-
-void OpenGLRenderer::removeShader(const std::string& vertPath, const std::string& fragPath)
-{
-
-}
-
-void OpenGLRenderer::registerVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile)
-{
-}
-
-void OpenGLRenderer::removeVertexData(const std::vector<Vertex>& vertexData, const std::string& pathToFile)
-{
-
-}
-
-void OpenGLRenderer::registerIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile)
-{
-
-}
-
-void OpenGLRenderer::removeIndexData(const std::vector<uint32_t>& indexData, const std::string& pathToFile)
-{
 }
 
 void* OpenGLRenderer::getOffscreenImageDescriptor()

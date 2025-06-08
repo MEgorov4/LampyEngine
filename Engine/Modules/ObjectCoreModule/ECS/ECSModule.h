@@ -11,6 +11,7 @@ class ECSModule
 {
 	bool m_tickEnabled = false;
 	std::string m_currentWorldFile;
+	std::string m_currentWorldData;
 	flecs::world m_world;
 public:
 	static ECSModule& getInstance()
@@ -40,6 +41,7 @@ public:
 	void ecsTick(float deltaTime);
 
 	void shutDown();
+
 
 	Event<> OnLoadInitialWorldState;
 	Event<> OnComponentsChanged;
