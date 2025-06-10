@@ -53,6 +53,4 @@ public:
     /// </summary>
     /// <param name="id">The unique ID of the GUI object to remove.</param>
     void removeObject(uint32_t id);
-public:
-    ImVec4 ConvertToLinear(ImVec4 color);
 };

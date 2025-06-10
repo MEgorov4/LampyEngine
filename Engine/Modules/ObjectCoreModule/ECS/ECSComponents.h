@@ -64,20 +64,20 @@ struct ScaleComponent {
 
 struct CameraComponent
 {
-	float fov;
-	float aspect;
-	float nearClip;
-	float farClip;
-	bool isViewportCamera;
+	float fov = 75.f;
+	float aspect = 1.65f;
+	float nearClip = 0.01f;
+	float farClip = 10000.f;
+	bool isViewportCamera = true;
 };
 
 struct MeshComponent
 {
-	char meshResourcePath[256];
-	char vertShaderPath[256];
-	char fragShaderPath[256];
-	char texturePath[256];
-	
+	char meshResourcePath[256] = "";
+	char vertShaderPath[256] = "";
+	char fragShaderPath[256] = "";
+	char texturePath[256] = "";
+
 	std::optional<std::shared_ptr<RMesh>> meshResource;
 
 	std::optional<std::shared_ptr<RShader>> vertShaderResource;
@@ -99,3 +99,4 @@ struct DirectionalLightComponent
 
 // Tags
 struct EditorOnlyTag {};
+struct InvisibleTag{};

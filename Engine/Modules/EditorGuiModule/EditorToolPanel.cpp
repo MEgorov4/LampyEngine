@@ -116,7 +116,6 @@ void GUIEditorToolPanel::renderSaveWorldPopup()
 		if (ImGui::Button("Save"))
 		{
 			ECSModule::getInstance().setCurrentWorldPath((currentPath.string() + "\\" + buffer));
-			ECSModule::getInstance().saveCurrentWorld();
 			memset(buffer, 0, sizeof(buffer));
 			ImGui::CloseCurrentPopup();
 		}

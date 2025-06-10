@@ -13,6 +13,7 @@ class ECSModule
 	std::string m_currentWorldFile;
 	std::string m_currentWorldData;
 	flecs::world m_world;
+	std::vector<std::pair<flecs::id_t, std::string>> m_registeredComponents;
 public:
 	static ECSModule& getInstance()
 	{
@@ -22,7 +23,6 @@ public:
 
 	void startup();
 	
-	void loadInitialWorldState();
 
 	void fillDefaultWorld();
 	void loadWorldFromFile(const std::string& path);
@@ -35,18 +35,20 @@ public:
 	void stopSystems();
 	
 	bool getTickEnabled() { return m_tickEnabled; }
-
-	flecs::world& getCurrentWorld();
+	flecs::world& getCurrentWorld() { return m_world; };
+	std::vector<std::pair<flecs::id_t, std::string>>& getRegisteredComponents() { return m_registeredComponents; };
 
 	void ecsTick(float deltaTime);
 
 	void shutDown();
 
-
 	Event<> OnLoadInitialWorldState;
 	Event<> OnComponentsChanged;
 
 private:
+	template<typename T>
+	void registerComponent(const std::string& name);
 	void registerComponents();
 	void registerObservers();
 };
+

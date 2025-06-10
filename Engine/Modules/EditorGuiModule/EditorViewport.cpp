@@ -39,40 +39,33 @@ void GUIEditorViewport::onKeyAction(int code, int, int, int)
 {
     if (!m_processInput)
         return;
-
     m_cameraPos = m_viewportEntity.get<PositionComponent>()->toGLMVec();
     glm::quat cameraRotation = m_viewportEntity.get<RotationComponent>()->toQuat(); 
 
     float speed = m_cameraSpeed;
     glm::vec3 movement(0.0f);
 
-    // Направление вперед (куда смотрит камера)
     glm::vec3 cameraFront = cameraRotation * glm::vec3(0, 0, -1);
     cameraFront = glm::normalize(cameraFront);
 
-    // Направление вправо (перпендикулярное вперед и вверх)
     glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, m_cameraUp));
 
-    // Движение вперед/назад относительно направления камеры
     if (code == 87) // W
         movement -= speed * cameraFront;
     if (code == 83) // S
         movement += speed * cameraFront;
 
-    // Движение влево/вправо относительно поворота камеры
     if (code == 65) // A
         movement -= speed * cameraRight;
     if (code == 68) // D
         movement += speed * cameraRight;
 
-    // Движение вверх/вниз относительно локального Up камеры
     glm::vec3 cameraUp = cameraRotation * glm::vec3(0, 1, 0);
-    if (code == 32)  // Space (вверх)
+    if (code == 32)  
         movement += speed * cameraUp;
-    if (code == 340) // Shift (вниз)
+    if (code == 340) 
         movement -= speed * cameraUp;
 
-    // Применяем движение
     m_cameraPos += movement;
 
     if (m_viewportEntity.is_alive()) {

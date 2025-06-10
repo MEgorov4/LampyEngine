@@ -128,7 +128,7 @@ public:
 				ImGui::SameLine();
 
 				std::string resPath = ProjectModule::getInstance().getProjectConfig().getResourcesPath();
-				ImGui::Text(FS.getFileName(meshComponent->meshResourcePath).c_str());
+				ImGui::Text(FS.getFileName(meshComponent->meshResourcePath).size() > 0 ? FS.getFileName(meshComponent->meshResourcePath).c_str() : "empty");
 
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {
@@ -150,7 +150,7 @@ public:
 
 				ImGui::Text("Texture path:");
 				ImGui::SameLine();
-				ImGui::Text(FS.getFileName(meshComponent->texturePath).c_str());
+				ImGui::Text(FS.getFileName(meshComponent->texturePath).size() > 0 ? FS.getFileName(meshComponent->texturePath).c_str() : "empty");
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {
 						std::string droppedPath = static_cast<const char*>(payload->Data);
@@ -158,8 +158,8 @@ public:
 						if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".png") {
 							MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
 
-							std::strncpy(meshComponentMut->meshResourcePath, droppedPath.c_str(), sizeof(meshComponentMut->meshResourcePath) - 1);
-							meshComponentMut->meshResourcePath[sizeof(meshComponentMut->meshResourcePath) - 1] = '\0';
+							std::strncpy(meshComponentMut->texturePath, droppedPath.c_str(), sizeof(meshComponentMut->texturePath) - 1);
+							meshComponentMut->texturePath[sizeof(meshComponentMut->texturePath) - 1] = '\0';
 
 							entity.modified<MeshComponent>();
 

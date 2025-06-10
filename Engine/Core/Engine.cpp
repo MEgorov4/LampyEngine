@@ -56,7 +56,6 @@ void Engine::startupModules()
 
 	PhysicsModule::getInstance().startup();
 
-	// Enable debug info
 	PhysicsModule::getInstance().enableDebugDraw(true);
 }
 
@@ -104,8 +103,8 @@ void Engine::shutDownModules()
 	ECSModule::getInstance().OnLoadInitialWorldState.unsubscribe(idOnLoadInitialWorldState);
 	ECSModule::getInstance().shutDown();
 	AudioModule::getInstance().shutDown();
-	RenderModule::getInstance().shutDown();
 	ResourceManager::getInstance().shutDown();
+	RenderModule::getInstance().shutDown();
 	InputModule::getInstance().shutDown();
 	WindowModule::getInstance().shutDown();
 }

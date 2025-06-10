@@ -79,10 +79,9 @@ void GUIWorldInspector::renderEntityTree()
 	auto query = m_world.query<PositionComponent>();
 	query.each([&](flecs::entity e, PositionComponent pos)
 		{
-			if (ImGui::Selectable(std::format("{}##{}", e.name().c_str(), e.id()).c_str()))
-			{
-				m_selectedEntity = e;
-			}
+			if(!e.has<InvisibleTag>())
+				if (ImGui::Selectable(std::format("{}##{}", e.name().c_str(), e.id()).c_str()))
+					m_selectedEntity = e;
 		});
 }
 
@@ -96,7 +95,6 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 		ImGui::TextColored(ImVec4(0.5882353186607361f, 0.5372549295425415f, 0.1764705926179886f, 1.0f), m_selectedEntity.name());
 		ImGui::SetWindowFontScale(1);
 		ImGui::SetCursorPosX(0);
-
 
 		auto& factory = ComponentRendererFactory::getInstance();
 
@@ -192,17 +190,27 @@ void GUIWorldInspector::renderAddComponentPopup()
 
 	if (ImGui::BeginPopupModal("AddComponent", 0, flags))
 	{
-		if (ImGui::BeginChild("SearchTree", ImVec2(ImGui::GetWindowWidth() * 0.3f, 0)))
+
+		if (ImGui::BeginCombo("Select component", "zero comp"))
 		{
-
-			if (ImGui::Button("Close"))
+			auto& registeredComponents = ECSModule::getInstance().getRegisteredComponents();
+			for (int i = 0; i < registeredComponents.size(); ++i)
 			{
-				ImGui::CloseCurrentPopup();
+				if (ImGui::Selectable(registeredComponents[i].second.c_str()))
+				{
+					if (!m_selectedEntity.has(registeredComponents[i].first))
+					{
+						m_selectedEntity.add(registeredComponents[i].first);
+						ImGui::CloseCurrentPopup();
+						break;
+					}
+				}
 			}
-
-			ImGui::Text("SearchTree");
-
-			ImGui::EndChild();
+			ImGui::EndCombo();
+		}
+		if (ImGui::Button("Close"))
+		{
+			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
 	}

@@ -5,8 +5,11 @@
 #include <portable-file-dialogs.h>
 #include <nlohmann/json.hpp>
 #include <boost/process.hpp>
+
 #include <chrono>
 #include "../LoggerModule/Logger.h"
+
+#include "../FilesystemModule/FilesystemModule.h"
 
 ProjectConfig::ProjectConfig(std::string data)
 {
@@ -65,24 +68,23 @@ void ProjectModule::setupProjectEnvironment()
 }
 void ProjectModule::saveProjectConfig()
 {
-	//nlohmann::json jsonData;
+	nlohmann::json jsonData;
 
-	//jsonData["projectPath"] = m_projectConfig.getProjectPath();
-	//jsonData["projectName"] = m_projectConfig.getProjectName();
+	jsonData["projectPath"] = m_projectConfig.getProjectPath();
+	jsonData["projectName"] = m_projectConfig.getProjectName();
 
-	//jsonData["resourcesPath"] = m_projectConfig.getResourcesPath();
-	//jsonData["buildPath"] = m_projectConfig.getBuildPath();
-	//jsonData["configPath"] = m_projectConfig.getConfigPath();
-	//jsonData["logsPath"] = m_projectConfig.getLogsPath();
+	jsonData["resourcesPath"] = m_projectConfig.getResourcesPath();
+	jsonData["buildPath"] = m_projectConfig.getBuildPath();
+	jsonData["configPath"] = m_projectConfig.getConfigPath();
+	jsonData["logsPath"] = m_projectConfig.getLogsPath();
 
-	//jsonData["editorStartWorld"] = m_projectConfig.getEditorStartWorld();
-	//jsonData["gameStartWorld"] = m_projectConfig.getGameStartWorld();
+	jsonData["editorStartWorld"] = m_projectConfig.getEditorStartWorld();
+	jsonData["gameStartWorld"] = m_projectConfig.getGameStartWorld();
+	
+	std::string projectFilePath = m_projectConfig.getProjectPath() + '/' + m_projectConfig.getProjectName() + ".lproj";
+	if (FS.writeTextFile(projectFilePath, jsonData.dump()) == FResult::SUCCESS)
+	{
+		LOG_INFO("ProjectModule: Project settings saved.");
+	}
 
-	//std::ofstream outFile(m_projectConfig.getProjectPath());
-	//if (outFile.is_open())
-	//{
-	//	outFile.clear();
-	//	outFile << jsonData;
-	//	outFile.close();
-	//}
 }

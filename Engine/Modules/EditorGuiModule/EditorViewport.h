@@ -15,7 +15,8 @@ class GUIEditorViewport : GUIObject
 	glm::vec3 m_cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3 m_cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	float m_cameraSpeed = 0.1f;
+	float m_cameraSpeed = 0.10f;
+
 	bool m_firstMouse = true;
 	double m_lastX, m_lastY;
 

@@ -149,17 +149,3 @@ void ImGuiModule::removeObject(uint32_t id)
         {return object->getID() == id; });
 }
 
-ImVec4 ImGuiModule::ConvertToLinear(ImVec4 color)
-{
-	auto srgb_to_linear = [](float c) -> float {
-		return (c <= 0.04045f) ? (c / 12.92f) : pow((c + 0.055f) / 1.055f, 2.4f);
-		};
-
-	return ImVec4(
-		srgb_to_linear(color.x),
-		srgb_to_linear(color.y),
-		srgb_to_linear(color.z),
-		color.w 
-	);
-}
-

@@ -78,7 +78,7 @@ class SetWorldFileAsEditorDefaultAction : public IFileAction
 public:
 	void execute(const std::string& filePath) override
 	{
-
+		PM.getProjectConfig().setEditorStartWorld(filePath);
 	}
 	std::string getName() const override { return "Set as editor default world"; }
 };

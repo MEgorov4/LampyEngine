@@ -16,52 +16,42 @@ void ECSModule::startup()
 	m_world = flecs::world();
 	m_world.import<flecs::stats>();
 
-	ProjectConfig& config = ProjectModule::getInstance().getProjectConfig();
-	m_currentWorldFile = config.getEditorStartWorld();
+	m_currentWorldFile = PM.getProjectConfig().getEditorStartWorld();
 
 	registerComponents();
 	registerObservers();
 
-	loadInitialWorldState();
-
+	fillDefaultWorld();
 
 	ECSluaScriptsSystem::getInstance().registerSystem(m_world);
 	ECSPhysicsSystem::getInstance().registerSystem(m_world);
-
-}
-
-void ECSModule::loadInitialWorldState()
-{
-	if (isWorldSetted())
-	{
-		loadWorldFromFile(m_currentWorldFile);
-	}
-	else
-	{
-		fillDefaultWorld();
-	}
 }
 
 void ECSModule::fillDefaultWorld()
 {
-	m_world.entity("Room").set<PositionComponent>({ 0.f, 0.f, 0.f })
-		.set<RotationComponent>({ 0.f, 0.f, 0.f })
-		.set<ScaleComponent>({ 1.f, 1.f, 1.f })
-		// .set<Script>({ PM.getInstance().getProjectConfig().getResourcesPath() + "/b/test.lua" })
-		.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
-				, "../Resources/Shaders/GLSL/shader.vert"
-				, "../Resources/Shaders/GLSL/shader.frag"
-				, "../Resources/Textures/viking_room.png" });
+	clearWorld();
 
-	m_world.entity("DirectionalLight")
-		.set<PositionComponent>({ 0.f, 2.f, 0.f })
-		.set<RotationComponent>({ 0.f, 0.f, 0.f })
-		.set<DirectionalLightComponent>({ 10 });
 
-	m_world.entity("ViewportCamera")
-		.set<PositionComponent>({ 0.f, 0.f, -5.f })
-		.set<RotationComponent>({ 0.0f, 0.0f, 0.0f })
-		.set<CameraComponent>({ 75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true });
+	if (!isWorldSetted())
+	{
+		auto& viewport_camera = m_world.entity("ViewportCamera")
+			.set<PositionComponent>({ 0.f, 0.f, -5.f })
+			.set<RotationComponent>({ 0.0f, 0.0f, 0.0f })
+			.set<CameraComponent>({ 75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true })
+			.add<InvisibleTag>();
+
+		m_world.entity("Room").set<PositionComponent>({ 0.f, 0.f, 0.f })
+			.set<RotationComponent>({ 0.f, 0.f, 0.f })
+			.set<ScaleComponent>({ 1.f, 1.f, 1.f })
+			.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
+					, ""
+					, ""
+					, "../Resources/Textures/viking_room.png" });
+	}
+	else
+	{
+		loadWorldFromFile(m_currentWorldFile);
+	}
 }
 
 void ECSModule::saveCurrentWorld()
@@ -69,9 +59,11 @@ void ECSModule::saveCurrentWorld()
 	LOG_DEBUG("ECSModule: saveCurrentWorld");
 	std::string strJson = m_world.to_json().c_str();
 
-	FS.writeTextFile(m_currentWorldFile, strJson);
+	if (FS.writeTextFile(m_currentWorldFile, strJson) == FResult::SUCCESS)
+		m_currentWorldData = strJson;
+	else
+		LOG_ERROR("ECSModule: saveCurrentWorld: save world failed");
 
-	m_currentWorldData = strJson;
 }
 
 void ECSModule::loadWorldFromFile(const std::string& path)
@@ -83,7 +75,6 @@ void ECSModule::loadWorldFromFile(const std::string& path)
 
 	m_world.from_json(strData.c_str());
 	m_currentWorldData = m_currentWorldData = m_world.to_json();
-
 }
 
 void ECSModule::setCurrentWorldPath(const std::string& path)
@@ -91,19 +82,31 @@ void ECSModule::setCurrentWorldPath(const std::string& path)
 	LOG_DEBUG("ECSModule: setCurrentWorldPath path: " + path);
 
 	m_currentWorldFile = path;
-	clearWorld();
-	loadWorldFromFile(m_currentWorldFile);
+	fillDefaultWorld();
+	saveCurrentWorld();
 }
 
 
 bool ECSModule::isWorldSetted()
 {
-	return m_currentWorldFile != "default";
+	if (m_currentWorldFile == "default")
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }
 
 void ECSModule::clearWorld()
 {
-	m_world.each([](flecs::entity& e) {e.destruct(); });
+	m_world.each([](flecs::entity& e) {
+		if (!e.has<InvisibleTag>())
+		{
+			e.destruct();
+		}
+		});
 }
 
 void ECSModule::startSystems()
@@ -111,44 +114,32 @@ void ECSModule::startSystems()
 	LOG_INFO("ECSModule: Start systems");
 
 	ECSluaScriptsSystem::getInstance().startSystem(m_world);
-	PhysicsModule::getInstance().registrateBodies();
 	m_tickEnabled = true;
 	PhysicsModule::getInstance().setTickEnabled(true);
-
-	/*auto& world = ECSModule::getInstance().getCurrentWorld();
-
-	auto query = world.query<MeshComponent>();
-
-	query.each([&](const flecs::entity& e, MeshComponent& mesh)
-		{
-			ResourceManager::unload<RMesh>(mesh.meshResourcePath);
-			ResourceManager::unload<RShader>(mesh.vertShaderPath);
-			ResourceManager::unload<RShader>(mesh.fragShaderPath);
-			ResourceManager::unload<RTexture>(mesh.texturePath);
-		});*/
 }
 
 void ECSModule::stopSystems()
 {
 	LOG_INFO("ECSModule: Stop systems");
 	m_tickEnabled = false;
+
 	PhysicsModule::getInstance().setTickEnabled(false);
-
-	PhysicsModule::getInstance().clearPhysicsWorld();
-
 	ECSluaScriptsSystem::getInstance().stopSystem(m_world);
-	clearWorld();
-	loadInitialWorldState();
+
+	fillDefaultWorld();
 }
 
-flecs::world& ECSModule::getCurrentWorld()
-{
-	return m_world;
-}
 
 void ECSModule::shutDown()
 {
 	m_world.reset();
+}
+
+template<typename T>
+void ECSModule::registerComponent(const std::string& name)
+{
+	auto component = m_world.component<T>();
+	m_registeredComponents.emplace_back(component.id(), name);
 }
 
 void ECSModule::registerComponents()
@@ -157,32 +148,42 @@ void ECSModule::registerComponents()
 		.member("x", &PositionComponent::x)
 		.member("y", &PositionComponent::y)
 		.member("z", &PositionComponent::z);
+	registerComponent<PositionComponent>("PositionComponent");
 
 	m_world.component<RotationComponent>()
 		.member("x", &RotationComponent::x)
 		.member("y", &RotationComponent::y)
 		.member("z", &RotationComponent::z);
+	registerComponent<RotationComponent>("RotationComponent");
 
 	m_world.component<ScaleComponent>()
 		.member("x", &ScaleComponent::x)
 		.member("y", &ScaleComponent::y)
 		.member("z", &ScaleComponent::z);
+	registerComponent<ScaleComponent>("ScaleComponent");
 
 	m_world.component<CameraComponent>()
 		.member("fov", &CameraComponent::fov)
 		.member("aspect", &CameraComponent::aspect)
 		.member("farClip", &CameraComponent::farClip)
 		.member("nearClip", &CameraComponent::nearClip);
+	registerComponent<CameraComponent>("CameraComponent");
 
 	m_world.component<MeshComponent>()
 		.member("meshResourcePath", &MeshComponent::meshResourcePath)
 		.member("vertShaderPath", &MeshComponent::vertShaderPath)
 		.member("fragShaderPath", &MeshComponent::fragShaderPath)
 		.member("texturePath", &MeshComponent::texturePath);
+	registerComponent<MeshComponent>("MeshComponent");
 
 	m_world.component<RigidbodyComponent>()
 		.member("mass", &RigidbodyComponent::mass);
+	registerComponent<RigidbodyComponent>("RigidbodyComponent");
+
+	m_world.component<InvisibleTag>();
+	registerComponent<InvisibleTag>("InvisibleTag");
 }
+
 
 void ECSModule::registerObservers()
 {
@@ -246,8 +247,11 @@ void ECSModule::registerObservers()
 
 void ECSModule::ecsTick(float deltaTime)
 {
-	if (m_tickEnabled && m_world.progress(deltaTime))
+	if (m_tickEnabled)
 	{
+		if (m_world.progress(deltaTime))
+		{
 
+		}
 	}
 }
