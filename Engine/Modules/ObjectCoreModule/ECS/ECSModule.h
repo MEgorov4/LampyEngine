@@ -23,7 +23,6 @@ public:
 
 	void startup();
 	
-
 	void fillDefaultWorld();
 	void loadWorldFromFile(const std::string& path);
 	void setCurrentWorldPath(const std::string& path);

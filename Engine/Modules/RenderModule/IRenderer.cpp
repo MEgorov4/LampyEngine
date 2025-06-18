@@ -46,13 +46,14 @@ void IRenderer::updateRenderList()
 
 	DirectionalLight dirLight;
 
-	world.query<PositionComponent, RotationComponent, DirectionalLightComponent>().each([&](PositionComponent& pos, RotationComponent& rot, DirectionalLightComponent& lightComponent)
+	world.query<RotationComponent, DirectionalLightComponent>().each([&]( RotationComponent& rot, DirectionalLightComponent& lightComponent)
 		{
 			glm::quat quat = rot.toQuat();
 			dirLight.direction = glm::vec4(quat * glm::vec3(0.0f, 0.0f, -1.0f), 1.0f);
 			dirLight.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			dirLight.intensity = lightComponent.intencity;
 		});
+
 	m_updateRenderPipelineData.directionalLight;
 	world.query<PositionComponent, RotationComponent, ScaleComponent, MeshComponent>().each([=](const flecs::entity& entity, PositionComponent& pos, RotationComponent& rot, ScaleComponent& scale, MeshComponent& mesh)
 		{
@@ -152,6 +153,9 @@ void IRenderer::postInit()
 
 	std::shared_ptr<RTexture> DET = ResourceManager::load<RTexture>("../Resources/Textures/Generic/DefaultAlbedo.png");
 	m_emissionGeneric = TextureFactory::createOrGetTexture(DET);
+
+	std::shared_ptr<RTexture> DGBT = ResourceManager::load<RTexture>("../Resources/Textures/Generic/GrayBoxTexture.png");
+	m_emptyTextureGeneric = TextureFactory::createOrGetTexture(DGBT);
 
 	m_onECSChanged = ECSModule::getInstance().OnComponentsChanged.subscribe(std::bind_front(&IRenderer::updateRenderList, this));
 

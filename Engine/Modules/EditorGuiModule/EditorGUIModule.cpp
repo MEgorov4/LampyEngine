@@ -13,8 +13,9 @@ void EditorGUIModule::startup()
     m_outputLog = std::make_unique<GUIOutputLog>();
     m_contentBrowser = std::make_unique<GUIContentBrowser>();
     m_worldInspector = std::make_unique<GUIWorldInspector>();
-    m_editorViewport = std::make_unique<GUIEditorViewport>();
+    m_viewport = std::make_unique<GUIEditorViewport>();
     m_console = std::make_unique<GUIEditorConsole>();
+    //m_scriptPanel = std::make_unique<GUIEditorScriptPanel>();
 }
 
 void EditorGUIModule::render()
@@ -36,8 +37,9 @@ void EditorGUIModule::shutDown()
     m_outputLog.reset();
     m_contentBrowser.reset();
     m_worldInspector.reset();
-    m_editorViewport.reset();
+    m_viewport.reset();
     m_console.reset();
+    //m_scriptPanel.reset();
 
     ImGuiModule::getInstance().shutDown();
 }

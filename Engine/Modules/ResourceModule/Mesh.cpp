@@ -58,7 +58,6 @@ RMesh::RMesh(const std::string& path) : BaseResource(path)
 				1.f - attrib.texcoords[2 * index.texcoord_index + 1]
 			};
 
-			// vertex.color = { 1.0f, 1.0f, 1.0f };
 
 			if (uniqueVertices.count(vertex) == 0)
 			{

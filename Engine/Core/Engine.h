@@ -22,7 +22,7 @@ public:
 private:
   /// <summary>
   /// Initializes all core engine modules (Window, Input, Rendering, Audio,
-  /// ECS).
+  /// ECS...).
   /// </summary>
   void startupModules();
 
@@ -47,7 +47,4 @@ private:
   /// Shuts down all engine modules in a proper order.
   /// </summary>
   void shutDownModules();
-
-  // Penis a potom chlen
-  int idOnLoadInitialWorldState;
 };

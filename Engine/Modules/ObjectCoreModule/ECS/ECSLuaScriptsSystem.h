@@ -2,12 +2,12 @@
 #include "../../LuaScriptModule/LuaScriptModule.h"
 #include <flecs.h>
 
-struct Script {
-	std::string script_path;
+struct ScriptComponent {
+	std::string scriptPath;
 	std::optional<sol::table> script_table;
 	void initialize() {
-		if (!script_table) {
-			sol::object result = LuaScriptModule::getInstance().getLuaState().script_file(script_path, sol::script_throw_on_error);
+		if (!script_table && !scriptPath.empty()) {
+			sol::object result = LuaScriptModule::getInstance().getLuaState().script_file(scriptPath, sol::script_throw_on_error);
 			if (result.is<sol::table>()) {
 				script_table = result.as<sol::table>();
 			}
@@ -65,9 +65,9 @@ public:
 
 	void registerSystem(flecs::world& world) {
 
-	world.system<Script>()
+	world.system<ScriptComponent>()
 			.kind(flecs::OnUpdate)
-			.each([](flecs::iter& it, size_t, Script& script) {
+			.each([](flecs::iter& it, size_t, ScriptComponent& script) {
 			script.update(it.delta_time());
 		});
 	}
@@ -75,8 +75,8 @@ public:
 	void startSystem(flecs::world& world) 
 	{
 
-		auto query = world.query<Script>();
-		query.each([](const flecs::entity& entity, Script& script) 
+		auto query = world.query<ScriptComponent>();
+		query.each([](const flecs::entity& entity, ScriptComponent& script) 
 		{
 				script.start(entity);
 		});
@@ -84,8 +84,8 @@ public:
 
 	void stopSystem(flecs::world& world) 
 	{
-		auto query = world.query<Script>();
-		query.each([](const flecs::entity& entity, Script& script) 
+		auto query = world.query<ScriptComponent>();
+		query.each([](const flecs::entity& entity, ScriptComponent& script) 
 		{
 				script.end();
 		});

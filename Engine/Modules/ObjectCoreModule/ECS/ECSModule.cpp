@@ -35,12 +35,60 @@ void ECSModule::fillDefaultWorld()
 	if (!isWorldSetted())
 	{
 		auto& viewport_camera = m_world.entity("ViewportCamera")
-			.set<PositionComponent>({ 0.f, 0.f, -5.f })
-			.set<RotationComponent>({ 0.0f, 0.0f, 0.0f })
+			.set<PositionComponent>({ 0.f, 2.f, -1.f })
+			.set<RotationComponent>({ 60.f, 0.0f, 0.0f })
 			.set<CameraComponent>({ 75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true })
 			.add<InvisibleTag>();
 
-		m_world.entity("Room").set<PositionComponent>({ 0.f, 0.f, 0.f })
+		//m_world.entity("floor")
+		//	.set<PositionComponent>({ -0.140f, -1.600, 0.000f })
+		//	.set<RotationComponent>({ 90.000, 0.f, 0.f })
+		//	.set<ScaleComponent>({ 2.080,0.760, 4.240 })
+		//	.set<MeshComponent>({ "../Resources/Meshes/BaseGeometry/cube.obj"
+		//			, ""
+		//			, ""
+		//			, "" });
+
+		//m_world.entity("wall")
+		//	.set<PositionComponent>({ -2.560, -0.300, 0.f })
+		//	.set<RotationComponent>({ -90.000, -180.000, 0.f })
+		//	.set<ScaleComponent>({ 0.540, 0.400, 3.500 })
+		//	.set<MeshComponent>({ "../Resources/Meshes/BaseGeometry/cube.obj"
+		//			, ""
+		//			, ""
+		//			, "" });
+
+		//m_world.entity("wall1")
+		//	.set<PositionComponent>({ -0.290, -1.040,4.650 })
+		//	.set<RotationComponent>({ -155.000, 90.000, 0.f })
+		//	.set<ScaleComponent>({ 0.970, 1.090, 3.830 })
+		//	.set<MeshComponent>({ "../Resources/Meshes/BaseGeometry/cube.obj"
+		//			, ""
+		//			, ""
+		//			, "" });
+
+		//m_world.entity("wall2")
+		//	.set<PositionComponent>({ 2.240, -0.470, -0.210 })
+		//	.set<RotationComponent>({ -90.000, 0.000, 0.000 })
+		//	.set<ScaleComponent>({ 0.510,0.500, 3.680 })
+		//	.set<MeshComponent>({ "../Resources/Meshes/BaseGeometry/cube.obj"
+		//			, ""
+		//			, ""
+		//			, "" });
+
+		//m_world.entity("ball")
+		//	.set<PositionComponent>({ 0.f, -0.150, 0.f })
+		//	.set<RotationComponent>({ 0.f, 0.f, 0.f })
+		//	.set<ScaleComponent>({ 0.350,0.350, 0.350 })
+		//	.set<MeshComponent>({ "../Resources/Meshes/BaseGeometry/sphere.obj"
+		//			, ""
+		//			, ""
+		//			, "C:/Users/mikhail/Desktop/LampyEngine(Vulkan)/build/Engine/Resources/Textures/Generic/GrayBoxTexture.png" })
+		//	.set<ScriptComponent>({""});
+
+
+		m_world.entity("Room")
+			.set<PositionComponent>({ 0.f, 0.f, 0.f })
 			.set<RotationComponent>({ 0.f, 0.f, 0.f })
 			.set<ScaleComponent>({ 1.f, 1.f, 1.f })
 			.set<MeshComponent>({ "../Resources/Meshes/viking_room.obj"
@@ -145,23 +193,27 @@ void ECSModule::registerComponent(const std::string& name)
 void ECSModule::registerComponents()
 {
 	m_world.component<PositionComponent>()
-		.member("x", &PositionComponent::x)
-		.member("y", &PositionComponent::y)
-		.member("z", &PositionComponent::z);
+		.member("Px", &PositionComponent::x)
+		.member("Py", &PositionComponent::y)
+		.member("Pz", &PositionComponent::z);
 	registerComponent<PositionComponent>("PositionComponent");
 
 	m_world.component<RotationComponent>()
-		.member("x", &RotationComponent::x)
-		.member("y", &RotationComponent::y)
-		.member("z", &RotationComponent::z);
+		.member("Rx", &RotationComponent::x)
+		.member("Ry", &RotationComponent::y)
+		.member("Rz", &RotationComponent::z);
 	registerComponent<RotationComponent>("RotationComponent");
 
 	m_world.component<ScaleComponent>()
-		.member("x", &ScaleComponent::x)
-		.member("y", &ScaleComponent::y)
-		.member("z", &ScaleComponent::z);
+		.member("Sx", &ScaleComponent::x)
+		.member("Sy", &ScaleComponent::y)
+		.member("Sz", &ScaleComponent::z);
 	registerComponent<ScaleComponent>("ScaleComponent");
-
+	
+	m_world.component<ScriptComponent>()
+		.member("scriptPath", &ScriptComponent::scriptPath);
+	registerComponent<ScriptComponent>("ScriptComponent");
+	
 	m_world.component<CameraComponent>()
 		.member("fov", &CameraComponent::fov)
 		.member("aspect", &CameraComponent::aspect)
@@ -181,7 +233,6 @@ void ECSModule::registerComponents()
 	registerComponent<RigidbodyComponent>("RigidbodyComponent");
 
 	m_world.component<InvisibleTag>();
-	registerComponent<InvisibleTag>("InvisibleTag");
 }
 
 
@@ -240,6 +291,24 @@ void ECSModule::registerObservers()
 				std::shared_ptr<RTexture> resTexturePath = ResourceManager::load<RTexture>(mesh.texturePath);
 				if (resTexturePath && mesh.textureResource != resTexturePath)
 					mesh.textureResource = resTexturePath;
+
+				OnComponentsChanged();
+			});
+
+	m_world.observer<MeshComponent>()
+		.event(flecs::OnRemove)
+		.each([=](flecs::entity e, MeshComponent& mesh)
+			{
+				if (mesh.meshResource)
+					ResourceManager::unload<RMesh>(mesh.meshResource.value()->getGUID());
+
+				if (mesh.vertShaderResource)
+					ResourceManager::unload<RShader>(mesh.vertShaderResource.value()->getGUID());
+				if (mesh.fragShaderResource)
+					ResourceManager::unload<RShader>(mesh.fragShaderResource.value()->getGUID());
+
+				if (mesh.textureResource)
+					ResourceManager::unload<RShader>(mesh.textureResource.value()->getGUID());
 
 				OnComponentsChanged();
 			});

@@ -138,7 +138,7 @@ public:
 							MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
 
 							std::strncpy(meshComponentMut->meshResourcePath, droppedPath.c_str(), sizeof(meshComponentMut->meshResourcePath) - 1);
-							meshComponentMut->meshResourcePath[sizeof(meshComponentMut->meshResourcePath) - 1] = '\0'; 
+							meshComponentMut->meshResourcePath[sizeof(meshComponentMut->meshResourcePath) - 1] = '\0';
 
 							entity.modified<MeshComponent>();
 
@@ -157,13 +157,15 @@ public:
 
 						if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".png") {
 							MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
+							if (meshComponent)
+							{
+								std::strncpy(meshComponentMut->texturePath, droppedPath.c_str(), sizeof(meshComponentMut->texturePath) - 1);
+								meshComponentMut->texturePath[sizeof(meshComponentMut->texturePath) - 1] = '\0';
 
-							std::strncpy(meshComponentMut->texturePath, droppedPath.c_str(), sizeof(meshComponentMut->texturePath) - 1);
-							meshComponentMut->texturePath[sizeof(meshComponentMut->texturePath) - 1] = '\0';
+								entity.modified<MeshComponent>();
 
-							entity.modified<MeshComponent>();
-
-							LOG_INFO(std::format("Dropped file: {}", droppedPath));
+								LOG_INFO(std::format("Dropped file: {}", droppedPath));
+							}
 						}
 					}
 					ImGui::EndDragDropTarget();
@@ -181,11 +183,11 @@ class ScriptRenderer : public IComponentRenderer {
 public:
 	void render(flecs::entity& entity) override {
 		if (ImGui::BeginChildFrame(3, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4))) {
-			if (const Script* script = entity.get<Script>()) {
-				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Script").x) / 2);
+			if (const ScriptComponent* script = entity.get<ScriptComponent>()) {
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("ScriptComponent").x) / 2);
 
 				ImGui::SetWindowFontScale(1.2);
-				ImGui::Text("Script");
+				ImGui::Text("ScriptComponent");
 				ImGui::SetWindowFontScale(1);
 
 				ImGui::SetCursorPosX(0);
@@ -195,13 +197,13 @@ public:
 				ImGui::SameLine();
 
 				std::string resPath = ProjectModule::getInstance().getProjectConfig().getResourcesPath();
-				ImGui::Text(FS.getFileName(script->script_path).c_str());
+				ImGui::Text(FS.getFileName(script->scriptPath).empty() ? "empty" : FS.getFileName(script->scriptPath).c_str());
 
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {
 						std::string droppedPath = static_cast<const char*>(payload->Data);
 						if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".lua") {
-							entity.set<Script>({ droppedPath });
+							entity.set<ScriptComponent>({droppedPath});
 						}
 						LOG_INFO(std::format("Dropped file: {}", droppedPath));
 					}

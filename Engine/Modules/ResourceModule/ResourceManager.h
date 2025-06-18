@@ -34,7 +34,6 @@ public:
 
 	void startup();
 	void shutDown();
-	void OnLoadInitialWorldState();
 
 	DoubleStackAllocator* getDoubleStackAllocator() const;
 private:
@@ -45,8 +44,6 @@ private:
 	MeshCache meshCache;
 	ShaderCache shaderCache;
 	TextureCache textureCache;
-
-	void checkAllResources();
 };
 
 template<>

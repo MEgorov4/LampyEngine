@@ -49,10 +49,7 @@ void Engine::startupModules()
 	
 	AudioModule::getInstance().startup();
 	ECSModule::getInstance().startup(); 
-	idOnLoadInitialWorldState = ECSModule::getInstance().OnLoadInitialWorldState.subscribe(std::bind(&ResourceManager::OnLoadInitialWorldState, ResourceManager::getInstance()));
 	LuaScriptModule::getInstance().startup();
-
-	ECSModule::getInstance().OnLoadInitialWorldState();
 
 	PhysicsModule::getInstance().startup();
 
@@ -86,6 +83,7 @@ void Engine::engineTick()
 		ECSModule::getInstance().ecsTick(deltaTime);
 
 		m_engineContext->tick(deltaTime);
+		RenderModule::getInstance().getRenderer()->updateRenderList();
 		RenderModule::getInstance().getRenderer()->render();
 	}
 	RenderModule::getInstance().getRenderer()->waitIdle();
@@ -100,7 +98,6 @@ void Engine::shutDownEngineContextObject()
 void Engine::shutDownModules()
 {
 	PhysicsModule::getInstance().shutDown();
-	ECSModule::getInstance().OnLoadInitialWorldState.unsubscribe(idOnLoadInitialWorldState);
 	ECSModule::getInstance().shutDown();
 	AudioModule::getInstance().shutDown();
 	ResourceManager::getInstance().shutDown();

@@ -24,8 +24,9 @@ void GUIEditorConsole::render()
 	ImGui::End();
 }
 
-void GUIEditorConsole::processCommand(const std::string command)
+void GUIEditorConsole::processCommand(const std::string& command)
 {
 	LuaScriptModule::getInstance().processCommand(command);
 }
+
 

@@ -107,7 +107,7 @@ void OpenGLRenderer::renderWorld()
 	//m_lightFramebuffer->unbind();
 
 	m_textureFramebuffer->bind();
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	renderPass(m_activeRenderPipelineData.texturePass);
 	m_textureFramebuffer->unbind();
@@ -121,7 +121,7 @@ void OpenGLRenderer::renderWorld()
 	glDisable(GL_DEPTH_TEST);
 	m_finalFramebuffer->bind();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	renderPass(m_activeRenderPipelineData.finalPass);
 	m_finalFramebuffer->unbind();
 	glEnable(GL_DEPTH_TEST);
@@ -141,12 +141,7 @@ void OpenGLRenderer::renderPass(const RenderPassData& renderPassData)
 
 	if (renderPassData.renderPassType == FINAL)
 	{
-		textures["customMap"] = m_emissionGeneric->getTextureID();
-		textures["lightMap"] = m_lightFramebuffer->getDepthTexture();
 		textures["objectAlbedo"] = m_textureFramebuffer->getColorTexture();
-		textures["objectEmission"] = m_emissionGeneric->getTextureID();
-		textures["reflectionMap"] = m_reflectionFramebuffer->getColorTexture();
-		textures["shadowMap"] = m_shadowFramebuffer->getDepthTexture();
 	}
 	for (auto& [shader, meshes] : renderPassData.batches)
 	{
@@ -186,7 +181,7 @@ void OpenGLRenderer::renderPass(const RenderPassData& renderPassData)
 						}
 						else
 						{
-							textures["albedoTexture"] = m_albedoGeneric->getTextureID();
+							textures["albedoTexture"] = m_emptyTextureGeneric->getTextureID();
 							shader->bindTextures(textures);
 						}
 					}
@@ -206,7 +201,7 @@ void OpenGLRenderer::renderPass(const RenderPassData& renderPassData)
 
 void* OpenGLRenderer::getOffscreenImageDescriptor()
 {
-	return reinterpret_cast<void*>(static_cast<uintptr_t>(m_finalFramebuffer->getColorTexture()));
+	return reinterpret_cast<void*>(static_cast<uintptr_t>(m_textureFramebuffer->getColorTexture()));
 }
 
 void OpenGLRenderer::waitIdle()

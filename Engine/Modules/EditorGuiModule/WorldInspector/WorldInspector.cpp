@@ -14,7 +14,7 @@ GUIWorldInspector::GUIWorldInspector() : GUIObject()
 	factory.registerRenderer("PositionComponent", []() {return std::make_unique<PositionRenderer>(); });
 	factory.registerRenderer("RotationComponent", []() {return std::make_unique<RotationRenderer>(); });
 	factory.registerRenderer("ScaleComponent", []() {return std::make_unique<ScaleRenderer>(); });
-	factory.registerRenderer("Script", []() {return std::make_unique<ScriptRenderer>(); });
+	factory.registerRenderer("ScriptComponent", []() {return std::make_unique<ScriptRenderer>(); });
 	factory.registerRenderer("MeshComponent", []() {return std::make_unique<MeshComponentRenderer>(); });
 	factory.registerRenderer("CameraComponent", []() {return std::make_unique<CameraRenderer>(); });
 	factory.registerRenderer("DirectionalLightComponent", []() {return std::make_unique<DirectionalLightRenderer>(); });
@@ -65,7 +65,9 @@ void GUIWorldInspector::renderEntityTreePopup()
 			{
 				if (strBuffer.size() > 0)
 				{
-					m_world.entity(buffer).set<PositionComponent>({ 0, 0, 0 });
+					m_world.entity(buffer).set<PositionComponent>({ 0, 0, 0 })
+						.set<RotationComponent>({0, 0, 0})
+						.set<ScaleComponent>({1, 1, 1});
 				}
 			}
 			ImGui::EndPopup();
@@ -138,9 +140,9 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
 			}
 		}
 
-		if (m_selectedEntity.has<Script>())
+		if (m_selectedEntity.has<ScriptComponent>())
 		{
-			auto renderer = factory.createRenderer("Script");
+			auto renderer = factory.createRenderer("ScriptComponent");
 			if (renderer) {
 				renderer->render(m_selectedEntity);
 			}

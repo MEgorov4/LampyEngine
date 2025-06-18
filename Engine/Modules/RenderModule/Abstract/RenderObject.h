@@ -71,6 +71,8 @@ struct RenderPipelineData
 
 	void clear()
 	{
+		pointLights.clear();
+
 		shadowPass.clear();
 		reflectionPass.clear();
 		lightPass.clear();

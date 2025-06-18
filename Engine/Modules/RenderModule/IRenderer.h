@@ -28,6 +28,7 @@ protected:
 
     std::shared_ptr<ITexture> m_albedoGeneric;
     std::shared_ptr<ITexture> m_emissionGeneric;
+    std::shared_ptr<ITexture> m_emptyTextureGeneric;
 
     std::shared_ptr<IShader> m_debugLineShader;
 public:

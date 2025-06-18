@@ -12,5 +12,5 @@ public:
 	void render() override;
 
 private:
-	void processCommand(const std::string command);
+	void processCommand(const std::string& command);
 };

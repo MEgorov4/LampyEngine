@@ -22,7 +22,7 @@ ResourceManager::ResourceManager()
 	size_t textureNum = 100;
 
 	size_t sumResources = meshCacheSize * meshNum + shaderCacheSize * shaderNum + textureCacheSize * textureNum;
-	size_t sumReverse = 1024 * 1024 * 5;
+	size_t sumReverse = size_t(1024 * 1024 * 5);
 	m_doubleStackAllocator = new DoubleStackAllocator(sumResources + sumReverse);
 
 	if (m_doubleStackAllocator)
@@ -48,22 +48,6 @@ void ResourceManager::shutDown()
 	clearAllCache();
 
 	delete m_doubleStackAllocator;
-
-	//auto& world = ECSModule::getInstance().getCurrentWorld();
-
-	//auto query = world.query<MeshComponent, PositionComponent>();
-
-	//query.each([&](flecs::entity e, MeshComponent& mesh, PositionComponent& pos)
-	//	{
-	//		const std::string meshPath = std::string(mesh.meshResourcePath);
-	//		std::shared_ptr<RMesh> loadedMesh = load<RMesh>(meshPath);
-
-	//		if (!loadedMesh) return;
-
-	//		std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
-	//		RenderModule::getInstance().removeVertexData(vertices, meshPath);
-	//		RenderModule::getInstance().removeIndexData(loadedMesh->getIndicesData(), meshPath);
-	//	});
 }
 
 void ResourceManager::clearAllCache()
@@ -73,30 +57,7 @@ void ResourceManager::clearAllCache()
 	textureCache.clear();
 }
 
-void ResourceManager::OnLoadInitialWorldState()
-{
-	checkAllResources();
-}
-
 DoubleStackAllocator* ResourceManager::getDoubleStackAllocator() const
 {
 	return m_doubleStackAllocator;
-}
-
-void ResourceManager::checkAllResources()
-{
-	//auto& world = ECSModule::getInstance().getCurrentWorld();
-
-	//auto query = world.query<PositionComponent, MeshComponent>();
-	//query.each([](const flecs::entity& entity, PositionComponent& pos, MeshComponent& mesh)
-	//	{
-	//		const std::string meshPath = std::string(mesh.meshResourcePath);
-	//		std::shared_ptr<RMesh> loadedMesh = load<RMesh>(meshPath);
-
-	//		if (!loadedMesh) return;
-	//		
-	//		std::vector<Vertex> vertices(loadedMesh->getVertexData().begin(), loadedMesh->getVertexData().end());
-	//		RenderModule::getInstance().registerVertexData(vertices, meshPath);
-	//		RenderModule::getInstance().registerIndexData(loadedMesh->getIndicesData(), meshPath);
-	//	});
 }

@@ -148,10 +148,6 @@ void LuaScriptModule::registerMathTypes()
 			return std::format("Vec2({}, {})", v.x, v.y);
 		},
 
-		//"angleBetween", [](const glm::vec2& v1, const glm::vec2& v2) -> float {
-		//	return glm::angle(glm::normalize(v1), glm::normalize(v2));
-		//},
-
 		"projectOnto", [](const glm::vec2& v1, const glm::vec2& v2) -> glm::vec2 {
 			return glm::dot(v1, glm::normalize(v2)) * glm::normalize(v2);
 		},
@@ -224,9 +220,6 @@ void LuaScriptModule::registerMathTypes()
 		"__tostring", [](const glm::vec3& v) -> std::string {
 			return std::format("Vec2({}, {}, {})", v.x, v.y, v.z);
 		},
-		//"angleBetween", [](const glm::vec3& v1, const glm::vec3& v2) -> float {
-		//	return glm::angle(glm::normalize(v1), glm::normalize(v2));
-		//},
 
 		"dot", [](const glm::vec3& v1, const glm::vec3& v2) -> float {
 			return glm::dot(v1, v2);
@@ -243,13 +236,8 @@ void LuaScriptModule::registerMathTypes()
 		"reflect", [](const glm::vec3& v, const glm::vec3& normal) -> glm::vec3 {
 			return glm::reflect(v, glm::normalize(normal));
 		}
-
-		//"rotateAroundAxis", [](const glm::vec3& v, const glm::vec3& axis, float angle) -> glm::vec3 {
-		//	return glm::rotate(v, angle, glm::normalize(axis));
-		//}
 	);
 
-	// Глобальные функции
 	m_luaState.set_function("DotProduct3", [](const glm::vec3& v1, const glm::vec3& v2) -> float {
 		return glm::dot(v1, v2);
 		});
@@ -269,10 +257,6 @@ void LuaScriptModule::registerMathTypes()
 	m_luaState.set_function("Reflect3", [](const glm::vec3& v, const glm::vec3& normal) -> glm::vec3 {
 		return glm::reflect(v, glm::normalize(normal));
 		});
-
-	//m_luaState.set_function("Rotate3", [](const glm::vec3& v, const glm::vec3& axis, float angle) -> glm::vec3 {
-	//	return glm::rotate(v, angle, glm::normalize(axis));
-	//	});
 }
 
 void LuaScriptModule::registerECSModule()
