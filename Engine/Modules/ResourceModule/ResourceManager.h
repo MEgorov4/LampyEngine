@@ -2,97 +2,104 @@
 
 #include <string>
 #include <memory>
-#include "ResourceCache.h"
-#include "Shader.h"
-#include "Mesh.h"
-#include "Texture.h"
-#include "Material.h"
+
+#include "../../EngineContext/IModule.h"
+#include "../../EngineContext/ModuleRegistry.h"
+
 #include "../FilesystemModule/FilesystemModule.h"
-#include "../MemoryModule/DoubleStackAllocator.h"
+#include "ResourceCache.h"
+#include "Mesh.h"
+#include "Shader.h"
+#include "Texture.h"
 
-class DoubleStackAllocator;
-
-using MeshCache = ResourceCache<RMesh>;
-using ShaderCache = ResourceCache<RShader>;
-using TextureCache = ResourceCache<RTexture>;
-
-class ResourceManager
+namespace ShaderCompiler
 {
-public:
-	static ResourceManager& getInstance()
+	class ShaderCompiler;
+}
+
+
+
+namespace Logger
+{
+	class Logger;
+}
+
+namespace ResourceModule
+{
+	class RMesh;
+	class RShader;
+	class RTexture;
+
+	class ResourceManager : public IModule
 	{
-		static ResourceManager resourceManager;
-		return resourceManager;
+		std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
+		std::shared_ptr<ShaderCompiler::ShaderCompiler> m_shaderCompiler;
+		std::shared_ptr<Logger::Logger> m_logger;
+
+		ResourceCache<RMesh> meshCache;
+		ResourceCache<RShader> shaderCache;
+		ResourceCache<RTexture> textureCache;
+	public:
+		void startup(const ModuleRegistry& registry) override;
+		void shutdown() override;
+
+		template<class T>
+		std::shared_ptr<T> load(const std::string& path);
+		
+		template<class T>
+		void unload(const std::string& path);
+
+		void clearAllCache();
+	};
+	
+	template <>
+	inline std::shared_ptr<RMesh> ResourceManager::load<RMesh>(const std::string& path)
+	{
+		if (path.empty())
+		{
+			return nullptr;
+		}
+
+		return meshCache.load(m_filesystemModule->getEngineAbsolutePath(path));
 	}
 
-	template<class T>
-	static std::shared_ptr<T> load(const std::string& path);
-	template<class T>
-	static void unload(const std::string& path);
-
-	void clearAllCache();
-
-	void startup();
-	void shutDown();
-
-	DoubleStackAllocator* getDoubleStackAllocator() const;
-private:
-	ResourceManager();
-
-	DoubleStackAllocator* m_doubleStackAllocator;
-
-	MeshCache meshCache;
-	ShaderCache shaderCache;
-	TextureCache textureCache;
-};
-
-template<>
-inline std::shared_ptr<RMesh> ResourceManager::load<RMesh>(const std::string& path)
-{
-	if (path.size() == 0)
+	template <>
+	inline std::shared_ptr<RShader> ResourceManager::load<RShader>(const std::string& path)
 	{
-		return nullptr;
+		if (path.empty())
+		{
+			return nullptr;
+		}
+
+		return shaderCache.load(m_filesystemModule->getEngineAbsolutePath(path), m_filesystemModule, m_shaderCompiler);
 	}
 
-	return getInstance().meshCache.load(FS.getEngineAbsolutePath(path));
-}
-
-template<>
-inline std::shared_ptr<RShader> ResourceManager::load<RShader>(const std::string& path)
-{
-	if (path.size() == 0)
+	template <>
+	inline std::shared_ptr<RTexture> ResourceManager::load<RTexture>(const std::string& path)
 	{
-		return nullptr;
+		if (path.empty())
+		{
+			return nullptr;
+		}
+
+		return textureCache.load(m_filesystemModule->getEngineAbsolutePath(path));
 	}
 
-	return getInstance().shaderCache.load(FS.getEngineAbsolutePath(path));
-}
-
-template<>
-inline std::shared_ptr<RTexture> ResourceManager::load<RTexture>(const std::string& path)
-{
-	if (path.size() == 0)
+	template <>
+	inline void ResourceManager::unload<RMesh>(const std::string& path)
 	{
-		return nullptr;
+		meshCache.unload<RMesh>(m_filesystemModule->getEngineAbsolutePath(path));
 	}
 
-	return getInstance().textureCache.load(FS.getEngineAbsolutePath(path));
-}
+	template <>
+	inline void ResourceManager::unload<RShader>(const std::string& path)
+	{
+		shaderCache.unload<RShader>(m_filesystemModule->getEngineAbsolutePath(path));
+	}
 
-template<>
-inline void ResourceManager::unload<RMesh>(const std::string& path)
-{
-	getInstance().meshCache.unload(FS.getEngineAbsolutePath(path));
-}
-
-template<>
-inline void ResourceManager::unload<RShader>(const std::string& path)
-{
-	getInstance().shaderCache.unload(FS.getEngineAbsolutePath(path));
-}
-
-template<>
-inline void ResourceManager::unload<RTexture>(const std::string& path)
-{
-	getInstance().textureCache.unload(FS.getEngineAbsolutePath(path));
+	template <>
+	inline void ResourceManager::unload<RTexture>(const std::string& path)
+	{
+		textureCache.unload<RTexture>(m_filesystemModule->getEngineAbsolutePath(path));
+	}
 }

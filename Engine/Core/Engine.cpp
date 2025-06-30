@@ -1,110 +1,110 @@
 #include "Engine.h"
 
-#include "EngineConfig.h"
-#include "../Editor/Editor.h"
 #include "../EngineContext/EngineContext.h"
+#include "../Editor/Editor.h"
+
 #include "../Modules/WindowModule/WindowModule.h"
+#include "../Modules/WindowModule/Window.h"
+
 #include "../Modules/InputModule/InputModule.h"
-#include "../Modules/RenderModule/RenderConfig.h"
 #include "../Modules/RenderModule/RenderModule.h"
+#include "../Modules/FilesystemModule/FilesystemModule.h"
+#include "../Modules/ProjectModule/ProjectModule.h"
+#include "../Modules/RenderModule/IRenderer.h"
 #include "../Modules/AudioModule/AudioModule.h"
 #include "../Modules/ObjectCoreModule/ECS/ECSModule.h"
+#include "../Modules/ShaderCompilerModule/ShaderCompiler.h"
 #include "../Modules/LoggerModule/Logger.h"
 #include "../Modules/LuaScriptModule/LuaScriptModule.h"
 #include "../Modules/ResourceModule/ResourceManager.h"
 #include "../Modules/PhysicsModule/PhysicsModule.h"
-// #include "../Modules/ResourceModule/Shader.h"
 
-Engine::Engine(){}
-
-Engine::~Engine(){}
+#include "EngineConfig.h"
+#include "../Modules/EditorGuiModule/EditorGUIModule.h"
+#include "../Modules/ImGuiModule/ImGuiModule.h"
 
 void Engine::run()
 {
-	LOG_INFO("Engine: Startup engine context");
-	startupEngineContextObject();
-	LOG_INFO("Engine: Startup modules");
-	startupModules();
-	initMajorEngineContext();
-	LOG_INFO("Engine: Startup engine tick");
-	engineTick();
-	LOG_INFO("Engine: Shut down engine context");
-	shutDownEngineContextObject();
-	LOG_INFO("Engine: Shut down modules");
-	shutDownModules();
+    startup();
+    engineTick();
+    shutDownEngineContextObject();
+    shutDownModules();
 }
 
-void Engine::startupModules()
+void Engine::startup()
 {
-	WindowModule::getInstance().startup(800, 600, "Lampy Engine", GraphicsAPI::OpenGL);
+    m_moduleManager = std::make_unique<ModuleManager>();
+    m_moduleManager->createModule<Logger::Logger>("Logger");
+    m_moduleManager->createModule<FilesystemModule::FilesystemModule>("FilesystemModule");
 
-	InputModule::getInstance().startup(WindowModule::getInstance().getWindow());
+    ContextCreate();
+    ContextMinorInit();
 
-	ResourceManager::getInstance().startup();
+    m_moduleManager->createModule<AudioModule::AudioModule>("AudioModule");
+    m_windowModule = m_moduleManager->createModule<WindowModule::WindowModule>("WindowModule");
+    m_moduleManager->createModule<InputModule::InputModule>("InputModule");
 
-	RenderConfig& renderConfig = RenderConfig::getInstance();
-	renderConfig.setMaxFramesInFlight(EngineConfig::getInstance().getMaxFramesInFlight());
-	renderConfig.setGraphicsAPI(GraphicsAPI::OpenGL);
-	RenderModule::getInstance().startup(WindowModule::getInstance().getWindow());
-	
-	AudioModule::getInstance().startup();
-	ECSModule::getInstance().startup(); 
-	LuaScriptModule::getInstance().startup();
+    m_moduleManager->createModule<ShaderCompiler::ShaderCompiler>("ShaderCompiler");
+    m_moduleManager->createModule<ResourceModule::ResourceManager>("ResourceManager");
+    m_renderModule = m_moduleManager->createModule<RenderModule::RenderModule>("RenderModule");
+    m_moduleManager->createModule<ImGuiModule::ImGuiModule>("ImGuiModule");
 
-	PhysicsModule::getInstance().startup();
+    m_ecsModule = m_moduleManager->createModule<ECSModule::ECSModule>("ECSModule");
+    m_moduleManager->createModule<ScriptModule::LuaScriptModule>("ScriptModule");
+    m_physicsModule = m_moduleManager->createModule<PhysicsModule>("PhysicsModule");
 
-	PhysicsModule::getInstance().enableDebugDraw(true);
+    ContextMajorInit();
+
+    m_moduleManager->startupAll();
 }
 
-void Engine::startupEngineContextObject()
+void Engine::ContextCreate()
 {
-	m_engineContext = std::make_unique<Editor>();
-	m_engineContext->initMinor();
+    m_engineContext = std::make_unique<Editor>();
 }
-void Engine::initMajorEngineContext()
+
+void Engine::ContextMinorInit() const 
 {
-	m_engineContext->initMajor();
+    m_engineContext->initMinor(m_moduleManager.get());
 }
+
+void Engine::ContextMajorInit() const
+{
+    m_engineContext->initMajor(m_moduleManager.get());
+}
+
 void Engine::engineTick()
 {
-	float deltaTime = 0.0f;
-	float lastTime = WindowModule::getInstance().getWindow()->currentTimeInSeconds();
+    float deltaTime = 0.0f;
 
-	while (!WindowModule::getInstance().getWindow()->shouldClose())
-	{
-		float currentTime = WindowModule::getInstance().getWindow()->currentTimeInSeconds();
+    WindowModule::Window* window = m_windowModule->getWindow();
+    float lastTime = window->currentTimeInSeconds();
 
-		deltaTime = currentTime - lastTime;
-		lastTime = currentTime;
+    while (!window->shouldClose())
+    {
+        float currentTime = window->currentTimeInSeconds();
 
-		WindowModule::getInstance().getWindow()->pollEvents();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
 
-		PhysicsModule::getInstance().tick(deltaTime);
-		ECSModule::getInstance().ecsTick(deltaTime);
+        window->pollEvents();
 
-		m_engineContext->tick(deltaTime);
-		RenderModule::getInstance().getRenderer()->updateRenderList();
-		RenderModule::getInstance().getRenderer()->render();
-	}
-	RenderModule::getInstance().getRenderer()->waitIdle();
+        m_physicsModule->tick(deltaTime);
+        m_ecsModule->ecsTick(deltaTime);
+
+        m_engineContext->tick(deltaTime);
+        m_renderModule->getRenderer()->render();
+    }
+    m_renderModule->getRenderer()->waitIdle();
 }
 
 
 void Engine::shutDownEngineContextObject()
 {
-	m_engineContext->shutDown();
+    m_engineContext->shutdown();
 }
 
 void Engine::shutDownModules()
 {
-	PhysicsModule::getInstance().shutDown();
-	ECSModule::getInstance().shutDown();
-	AudioModule::getInstance().shutDown();
-	ResourceManager::getInstance().shutDown();
-	RenderModule::getInstance().shutDown();
-	InputModule::getInstance().shutDown();
-	WindowModule::getInstance().shutDown();
+    m_moduleManager->shutdownAll();
 }
-
-
-

@@ -4,20 +4,64 @@
 #include <memory>
 #include <unordered_map>
 
-#include "../MemoryModule/PoolAllocator.h"
-
-template<typename T>
-class ResourceCache
+namespace ResourceModule
 {
-public:
-	ResourceCache() {};
-	ResourceCache(size_t objectSize, size_t objectNum, void* placement = nullptr);
+    template <typename T>
+    class ResourceCache
+    {
+    public:
+        ResourceCache() = default;
 
-	std::shared_ptr<T> load(const std::string& path);
-	void unload(const std::string& path);
-	void clear();
-	void removeUnused();
-private:
-	PoolAllocator m_allocator;
-	std::unordered_map<std::string, std::shared_ptr<T>> cache;
-};
+        template <typename... Args>
+        std::shared_ptr<T> load(const std::string& path, Args&&... args)
+        {
+            auto it = cache.find(path);
+            if (it != cache.end() && it->second)
+            {
+                return it->second;
+            }
+
+            auto resource = std::make_shared<T>(path, std::forward<Args>(args)...);
+            cache[path] = resource;
+
+            return resource;
+        }
+
+        template <typename T>
+        void unload(const std::string& path)
+        {
+            auto it = cache.find(path);
+            if (it != cache.end())
+            {
+                cache.erase(it);
+            }
+        }
+
+
+        template <typename T>
+        void clear()
+        {
+            cache.clear();
+        }
+
+
+        template <typename T>
+        void removeUnused()
+        {
+            for (auto it = cache.begin(); it != cache.end();)
+            {
+                if (it->second.use_count() == 1)
+                {
+                    it = cache.erase(it);
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+        }
+
+    private:
+        std::unordered_map<std::string, std::shared_ptr<T>> cache;
+    };
+}

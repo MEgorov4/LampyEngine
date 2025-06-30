@@ -1,28 +1,41 @@
 #pragma once
 
-#include "BaseResource.h"
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "../MemoryModule/GarbageAllocator.h"
+#include "BaseResource.h"
 
-struct ShaderInfo
+namespace ShaderCompiler
 {
-	std::vector<uint8_t, GarbageAllocator<uint8_t>> buffer;
-	size_t fileSize;
-};
+	class ShaderCompiler;
+}
 
-class RShader : public BaseResource
+namespace FilesystemModule
 {
-public:
-	RShader(const std::string& path);
+	class FilesystemModule;
+}
 
-	std::vector<uint8_t> getBuffer() const;
-	const ShaderInfo& getShaderInfo() const
+namespace ResourceModule
+{
+	struct ShaderInfo
 	{
-		return shaderInfo;
-	}
-private:
-	ShaderInfo shaderInfo;
-};
+		std::vector<uint8_t> buffer;
+		size_t fileSize;
+	};
+
+	class RShader : public BaseResource
+	{
+	public:
+		RShader(const std::string& path, std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule,
+			std::shared_ptr<ShaderCompiler::ShaderCompiler> shaderCompiler);
+
+		std::vector<uint8_t> getBuffer() const;
+		const ShaderInfo& getShaderInfo() const
+		{
+			return m_shaderInfo;
+		}
+	private:
+		ShaderInfo m_shaderInfo;
+	};
+}

@@ -4,24 +4,27 @@
 #include <stb_image.h>
 #include <stdexcept>
 
-RTexture::RTexture(const std::string& path) : BaseResource(path)
+namespace ResourceModule
 {
-    int width, height, channels;
-    stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-    if (!data) 
+	RTexture::RTexture(const std::string& path) : BaseResource(path)
 	{
-        throw std::runtime_error("Failed to load texture: " + path);
-    }
+		int width, height, channels;
+		stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+		if (!data)
+		{
+			throw std::runtime_error("Failed to load texture: " + path);
+		}
 
-	textureInfo.texWidth = width;
-	textureInfo.texHeight = height;
-	textureInfo.texChannels = channels;
-	textureInfo.pixels.assign(data, data + (width * height * 4));
+		textureInfo.texWidth = width;
+		textureInfo.texHeight = height;
+		textureInfo.texChannels = channels;
+		textureInfo.pixels.assign(data, data + (width * height * 4));
 
-	stbi_image_free(data);
-}
+		stbi_image_free(data);
+	}
 
-RTexture::~RTexture()
-{
-	
+	RTexture::~RTexture()
+	{
+
+	}
 }

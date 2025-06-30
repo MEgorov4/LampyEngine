@@ -3,35 +3,37 @@
 
 #include "../LoggerModule/Logger.h"
 
-GUIOutputLog::GUIOutputLog() : GUIObject()
+GUIOutputLog::GUIOutputLog(std::shared_ptr<Logger::Logger> logger) : GUIObject(), m_logger(logger)
 {
-	m_subscriberID = Logger::Get().OnMessagePushed.subscribe(std::bind(&GUIOutputLog::receiveLogMessage, this, std::placeholders::_1));
+    m_subscriberID = m_logger->OnMessagePushed.subscribe(
+        std::bind(&GUIOutputLog::receiveLogMessage, this, std::placeholders::_1));
 }
 
 GUIOutputLog::~GUIOutputLog()
 {
-	Logger::Get().OnMessagePushed.unsubscribe(m_subscriberID);
+    m_logger->OnMessagePushed.unsubscribe(m_subscriberID);
 }
 
 void GUIOutputLog::render()
 {
-	ImGui::Begin("Console Log", nullptr, 0);
+    ImGui::Begin("Console Log", nullptr, 0);
 
+    if (ImGui::Button("Clear"))
+    {
+        clear();
+    }
 
-	if (ImGui::Button("Clear"))
-	{
-		clear();
-	}
-
-	ImGui::Separator();
+    ImGui::Separator();
 
     ImGui::BeginChild("LogRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
 
-    for (const auto& message : m_messages) {
+    for (const auto& message : m_messages)
+    {
         ImGui::TextUnformatted(message.c_str());
     }
 
-    if (!m_messages.empty()) {
+    if (!m_messages.empty())
+    {
         ImGui::SetScrollHereY(1.0f);
     }
 
@@ -42,10 +44,10 @@ void GUIOutputLog::render()
 
 void GUIOutputLog::receiveLogMessage(const std::string& message)
 {
-	m_messages.push_back(message);
+    m_messages.push_back(message);
 }
 
 void GUIOutputLog::clear()
 {
-	m_messages.clear();
+    m_messages.clear();
 }

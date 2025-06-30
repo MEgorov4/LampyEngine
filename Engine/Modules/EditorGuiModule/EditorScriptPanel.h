@@ -1,13 +1,18 @@
 #pragma once
-#include <string>
-#include <list>
+#include <memory>
+
 #include "../ImGuiModule/GUIObject.h"
 
-class GUIEditorScriptPanel : GUIObject
+namespace FilesystemModule
 {
+	class FilesystemModule;
+}
 
+class GUIEditorScriptPanel : ImGuiModule::GUIObject
+{
+	std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
 public:
-	GUIEditorScriptPanel();
+	GUIEditorScriptPanel(const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule);
 	~GUIEditorScriptPanel() override = default;
 
 	void render() override;

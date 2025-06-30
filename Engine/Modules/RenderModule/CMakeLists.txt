@@ -16,4 +16,5 @@ target_link_libraries(RenderModule PUBLIC
     ImGuiModule
     glfw
     glm::glm
+    EngineContext
 )

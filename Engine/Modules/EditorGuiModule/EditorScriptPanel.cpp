@@ -2,13 +2,12 @@
 #include "imgui.h"
 
 #include "../FilesystemModule/FilesystemModule.h"
-GUIEditorScriptPanel::GUIEditorScriptPanel()
+GUIEditorScriptPanel::GUIEditorScriptPanel(const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule) : m_filesystemModule(filesystemModule)
 {
-
-	std::string resourcesPath = FS.getCurrentPath() + "\\..\\Resources\\Scripts\\";
+	std::string resourcesPath = m_filesystemModule->getCurrentPath() + "\\..\\Resources\\Scripts\\";
 	std::vector<std::string> items =
-		FS.getDirectoryContents(resourcesPath
-			, ContentSearchFilter{ DirContentType::ALL, std::vector<std::string>({".lua"})});
+		m_filesystemModule->getDirectoryContents(resourcesPath
+			, FilesystemModule::ContentSearchFilter{ FilesystemModule::DirContentType::ALL, std::vector<std::string>({".lua"})});
 }
 
 void GUIEditorScriptPanel::render()

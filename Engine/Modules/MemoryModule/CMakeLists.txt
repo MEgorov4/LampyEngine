@@ -8,6 +8,8 @@ add_library(MemoryModule STATIC ${MEMORY_MODULE_SOURCE})
 
 target_link_libraries(MemoryModule PUBLIC
     LoggerModule
+    EngineContext
     PRIVATE
     ResourceModule
+    
 )

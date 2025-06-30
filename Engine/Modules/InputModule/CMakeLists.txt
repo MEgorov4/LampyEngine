@@ -11,4 +11,5 @@ target_link_libraries(InputModule PRIVATE
     WindowModule
     EventModule
     LoggerModule
+    EngineContext
 )

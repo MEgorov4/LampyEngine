@@ -10,4 +10,5 @@ target_link_libraries(WindowModule PUBLIC
     Vulkan::Loader
     LoggerModule
     GLEW::GLEW
+    EngineContext
 )

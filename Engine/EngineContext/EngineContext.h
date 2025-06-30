@@ -1,6 +1,7 @@
 #pragma once 
+#include "ModuleManager.h"
 
-/// <summary>
+// <summary>
 /// Interface for defining different engine contexts (e.g., Game Mode, Editor Mode).
 /// Each context must implement initialization, ticking, and shutdown behavior.
 /// </summary>
@@ -14,9 +15,9 @@ public:
     /// Initializes the engine context.
     /// This method should set up any necessary resources and configurations.
     /// </summary>
-    virtual void initMinor() = 0;
+    virtual void initMinor(ModuleManager* moduleManager) = 0;
 
-    virtual void initMajor() = 0;
+    virtual void initMajor(ModuleManager* moduleManager) = 0;
     /// <summary>
     /// Called every frame to update the engine context.
     /// </summary>
@@ -26,5 +27,5 @@ public:
     /// <summary>
     /// Shuts down the engine context and releases resources.
     /// </summary>
-    virtual void shutDown() = 0;
+    virtual void shutdown() = 0;
 };

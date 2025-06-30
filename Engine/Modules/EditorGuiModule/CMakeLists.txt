@@ -16,5 +16,6 @@ target_link_libraries(EditorGuiModule PRIVATE
     LuaScriptModule
     InputModule
     EventModule
+    EngineContext
 )
 # target_link_libraries(EditorGuiModule PUBLIC ImGuiModule)

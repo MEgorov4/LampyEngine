@@ -1,9 +1,8 @@
-#pragma once
+/*#pragma once
 
 class DoubleStackAllocator
 {
 public:
-	DoubleStackAllocator() {};
 	DoubleStackAllocator(size_t size);
 	~DoubleStackAllocator();
 
@@ -17,4 +16,4 @@ private:
 	void* m_end = nullptr;
 	void* m_current = nullptr;
 	void* m_reverse = nullptr;
-};
+};*/

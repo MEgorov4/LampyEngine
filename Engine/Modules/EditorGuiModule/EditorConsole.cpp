@@ -3,7 +3,7 @@
 
 #include "../LuaScriptModule/LuaScriptModule.h"
 
-GUIEditorConsole::GUIEditorConsole() : GUIObject()
+GUIEditorConsole::GUIEditorConsole(const std::shared_ptr<ScriptModule::LuaScriptModule>& scriptModule) : GUIObject(), m_luaScriptModule(scriptModule)
 {
 
 }
@@ -24,9 +24,9 @@ void GUIEditorConsole::render()
 	ImGui::End();
 }
 
-void GUIEditorConsole::processCommand(const std::string& command)
+void GUIEditorConsole::processCommand(const std::string& command) const
 {
-	LuaScriptModule::getInstance().processCommand(command);
+	m_luaScriptModule->processCommand(command);
 }
 
 

@@ -2,14 +2,18 @@
 #include <imgui.h>
 #include "../RenderModule/RenderModule.h"
 #include "../InputModule/InputModule.h"
+#include "../RenderModule/IRenderer.h"
+#include "../ObjectCoreModule/ECS/ECSComponents.h"
 
-GUIEditorViewport::GUIEditorViewport()
-    : GUIObject(),
-    m_offscreenImageDescriptor(RenderModule::getInstance().getRenderer()->getOffscreenImageDescriptor()),
-    m_viewportEntity(ECSModule::getInstance().getCurrentWorld().entity("ViewportCamera"))
+GUIEditorViewport::GUIEditorViewport(const std::shared_ptr<RenderModule::RenderModule>& renderModule,
+                                     const std::shared_ptr<InputModule::InputModule>& inputModule,
+                                     const std::shared_ptr<ECSModule::ECSModule>& ecsModule) 
+    : ImGuiModule::GUIObject(), m_renderModule(renderModule), m_inputModule(inputModule), m_ecsModule(ecsModule),
+    m_offscreenImageDescriptor(m_renderModule->getRenderer()->getOffscreenImageDescriptor()),
+    m_viewportEntity(m_ecsModule->getCurrentWorld().entity("ViewportCamera"))
 {
-    m_keyActionHandlerID = InputModule::getInstance().OnKeyAction.subscribe(std::bind_front(&GUIEditorViewport::onKeyAction, this));
-    m_mouseActionHandlerID = InputModule::getInstance().OnMousePosAction.subscribe(std::bind_front(&GUIEditorViewport::onMouseAction, this));
+    m_keyActionHandlerID = m_inputModule->OnKeyAction.subscribe(std::bind_front(&GUIEditorViewport::onKeyAction, this));
+    m_mouseActionHandlerID = m_inputModule->OnMousePosAction.subscribe(std::bind_front(&GUIEditorViewport::onMouseAction, this));
 
     m_cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     m_cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -17,8 +21,8 @@ GUIEditorViewport::GUIEditorViewport()
 
 GUIEditorViewport::~GUIEditorViewport()
 {
-    InputModule::getInstance().OnKeyAction.unsubscribe(m_keyActionHandlerID);
-    InputModule::getInstance().OnMousePosAction.unsubscribe(m_mouseActionHandlerID);
+    m_inputModule->OnKeyAction.unsubscribe(m_keyActionHandlerID);
+    m_inputModule->OnMousePosAction.unsubscribe(m_mouseActionHandlerID);
 }
 
 void GUIEditorViewport::render()

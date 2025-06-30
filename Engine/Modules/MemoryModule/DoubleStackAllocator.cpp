@@ -1,3 +1,4 @@
+/*
 #include "DoubleStackAllocator.h"
 
 #include <memory>
@@ -55,3 +56,4 @@ void DoubleStackAllocator::reset()
 	m_current = m_start;
 	m_reverse = m_end;
 }
+*/

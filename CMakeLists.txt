@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28.3)
+cmake_minimum_required(VERSION 3.21)
 
 project(LampyEngine VERSION 1.0 LANGUAGES CXX)
 
@@ -41,6 +41,11 @@ function(format_source_group)
         source_group("${_source_path_msvc}" FILES "${_source}")
     endforeach()
 endfunction(format_source_group)
+
+
+if (MSVC)
+    add_compile_options(/bigobj)
+endif()
 
 add_subdirectory(Engine)
 # add_subdirectory(Projects)

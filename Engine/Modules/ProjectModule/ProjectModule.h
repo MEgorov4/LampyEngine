@@ -1,102 +1,100 @@
 #pragma once 
 
-#include "../LoggerModule/Logger.h"
 #include <string>
+#include <memory>
 
-/// <summary>
-/// Represents the configuration settings of a project, including file paths and world settings.
-/// </summary>
-struct ProjectConfig
+#include "../../EngineContext/IModule.h"
+#include "../../EngineContext/ModuleRegistry.h"
+
+
+namespace FilesystemModule
 {
-private:
-    std::string openTime; ///< Time when project was opened
-    std::string projectPath; ///< Path to the project directory.
-    std::string projectName; ///< Name of the project.
+	class FilesystemModule;
+}
 
-    std::string resourcesPath; ///< Path to the project's resources directory.
-    std::string configPath; ///< Path to the project's configuration files.
-    std::string logsPath; ///< Path to the project's log files.
-    std::string buildPath; ///< Path to the project's build directory.
-
-    std::string editorStartWorld; ///< The default world loaded in the editor.
-    std::string gameStartWorld; ///< The default world loaded in the game.
-
-public:
-    ProjectConfig() = default;
-
-    /// Constructs a ProjectConfig from JSON data.
-    /// </summary>
-    /// <param name="data">String containing JSON-formatted project configuration data.</param>
-    ProjectConfig(std::string data);
-
-    std::string getOpenTime() const { return openTime; }
-
-    std::string getProjectPath() const { return projectPath; }
-    std::string getProjectName() const { return projectName; }
-
-    std::string getResourcesPath() const { return resourcesPath; }
-    std::string getConfigPath() const { return configPath; }
-    std::string getLogsPath() const { return configPath; }
-    std::string getBuildPath() const { return buildPath; }
-
-    std::string getEditorStartWorld() const { return editorStartWorld; }
-    std::string getGameStartWorld() const { return gameStartWorld; }
-
-    void setEditorStartWorld(const std::string& path) { editorStartWorld = path; }
-};
-
-/// <summary>
-/// Singleton module responsible for managing project settings, environment, and configuration.
-/// </summary>
-class ProjectModule
+namespace Logger
 {
-    ProjectConfig m_projectConfig; ///< Stores the project configuration.
+	class Logger;
+}
 
-public:
-    /// <summary>
-    /// Retrieves the singleton instance of the ProjectModule.
-    /// </summary>
-    /// <returns>Reference to the ProjectModule instance.</returns>
-    static ProjectModule& getInstance()
-    {
-        static ProjectModule ProjectModule;
-        return ProjectModule;
-    }
+namespace ProjectModule
+{
+	/// <summary>
+	/// Represents the configuration settings of a project, including file paths and world settings.
+	/// </summary>
+	struct ProjectConfig
+	{
+	private:
+		std::string openTime; ///< Time when project was opened
+		std::string projectPath; ///< Path to the project directory.
+		std::string projectName; ///< Name of the project.
 
-    /// <summary>
-    /// Initializes the project module and sets up the project environment.
-    /// </summary>
-    void startup()
-    {
-        LOG_INFO("ProjectModule: Startup");
-        setupProjectEnvironment();
-    }
+		std::string resourcesPath; ///< Path to the project's resources directory.
+		std::string configPath; ///< Path to the project's configuration files.
+		std::string logsPath; ///< Path to the project's log files.
+		std::string buildPath; ///< Path to the project's build directory.
 
-    /// <summary>
-    /// Retrieves the project configuration.
-    /// </summary>
-    /// <returns>Reference to the ProjectConfig instance.</returns>
-    ProjectConfig& getProjectConfig() { return m_projectConfig; }
+		std::string editorStartWorld; ///< The default world loaded in the editor.
+		std::string gameStartWorld; ///< The default world loaded in the game.
 
-    /// <summary>
-    /// Shuts down the project module and saves the project configuration.
-    /// </summary>
-    void shutDown()
-    {
-        LOG_INFO("ProjectModule: Shut down");
-        saveProjectConfig();
-    }
+	public:
+		ProjectConfig() = default;
 
-private:
-    /// <summary>
-    /// Sets up the project environment by launching the Project Browser and retrieving configuration data.
-    /// </summary>
-    void setupProjectEnvironment();
+		/// Constructs a ProjectConfig from JSON data.
+		/// </summary>
+		/// <param name="data">String containing JSON-formatted project configuration data.</param>
+		ProjectConfig(std::string data);
 
-    /// <summary>
-    /// Saves the current project configuration to a file.
-    /// </summary>
-    void saveProjectConfig();
-};
+		std::string getOpenTime() const;
 
-inline ProjectModule& PM = ProjectModule::getInstance();
+		std::string getProjectPath() const;
+		std::string getProjectName() const;
+
+		std::string getResourcesPath() const;
+		std::string getConfigPath() const;
+		std::string getLogsPath() const;
+		std::string getBuildPath() const;
+
+		std::string getEditorStartWorld() const;
+		std::string getGameStartWorld() const;
+
+		void setEditorStartWorld(const std::string& path);
+	};
+
+	/// <summary>
+	/// Singleton module responsible for managing project settings, environment, and configuration.
+	/// </summary>
+	class ProjectModule : public IModule
+	{
+		ProjectConfig m_projectConfig; ///< Stores the project configuration.
+		std::shared_ptr<Logger::Logger> m_logger;
+		std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
+	public:
+		/// <summary>
+		/// Initializes the project module and sets up the project environment.
+		/// </summary>
+		void startup(const ModuleRegistry& registry) override;
+
+		/// <summary>
+		/// Retrieves the project configuration.
+		/// </summary>
+		/// <returns>Reference to the ProjectConfig instance.</returns>
+		ProjectConfig& getProjectConfig();
+
+		/// <summary>
+		/// Shuts down the project module and saves the project configuration.
+		/// </summary>
+		void shutdown() override;
+
+	private:
+		/// <summary>
+		/// Sets up the project environment by launching the Project Browser and retrieving configuration data.
+		/// </summary>
+		void setupProjectEnvironment();
+
+		/// <summary>
+		/// Saves the current project configuration to a file.
+		/// </summary>
+		void saveProjectConfig();
+	};
+}

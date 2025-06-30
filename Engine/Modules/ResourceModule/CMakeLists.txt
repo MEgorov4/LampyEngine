@@ -15,4 +15,5 @@ target_link_libraries(ResourceModule PUBLIC
     tinyobjloader::tinyobjloader
     PRIVATE
     MemoryModule
+    EngineContext
 )

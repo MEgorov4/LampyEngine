@@ -7,6 +7,8 @@ format_source_group(${SHADER_COMPILER_MODULE_SOURCE})
 add_library(ShaderCompilerModule ${SHADER_COMPILER_MODULE_SOURCE})
 
 target_link_libraries(ShaderCompilerModule
+PUBLIC 
+EngineContext
     PRIVATE
         boost::boost
         FilesystemModule

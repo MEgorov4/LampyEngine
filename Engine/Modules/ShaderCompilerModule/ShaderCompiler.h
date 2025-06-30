@@ -1,30 +1,35 @@
 #pragma once
+
 #include <string>
-#include <vector>
+#include <memory>
 
-#include "../EventModule/Event.h"
+#include "../../EngineContext/IModule.h"
+#include "../../EngineContext/ModuleRegistry.h"
 
-class ShaderCompiler
+
+namespace Logger
 {
-public:
-    static ShaderCompiler& getInstance()
-    {
-        static ShaderCompiler instance;
-        return instance;
-    }
+	class Logger;
+}
+namespace FilesystemModule
+{
+	class FilesystemModule;
+}
+namespace ShaderCompiler
+{
+	class ShaderCompiler : public IModule
+	{
+		std::shared_ptr<Logger::Logger> m_logger;
+		std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
+	public:
 
-    std::string compileShader(const std::string& shaderPath);
-    void compileShaders(const std::vector<std::string>& shaderPaths);
+		void startup(const ModuleRegistry& registry) override;
 
-    bool isShaderPrecompiled(const std::string& shaderPath);
+		void shutdown() override;
 
-private:
-    ShaderCompiler() = default;
-    ~ShaderCompiler() = default;
-    ShaderCompiler(const ShaderCompiler&) = delete;
-    ShaderCompiler& operator=(const ShaderCompiler&) = delete;
+		std::string compileShader(const std::string& shaderPath);
+		void compileShaders(const std::vector<std::string>& shaderPaths);
 
-    std::vector<Event<bool, std::string>> Task;
-};
-
-inline ShaderCompiler& SH = ShaderCompiler::getInstance();
+		bool isShaderPrecompiled(const std::string& shaderPath);
+	};
+}

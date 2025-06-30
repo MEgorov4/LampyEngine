@@ -13,4 +13,5 @@ target_link_libraries(PhysicsModule PUBLIC
     PRIVATE
     glm::glm
     RenderModule
+    EngineContext
 )

@@ -5,360 +5,384 @@
 
 #ifdef _WIN32
 #include <windows.h>
-//#include <fileapi.h>
 #else
 #endif
 
 #include "../LoggerModule/Logger.h"
 #include "../ProjectModule/ProjectModule.h"
 
-namespace fs = std::filesystem;
+#include "DirectoryIterator.h"
 
-FResult FilesystemModule::deleteFile(constr path)
+namespace FilesystemModule
 {
-	if (!isPathExists(path))
-	{
-		LOG_ERROR(std::format("FilesystemModule:deleteFile: invalid path file: {}", path));
-		return FResult::INVALID_PATH;
-	}
+    namespace fs = std::filesystem;
 
-	if (!fs::remove(path))
-	{
-		LOG_ERROR(std::format("FilesystemModule:deleteFile: failed to remove file: {}", path));
-		return FResult::UNDEFIND;
-	}
+    void FilesystemModule::startup(const ModuleRegistry& registry)
+    {
+        m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
+        m_projectModule = std::dynamic_pointer_cast<ProjectModule::ProjectModule>(registry.getModule("ProjectModule"));
+    }
 
-	return FResult::SUCCESS;
-}
+    void FilesystemModule::shutdown()
+    {
+    }
 
-FResult FilesystemModule::duplicateFileInDirectory(constr path)
-{
-	if (!isPathExists(path))
-	{
-		LOG_ERROR(std::format("FilesystemModule:deleteFile: invalid path file: {}", path));
-		return FResult::INVALID_PATH;
-	}
+    FResult FilesystemModule::deleteFile(constr path)
+    {
+        if (!isPathExists(path))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Invalid path file: " + path, "FilesystemModule");
+            return FResult::INVALID_PATH;
+        }
 
-	fs::path originalPath(path);
-	fs::path directory = originalPath.parent_path();
-	std::string baseName = originalPath.stem().string();
-	std::string extension = originalPath.extension().string();
+        if (!fs::remove(path))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Failed to remove file: " + path, "FilesystemModule");
+            return FResult::UNDEFIND;
+        }
 
-	fs::path newFilePath = directory / (baseName + extension);
+        return FResult::SUCCESS;
+    }
 
-	int index = 1;
+    FResult FilesystemModule::duplicateFileInDirectory(constr path)
+    {
+        if (!isPathExists(path))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Invalid file path: " + path, "FilesystemModule");
+            return FResult::INVALID_PATH;
+        }
 
-	while (isPathExists(newFilePath.string()))
-	{
-		newFilePath = directory / (baseName + "_" + std::to_string(index) + extension);
-		index++;
-	}
-	
-	if (!fs::copy_file(path, newFilePath, fs::copy_options::overwrite_existing))
-	{
-		LOG_ERROR(std::format("FilesystemModule:duplicateFileInDirectory: failed to duplicate file in directory {}", path));
-		return FResult::UNDEFIND;
-	}
-	return FResult::SUCCESS;
-}
+        fs::path originalPath(path);
+        fs::path directory = originalPath.parent_path();
+        std::string baseName = originalPath.stem().string();
+        std::string extension = originalPath.extension().string();
 
-FResult FilesystemModule::moveFileToDirectory(constr filePath, constr destinationPath)
-{
-	if (!isPathExists(filePath) || !isPathExists(destinationPath))
-	{
-		LOG_ERROR("FilesystemModule:moveFileToDirectory: invalid file path or destination path");
-		return FResult::INVALID_PATH;
-	}
+        fs::path newFilePath = directory / (baseName + extension);
 
-	fs::path source(filePath);
-	fs::path destination = fs::path(destinationPath) / source.filename();
+        int index = 1;
 
-	if (!fs::copy_file(source, destination, fs::copy_options::overwrite_existing))
-	{
-		LOG_ERROR("FilesystemModule:moveFileToDirectory: failed to copy file: " + filePath);
-		return FResult::UNDEFIND;
-	}
+        while (isPathExists(newFilePath.string()))
+        {
+            newFilePath = directory / (baseName + "_" + std::to_string(index) + extension);
+            index++;
+        }
 
-	if (!fs::remove(source))
-	{
-		LOG_ERROR("FilesystemModule:moveFileToDirectory: failed to remove: " + filePath);
-		return FResult::UNDEFIND;
-	}
+        if (!fs::copy_file(path, newFilePath, fs::copy_options::overwrite_existing))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Failed to duplicate file in directory: " + path,
+                          "FilesystemModule");
+            return FResult::UNDEFIND;
+        }
+        return FResult::SUCCESS;
+    }
 
-	return FResult::SUCCESS;
-}
+    FResult FilesystemModule::moveFileToDirectory(constr filePath, constr destinationPath)
+    {
+        if (!isPathExists(filePath) || !isPathExists(destinationPath))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Invalid file or destination path", "FilesystemModule");
+            return FResult::INVALID_PATH;
+        }
 
-FResult FilesystemModule::copyAbsolutePath(constr filePath)
-{
-	if (!clip::set_text(filePath))
-	{
-		LOG_ERROR(std::format("FilesystemModule:CopyAbsolutePath: failed to copy path: {}", filePath));
+        fs::path source(filePath);
+        fs::path destination = fs::path(destinationPath) / source.filename();
 
-		return FResult::UNDEFIND;
-	}
-	return FResult::SUCCESS;
-}
+        if (!fs::copy_file(source, destination, fs::copy_options::overwrite_existing))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Invalid file or destination path", "FilesystemModule");
+            return FResult::UNDEFIND;
+        }
 
-FResult FilesystemModule::copyRelativePath(constr filePath)
-{
-	std::string relativeFilePath = fs::relative(filePath, ProjectModule::getInstance().getProjectConfig().getResourcesPath()).string();
+        if (!fs::remove(source))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Failed to remove file: " + source.string(), "FilesystemModule");
+            return FResult::UNDEFIND;
+        }
 
-	if (!clip::set_text(relativeFilePath))
-	{
-		LOG_ERROR(std::format("FilesystemModule:CopyRelativePath: failed to copy path: {}", relativeFilePath));
-		return FResult::UNDEFIND;
-	}
-	return FResult::SUCCESS;
-}
+        return FResult::SUCCESS;
+    }
 
-std::vector<uint8_t> FilesystemModule::readBinaryFile(constr filePath)
-{
-	std::ifstream file(filePath, std::ios::binary);
-	if (!file) {
-		LOG_ERROR(std::format("FilesystemModule:readBinaryFile: failed to read binary file: {}", filePath));
-		return std::vector<uint8_t>();
-	}
+    FResult FilesystemModule::copyAbsolutePath(constr filePath)
+    {
+        if (!clip::set_text(filePath))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Failed copy path: " + filePath, "FilesystemModule");
+            return FResult::UNDEFIND;
+        }
+        return FResult::SUCCESS;
+    }
 
-	file.seekg(0, std::ios::end);
-	size_t fileSize = file.tellg();
-	file.seekg(0, std::ios::beg);
+    FResult FilesystemModule::copyRelativePath(constr filePath)
+    {
+        std::string relativeFilePath = fs::relative(filePath, m_projectModule->getProjectConfig().getResourcesPath()).
+            string();
 
-	std::vector<uint8_t> buffer(fileSize);
-	file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
+        if (!clip::set_text(relativeFilePath))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Failed copy path: " + filePath, "FilesystemModule");
+            return FResult::UNDEFIND;
+        }
+        return FResult::SUCCESS;
+    }
 
-	return buffer;
-}
+    std::vector<uint8_t> FilesystemModule::readBinaryFile(constr filePath)
+    {
+        std::ifstream file(filePath, std::ios::binary);
+        if (!file)
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Failed to read binary file: " + filePath, "FilesystemModule");
+            return std::vector<uint8_t>();
+        }
 
-std::string FilesystemModule::readTextFile(constr filePath)
-{
-	std::ifstream file(filePath, std::ios::in);
-	if (!file){
-		LOG_ERROR(std::format("FilesystemModule:readTextFile: failed to read text file: {}", filePath));
-		return "";
-	}
+        file.seekg(0, std::ios::end);
+        size_t fileSize = file.tellg();
+        file.seekg(0, std::ios::beg);
 
-	std::ostringstream buffer;
+        std::vector<uint8_t> buffer(fileSize);
+        file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
 
-	buffer << file.rdbuf();
-	return buffer.str();
-}
+        return buffer;
+    }
 
-std::string FilesystemModule::getEngineAbsolutePath(constr relativePath)
-{
-	return fs::absolute(relativePath).string();
-}
+    std::string FilesystemModule::readTextFile(constr filePath)
+    {
+        std::ifstream file(filePath, std::ios::in);
+        if (!file)
+        {
+            return "";
+        }
 
-std::string FilesystemModule::getCurrentPath()
-{
-	return fs::current_path().string();
-}
+        std::ostringstream buffer;
 
-std::string FilesystemModule::getFileName(constr filePath)
-{
-	return fs::path(filePath).filename().string();
-}
+        buffer << file.rdbuf();
+        return buffer.str();
+    }
 
-std::string FilesystemModule::getFileExtensions(constr filePath)
-{
-	if (!isPathExists(filePath))
-	{
-		LOG_ERROR(std::format("FilesystemModule:getFileExtensions: file does not exist: {}", filePath));
-		return "";
-	}
-	return fs::path(filePath).extension().string();
-}
+    std::string FilesystemModule::getEngineAbsolutePath(constr relativePath)
+    {
+        return fs::absolute(relativePath).string();
+    }
 
-std::string FilesystemModule::getRelativeToTheResources(constr filePath)
-{
-	return fs::relative(filePath, PM.getProjectConfig().getResourcesPath()).string();
-}
+    std::string FilesystemModule::getCurrentPath()
+    {
+        return fs::current_path().string();
+    }
 
-size_t FilesystemModule::getFileSize(constr filePath)
-{
-	if (!isPathExists(filePath))
-	{
-		LOG_ERROR(std::format("FilesystemModule:getFileSize: file does not exist: {}", filePath));
-		return 0;
-	}
-	return fs::file_size(filePath);
-}
+    std::string FilesystemModule::getFileName(constr filePath)
+    {
+        return fs::path(filePath).filename().string();
+    }
 
-std::vector<std::string> FilesystemModule::getDirectoryContents(constr dirPath, ContentSearchFilter filter = ContentSearchFilter())
-{
-	std::vector<std::string> contents;
+    std::string FilesystemModule::getFileExtensions(constr filePath)
+    {
+        if (!isPathExists(filePath))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "File does`t exits: " + filePath, "FilesystemModule");
+            return "";
+        }
+        return fs::path(filePath).extension().string();
+    }
 
-	if (!isPathExists(dirPath) || !isPathExists(dirPath))
-	{
-		LOG_ERROR(std::format("FilesystemModule:getDirectoryContents: invalid directory path: {}", dirPath));
-		return contents;
-	}
+    std::string FilesystemModule::getRelativeToTheResources(constr filePath)
+    {
+        return fs::relative(filePath, m_projectModule->getProjectConfig().getResourcesPath()).string();
+    }
 
-	for (const auto& entry : fs::directory_iterator(dirPath))
-	{
-		fs::path entryPath = entry.path();
-		std::string entryName = entryPath.filename().string();
+    size_t FilesystemModule::getFileSize(constr filePath)
+    {
+        if (!isPathExists(filePath))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "File does`t exits: " + filePath, "FilesystemModule");
+            return 0;
+        }
+        return fs::file_size(filePath);
+    }
 
-		if (filter.contentType == DirContentType::FILES && !entry.is_regular_file()) continue;
-		if (filter.contentType == DirContentType::FOLDERS && !entry.is_directory()) continue;
+    std::vector<std::string> FilesystemModule::getDirectoryContents(constr dirPath,
+                                                                    ContentSearchFilter filter = ContentSearchFilter())
+    {
+        std::vector<std::string> contents;
 
-		if (filter.fileExtensions && entry.is_regular_file())
-		{
-			std::string extension = entryPath.extension().string();
-			bool match = false;
+        if (!isPathExists(dirPath) || !isPathExists(dirPath))
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Invalid directory path: " + dirPath, "FilesystemModule");
+            return contents;
+        }
 
-			for (const std::string& ext : filter.fileExtensions.value())
-			{
-				if (extension == ext)
-				{
-					match = true;
-					break;
-				}
-			}
+        for (const auto& entry : fs::directory_iterator(dirPath))
+        {
+            fs::path entryPath = entry.path();
+            std::string entryName = entryPath.filename().string();
 
-			if (!match) continue;  
-		}
+            if (filter.contentType == DirContentType::FILES && !entry.is_regular_file()) continue;
+            if (filter.contentType == DirContentType::FOLDERS && !entry.is_directory()) continue;
 
-		if (filter.filter && entryName.find(filter.filter.value()) == std::string::npos)
-		{
-			continue; 
-		}
+            if (filter.fileExtensions && entry.is_regular_file())
+            {
+                std::string extension = entryPath.extension().string();
+                bool match = false;
 
-		contents.push_back(entryPath.filename().string());
-	}
+                for (const std::string& ext : filter.fileExtensions.value())
+                {
+                    if (extension == ext)
+                    {
+                        match = true;
+                        break;
+                    }
+                }
 
-	return contents;
-}
+                if (!match) continue;
+            }
 
-uint64_t FilesystemModule::getFolderModificationTime(constr folderPath)
-{
+            if (filter.filter && entryName.find(filter.filter.value()) == std::string::npos)
+            {
+                continue;
+            }
+
+            contents.push_back(entryPath.filename().string());
+        }
+
+        return contents;
+    }
+
+    uint64_t FilesystemModule::getFolderModificationTime(constr folderPath)
+    {
 #ifdef _WIN32
-	WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-	if (GetFileAttributesExA(folderPath.c_str(), GetFileExInfoStandard, &fileInfo))
-	{
-		return	(static_cast<uint64_t>(fileInfo.ftLastWriteTime.dwHighDateTime) << 32) |
-			fileInfo.ftLastWriteTime.dwLowDateTime;
-	}
-	return 0;
+        WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+        if (GetFileAttributesExA(folderPath.c_str(), GetFileExInfoStandard, &fileInfo))
+        {
+            return (static_cast<uint64_t>(fileInfo.ftLastWriteTime.dwHighDateTime) << 32) |
+                fileInfo.ftLastWriteTime.dwLowDateTime;
+        }
+        return 0;
 #else
-	struct stat attr;
-	if (stat(folderPath.c_str(), &attr) == 0)
-	{
-		return attr.st_mtime;
-	}
-	return 0;
+		struct stat attr;
+		if (stat(folderPath.c_str(), &attr) == 0)
+		{
+			return attr.st_mtime;
+		}
+		return 0;
 #endif
+    }
 
-}
+    bool FilesystemModule::isPathExists(constr path)
+    {
+        return fs::exists(path);
+    }
 
-bool FilesystemModule::isPathExists(constr path)
-{
-	return fs::exists(path);
-}
+    bool FilesystemModule::isFile(constr path)
+    {
+        return isPathExists(path) && fs::is_regular_file(path);
+    }
 
-bool FilesystemModule::isFile(constr path)
-{
-	return isPathExists(path) && fs::is_regular_file(path);
-}
+    bool FilesystemModule::isDirectory(constr path)
+    {
+        return isPathExists(path) && fs::is_directory(path);
+    }
 
-bool FilesystemModule::isDirectory(constr path)
-{
-	return isPathExists(path) && fs::is_directory(path);
-}
+    FResult FilesystemModule::createFile(constr dirPath, constr fileName)
+    {
+        if (!isPathExists(dirPath))
+        {
+            return FResult::INVALID_PATH;
+        }
 
-FResult FilesystemModule::createFile(constr dirPath, constr fileName)
-{
-	if (!isPathExists(dirPath))
-	{
-		return FResult::INVALID_PATH;
-	}
+        fs::path dir(dirPath);
+        fs::path fName(fileName);
+        fs::path outFilePath = dirPath / fName;
+        std::ofstream file(outFilePath);
 
-	fs::path dir(dirPath);
-	fs::path fName(fileName);
-	fs::path outFilePath = dirPath / fName;
-	std::ofstream file(outFilePath);
-	
-	if (!file.is_open())
-	{
-		return FResult::UNDEFIND;
-	}
-	file.close();
+        if (!file.is_open())
+        {
+            return FResult::UNDEFIND;
+        }
+        file.close();
 
-	return FResult::SUCCESS;
-}
+        return FResult::SUCCESS;
+    }
 
-FResult FilesystemModule::createDirectory(constr dirPath, constr dirName)
-{
-	std::error_code ec;
+    FResult FilesystemModule::createDirectory(constr dirPath, constr dirName)
+    {
+        std::error_code ec;
 
-	if (isPathExists(dirPath))
-	{
-		return FResult::ALREADY_EXISTS;
-	}
+        if (isPathExists(dirPath))
+        {
+            return FResult::ALREADY_EXISTS;
+        }
 
-	if (fs::create_directories(dirPath, ec))
-	{
-		return FResult::SUCCESS;
-	}
+        if (fs::create_directories(dirPath, ec))
+        {
+            return FResult::SUCCESS;
+        }
 
-	LOG_ERROR(std::format("FilesystemModule:createDirectory: failed to create directory: {}", dirPath));
-	return FResult::UNDEFIND;
-}
+        m_logger->log(Logger::LogVerbosity::Error, "Failed to create directory: " + dirPath, "FilesystemModule");
+        return FResult::UNDEFIND;
+    }
 
-FResult FilesystemModule::writeTextFile(constr filePath, constr content)
-{
-	std::ofstream file(filePath, std::ios::out);
+    DirectoryIterator FilesystemModule::createDirectoryIterator()
+    {
+        std::string resourcesPath = m_projectModule->getProjectConfig().getResourcesPath();
+        return DirectoryIterator(this, m_logger, m_projectModule, resourcesPath, resourcesPath);
+    }
 
-	if (!file)
-	{
-		LOG_ERROR(std::format("FilesystemModule:writeTextFile: failed to open file: {}", filePath));
-		return FResult::UNDEFIND;
-	}
+    FResult FilesystemModule::writeTextFile(constr filePath, constr content)
+    {
+        std::ofstream file(filePath, std::ios::out);
 
-	file << content;
-	file.close();
+        if (!file)
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Failed to open file: " + filePath, "FilesystemModule");
+            return FResult::UNDEFIND;
+        }
 
-	return FResult::SUCCESS;
-}
+        file << content;
+        file.close();
 
-FResult FilesystemModule::appendToTextFile(constr filePath, constr content)
-{
-	std::ofstream file(filePath, std::ios::app);
-	if (!file)
-	{
-		LOG_ERROR(std::format("FilesystemModule:appendToTextFile: failed to open file: {}", filePath));
-		return FResult::UNDEFIND;
-	}
+        return FResult::SUCCESS;
+    }
 
-	file << content << std::endl;
-	file.close();
+    FResult FilesystemModule::appendToTextFile(constr filePath, constr content)
+    {
+        std::ofstream file(filePath, std::ios::app);
+        if (!file)
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Failed to open file: " + filePath, "FilesystemModule");
+            return FResult::UNDEFIND;
+        }
 
-	return FResult::SUCCESS;
-}
+        file << content << std::endl;
+        file.close();
 
-FResult FilesystemModule::writeBinaryFile(constr filePath, const std::vector<uint8_t>& data)
-{
-	std::ofstream file(filePath, std::ios::binary | std::ios::out);
-	if (!file) {
-		LOG_ERROR(std::format("FilesystemModule:writeBinaryFile: failed to open file: {}", filePath));
-		return FResult::UNDEFIND;
-	}
+        return FResult::SUCCESS;
+    }
 
-	file.write(reinterpret_cast<const char*>(data.data()), data.size());
-	file.close();
-	return FResult::SUCCESS;
-}
+    FResult FilesystemModule::writeBinaryFile(constr filePath, const std::vector<uint8_t>& data)
+    {
+        std::ofstream file(filePath, std::ios::binary | std::ios::out);
+        if (!file)
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Failed to open file: " + filePath, "FilesystemModule");
+            return FResult::UNDEFIND;
+        }
 
-FResult FilesystemModule::appendToBinaryFile(constr filePath, const std::vector<uint8_t>& data)
-{
-	std::ofstream file(filePath, std::ios::binary | std::ios::app);
-	if (!file)
-	{
-		LOG_ERROR(std::format("FilesystemModule:createFileWithSize: failed to create file: {}", filePath));
-		return FResult::UNDEFIND;
-	}
-	
-	file.write(reinterpret_cast<const char*>(data.data()), data.size());
-	file.close();
+        file.write(reinterpret_cast<const char*>(data.data()), data.size());
+        file.close();
+        return FResult::SUCCESS;
+    }
 
-	return FResult::SUCCESS;
+    FResult FilesystemModule::appendToBinaryFile(constr filePath, const std::vector<uint8_t>& data)
+    {
+        std::ofstream file(filePath, std::ios::binary | std::ios::app);
+        if (!file)
+        {
+            m_logger->log(Logger::LogVerbosity::Error, "Failed to open or create file: " + filePath,
+                          "FilesystemModule");
+            return FResult::UNDEFIND;
+        }
+
+        file.write(reinterpret_cast<const char*>(data.data()), data.size());
+        file.close();
+
+        return FResult::SUCCESS;
+    }
 }

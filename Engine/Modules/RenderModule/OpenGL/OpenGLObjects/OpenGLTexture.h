@@ -2,17 +2,19 @@
 
 #include <GL/glew.h>
 #include "../../Abstract/ITexture.h"
-
-class OpenGLTexture : public ITexture
+namespace RenderModule::OpenGL
 {
-public:
-	OpenGLTexture(const std::shared_ptr<RTexture>& texture);
-	virtual ~OpenGLTexture();
+	class OpenGLTexture : public ITexture
+	{
+	public:
+		OpenGLTexture(const std::shared_ptr<ResourceModule::RTexture>& texture);
+		virtual ~OpenGLTexture();
 
-	void bind() const override;
-	void unbind() const override;
+		void bind() const override;
+		void unbind() const override;
 
-	uint32_t getTextureID() override { return m_textureID; }
-private:
-	GLuint m_textureID;
-};
+		uint32_t getTextureID() override { return m_textureID; }
+	private:
+		GLuint m_textureID;
+	};
+}

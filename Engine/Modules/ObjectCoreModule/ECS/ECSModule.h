@@ -2,52 +2,84 @@
 #include <memory>
 #include <optional>
 #include <string>
-
 #include <flecs.h>
+
 #include "../../EventModule/Event.h"
 
-#include "ECSComponents.h"
-class ECSModule
+#include "../../../EngineContext/IModule.h"
+#include "../../../EngineContext/ModuleRegistry.h"
+
+
+class PhysicsModule;
+
+namespace ScriptModule
 {
-	bool m_tickEnabled = false;
-	std::string m_currentWorldFile;
-	std::string m_currentWorldData;
-	flecs::world m_world;
-	std::vector<std::pair<flecs::id_t, std::string>> m_registeredComponents;
-public:
-	static ECSModule& getInstance()
-	{
-		static ECSModule ECSModule;
-		return ECSModule;
-	}
+    class LuaScriptModule;
+}
 
-	void startup();
-	
-	void fillDefaultWorld();
-	void loadWorldFromFile(const std::string& path);
-	void setCurrentWorldPath(const std::string& path);
-	void saveCurrentWorld();
-	bool isWorldSetted();
-	void clearWorld();
+namespace FilesystemModule
+{
+   class FilesystemModule; 
+}
 
-	void startSystems();
-	void stopSystems();
-	
-	bool getTickEnabled() { return m_tickEnabled; }
-	flecs::world& getCurrentWorld() { return m_world; };
-	std::vector<std::pair<flecs::id_t, std::string>>& getRegisteredComponents() { return m_registeredComponents; };
+namespace ProjectModule
+{
+    class ProjectModule;
+}
+namespace ResourceModule
+{
+    class ResourceManager;
+}
+namespace Logger
+{
+    class Logger;
+}
 
-	void ecsTick(float deltaTime);
+namespace ECSModule
+{
+    class ECSModule : public IModule
+    {
+        std::shared_ptr<Logger::Logger> m_logger;
+        std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
+        std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
+        std::shared_ptr<ResourceModule::ResourceManager> m_resourceManager;
+        std::shared_ptr<ScriptModule::LuaScriptModule> m_luaScriptModule;
+        std::shared_ptr<PhysicsModule> m_physicsModule;
+        
+        bool m_tickEnabled = false;
+        std::string m_currentWorldFile;
+        std::string m_currentWorldData;
+        flecs::world m_world;
+        std::vector<std::pair<flecs::id_t, std::string>> m_registeredComponents;
+    public:
 
-	void shutDown();
+        void startup(const ModuleRegistry& registry) override;
+        void shutdown() override;
+        
+        void fillDefaultWorld();
+        void loadWorldFromFile(const std::string& path);
+        void setCurrentWorldPath(const std::string& path);
+        void saveCurrentWorld();
+        bool isWorldSetted();
+        void clearWorld();
 
-	Event<> OnLoadInitialWorldState;
-	Event<> OnComponentsChanged;
+        void startSystems();
+        void stopSystems();
 
-private:
-	template<typename T>
-	void registerComponent(const std::string& name);
-	void registerComponents();
-	void registerObservers();
-};
+        bool getTickEnabled() { return m_tickEnabled; }
+        flecs::world& getCurrentWorld() { return m_world; };
+        std::vector<std::pair<flecs::id_t, std::string>>& getRegisteredComponents() { return m_registeredComponents; };
 
+        void ecsTick(float deltaTime);
+
+
+        Event<> OnLoadInitialWorldState;
+        Event<> OnComponentsChanged;
+
+    private:
+        template <typename T>
+        void registerComponent(const std::string& name);
+        void registerComponents();
+        void registerObservers();
+    };
+}

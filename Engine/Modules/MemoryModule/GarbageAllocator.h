@@ -1,3 +1,4 @@
+/*
 #pragma once
 
 class DoubleStackAllocator;
@@ -38,4 +39,5 @@ public:
 private:
     T* innerAllocate(size_t n);
 };
+*/
 

@@ -5,6 +5,10 @@ GUIMainMenuBar::GUIMainMenuBar() : GUIObject()
 {
 }
 
+GUIMainMenuBar::~GUIMainMenuBar()
+{
+}
+
 void GUIMainMenuBar::render()
 {
     if (ImGui::BeginMainMenuBar()) 

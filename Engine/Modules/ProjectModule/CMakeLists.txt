@@ -12,4 +12,5 @@ target_link_libraries(ProjectModule PRIVATE
     LoggerModule
     nlohmann_json::nlohmann_json
     boost::boost
+    EngineContext
 )

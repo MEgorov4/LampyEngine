@@ -4,31 +4,33 @@
 #include "../FilesystemModule/FilesystemModule.h"
 #include "../ShaderCompilerModule/ShaderCompiler.h"
 
-#include "../MemoryModule/DoubleStackAllocator.h"
 #include "ResourceManager.h"
 
-RShader::RShader(const std::string& path) : BaseResource(path)
+namespace ResourceModule
 {
-	std::string extension = FS.getFileExtensions(path);
-
-	std::string binaryResultPath;
-	//GLSL Case
-	if (extension == ".vert" || extension == ".frag")
+	RShader::RShader(const std::string& path, std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule,
+			std::shared_ptr<ShaderCompiler::ShaderCompiler> shaderCompiler) : BaseResource(path)
 	{
-		binaryResultPath = SH.compileShader(path);
+		
+		std::string extension = filesystemModule->getFileExtensions(path);
+
+		std::string binaryResultPath;
+
+		if (extension == ".vert" || extension == ".frag")
+		{
+			binaryResultPath = shaderCompiler->compileShader(path);
+		}
+
+		else if (extension == ".spv")
+		{
+			binaryResultPath = path;
+		}
+			
+		m_shaderInfo.buffer = filesystemModule->readBinaryFile(binaryResultPath);
 	}
-	//SPIR-V Case
-	else if (extension == ".spv")
+
+	std::vector<uint8_t> RShader::getBuffer() const
 	{
-		binaryResultPath = path;
+		return std::vector<uint8_t>(m_shaderInfo.buffer.begin(), m_shaderInfo.buffer.end());
 	}
-
-	DoubleStackAllocator* allocator = ResourceManager::getInstance().getDoubleStackAllocator();
-	std::vector<uint8_t> temp = FS.readBinaryFile(binaryResultPath);
-	shaderInfo.buffer = std::vector<uint8_t, GarbageAllocator<uint8_t>>(temp.begin(), temp.end(), GarbageAllocator<uint8_t>(allocator));
-}
-
-std::vector<uint8_t> RShader::getBuffer() const
-{
-	return std::vector<uint8_t>(shaderInfo.buffer.begin(), shaderInfo.buffer.end());
 }

@@ -2,11 +2,13 @@
 
 #include "../ImGuiModule/GUIObject.h"
 #include "../EventModule/Event.h"
-class GUIMainMenuBar : public GUIObject
+
+
+class GUIMainMenuBar : public ImGuiModule::GUIObject
 {
 public:
 	GUIMainMenuBar();
-	virtual ~GUIMainMenuBar() = default;
+	virtual ~GUIMainMenuBar();
 
 	Event<std::string> OnOpenClicked;
 	

@@ -1,27 +1,24 @@
 #pragma once
 #include <string>
+#include <memory>
 #include "../EngineContext/EngineContext.h"
 
+class EditorGUIModule;
 /// <summary>
 /// Represents the Editor context, handling initialization, ticking, and shutdown of editor-specific modules.
 /// </summary>
 class Editor : public IEngineContext
 {
+   std::shared_ptr<EditorGUIModule> m_editorGUIModule;
 public:
-    Editor() {}
-    virtual ~Editor() {}
+    virtual ~Editor() override = default;
 
     /// <summary>
     /// Initializes the Editor context and starts necessary modules.
     /// </summary>
-    void initMinor() override;
+    void initMinor(ModuleManager* moduleManager) override;
     
-    void initMajor() override;
-    /// <summary>
-    /// Starts up editor-specific modules (e.g., GUI, Project Management).
-    /// </summary>
-    void startupEditorModules();
-
+    void initMajor(ModuleManager* moduleManager) override;
     /// <summary>
     /// Updates the Editor context every frame.
     /// </summary>
@@ -31,10 +28,5 @@ public:
     /// <summary>
     /// Shuts down the Editor context and its associated modules.
     /// </summary>
-    void shutDown() override;
-
-    /// <summary>
-    /// Shuts down editor-specific modules.
-    /// </summary>
-    void shutDownEditorModules();
+    void shutdown() override;
 };

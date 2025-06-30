@@ -1,3 +1,4 @@
+/*
 #include "PoolAllocator.h"
 
 #include <string>
@@ -93,3 +94,4 @@ void PoolAllocator::placementBlock(size_t size)
 		m_alloc = blockBegin;
 	}
 }
+*/

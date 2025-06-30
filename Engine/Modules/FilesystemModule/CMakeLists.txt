@@ -10,4 +10,5 @@ target_link_libraries(FilesystemModule PRIVATE
     LoggerModule 
     ProjectModule 
     clip::clip
+    EngineContext
 )

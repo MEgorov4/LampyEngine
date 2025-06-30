@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 
 class PoolAllocator
 {
@@ -9,7 +9,7 @@ private:
 	};
 
 public:
-	PoolAllocator() {};
+	PoolAllocator() = default;
 	PoolAllocator(size_t objectSize, size_t chunksPerBlock, void* placement = nullptr);
 	~PoolAllocator();
 
@@ -25,4 +25,4 @@ private:
 	void placementBlock(size_t size);
 
 	bool m_ownsMemory = false;
-};
+};*/

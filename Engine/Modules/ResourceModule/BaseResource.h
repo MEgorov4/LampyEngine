@@ -1,14 +1,16 @@
 #pragma once
 
 #include <string>
-
-class BaseResource
+namespace ResourceModule
 {
-public:
-	BaseResource(const std::string& path) { GUID = path; };
+	class BaseResource
+	{
+	public:
+		BaseResource(const std::string& path) { GUID = path; };
 
-	std::string getGUID() const;
-	void setGUID(std::string& newGUID);
-protected:
-	std::string GUID;
-};
+		std::string getGUID() const;
+		void setGUID(const std::string& newGUID);
+	protected:
+		std::string GUID;
+	};
+}

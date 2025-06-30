@@ -1,56 +1,41 @@
-#pragma once 
+#pragma once
 #include <vector>
+#include <memory>
 
-struct ImVec4;
-class GUIObject;
-/// <summary>
-/// Manages the ImGui user interface system, handling GUI object registration and rendering.
-/// Implements a singleton pattern to ensure a single instance.
-/// </summary>
-class ImGuiModule
+#include "../../EngineContext/IModule.h"
+#include "../../EngineContext/ModuleRegistry.h"
+
+namespace Logger
 {
-    std::vector<GUIObject*> m_GuiObjects; ///< List of registered GUI objects.
+    class Logger;
+}
+
+namespace ImGuiModule
+{
+    class GUIObject;
 
     /// <summary>
-    /// Private constructor to enforce singleton pattern.
+    /// Manages the ImGui user interface system, handling GUI object registration and rendering.
+    /// Implements a singleton pattern to ensure a single instance.
     /// </summary>
-    ImGuiModule() = default;
-
-public:
-    /// <summary>
-    /// Destructor for the ImGuiModule.
-    /// </summary>
-    ~ImGuiModule() = default;
-
-    void startup();
-    void shutDown();
-    /// <summary>
-    /// Retrieves the singleton instance of the ImGuiModule.
-    /// </summary>
-    /// <returns>Reference to the singleton ImGuiModule instance.</returns>
-    static ImGuiModule& getInstance()
+    class ImGuiModule : public IModule
     {
-        static ImGuiModule ImGuiModule;
-        return ImGuiModule;
-    }
+        std::shared_ptr<Logger::Logger> m_logger;
+        std::vector<std::shared_ptr<GUIObject>> m_guiObjects; ///< List of registered GUI objects.
 
-    void setImGuiStyle();
+    public:
+        void startup(const ModuleRegistry& registry) override;
+        void shutdown() override;
 
-    /// <summary>
-    /// Renders the ImGui user interface.
-    /// Calls the render function of all registered GUI objects.
-    /// </summary>
-    void renderUI() const;
+        void setImGuiStyle();
 
-    /// <summary>
-    /// Registers a GUI object to be rendered.
-    /// </summary>
-    /// <param name="object">Pointer to the GUI object to be added.</param>
-    void addObject(GUIObject* object);
+        /// <summary>
+        /// Renders the ImGui user interface.
+        /// Calls the render function of all registered GUI objects.
+        /// </summary>
+        void renderUI() const;
 
-    /// <summary>
-    /// Removes a GUI object from the list using its unique ID.
-    /// </summary>
-    /// <param name="id">The unique ID of the GUI object to remove.</param>
-    void removeObject(uint32_t id);
-};
+        std::weak_ptr<GUIObject> addObject(GUIObject* object);
+        void removeObject(const std::weak_ptr<GUIObject>& object);
+    };
+}

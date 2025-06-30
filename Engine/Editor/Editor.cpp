@@ -2,38 +2,22 @@
 #include "../Modules/EditorGuiModule/EditorGUIModule.h"
 #include "../Modules/ProjectModule/ProjectModule.h"
 
-void Editor::initMinor()
+void Editor::initMinor(ModuleManager* moduleManager)
 {
-	LOG_INFO("Editor: Init");
-	LOG_INFO("Editor: startup editor modules");
-	ProjectModule::getInstance().startup();
+	moduleManager->createModule<ProjectModule::ProjectModule>("ProjectModule");
 }
 
-void Editor::initMajor()
+void Editor::initMajor(ModuleManager* moduleManager)
 {
-	startupEditorModules();
-}
-
-
-void Editor::startupEditorModules()
-{
-	EditorGUIModule::getInstance().startup();
+	m_editorGUIModule = moduleManager->createModule<EditorGUIModule>("EditorGUIModule");
 }
 
 void Editor::tick(float deltaTime)
 {
-	EditorGUIModule::getInstance().render();
+	m_editorGUIModule->render();	
 }
 
-void Editor::shutDown()
+void Editor::shutdown()
 {
-	LOG_INFO("Editor: Shut down editor");
-	shutDownEditorModules();
-}
 
-void Editor::shutDownEditorModules()
-{
-	LOG_INFO("Editor: Shut down editor modules");
-	EditorGUIModule::getInstance().shutDown();
-	ProjectModule::getInstance().shutDown();
 }

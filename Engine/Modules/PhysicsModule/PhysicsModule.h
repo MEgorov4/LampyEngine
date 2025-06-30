@@ -2,29 +2,33 @@
 
 #include <memory>
 
-class BulletDebugDrawer;
-class btDefaultCollisionConfiguration;
-class btCollisionDispatcher;
-class btBroadphaseInterface;
-class btSequentialImpulseConstraintSolver;
-class btDiscreteDynamicsWorld;
+#include "../../EngineContext/IModule.h"
+#include "../../EngineContext/ModuleRegistry.h"
+
+#include "BulletDebugDrawer.h"
+namespace ECSModule
+{
+	class ECSModule;
+}
+
+namespace Logger
+{
+	class Logger;
+}
+
+
 
 class btVector3;
 class btTransform;
 
-class PhysicsModule
+class PhysicsModule : public IModule
 {
+	std::shared_ptr<Logger::Logger> m_logger;
+	std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
 public:
-	~PhysicsModule();
 
-	static PhysicsModule& getInstance()
-	{
-		static PhysicsModule resourceManager;
-		return resourceManager;
-	}
-
-	void startup();
-	void shutDown();
+	void startup(const ModuleRegistry& registry) override;
+	void shutdown() override;
 
 	void tick(float deltaTime);
 
@@ -36,8 +40,6 @@ public:
 
 	void enableDebugDraw(bool newFlag);
 private:
-	PhysicsModule();
-
 	void setupWorldProperties();
 
 	void drawDebugBox(btVector3 center, btVector3 halfExtents, const btTransform& worldTransform);

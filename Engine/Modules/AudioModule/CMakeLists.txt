@@ -9,4 +9,5 @@ add_library(AudioModule STATIC ${AUDIO_MODULE_SOURCE})
 target_link_libraries(AudioModule PUBLIC
     OpenAL::OpenAL
     LoggerModule
+    EngineContext
 )

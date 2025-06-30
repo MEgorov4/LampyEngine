@@ -1,6 +1,9 @@
 #include "Material.h"
 
-RMaterial::RMaterial(const std::string& guid) : BaseResource(guid)
+namespace ResourceModule
 {
+	RMaterial::RMaterial(const std::string& guid) : BaseResource(guid)
+	{
 
+	}
 }

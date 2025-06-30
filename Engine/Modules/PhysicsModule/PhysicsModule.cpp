@@ -6,20 +6,11 @@
 #include "../ObjectCoreModule/ECS/ECSModule.h"
 #include "../ObjectCoreModule/ECS/ECSPhysicsSystem.h"
 
-PhysicsModule::PhysicsModule()
+void PhysicsModule::startup(const ModuleRegistry& registry)
 {
-
-}
-
-PhysicsModule::~PhysicsModule()
-{
-
-}
-
-void PhysicsModule::startup()
-{
-	LOG_INFO("PhysicsModule: Startup");
-
+	m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
+	m_ecsModule = std::dynamic_pointer_cast<ECSModule::ECSModule>(registry.getModule("ECSModule"));
+	
 	m_debugDrawer.reset(new BulletDebugDrawer());
 
 	m_collisionConfig.reset(new btDefaultCollisionConfiguration());
@@ -32,11 +23,9 @@ void PhysicsModule::startup()
 	// registrateBodies();
 }
 
-void PhysicsModule::shutDown()
+void PhysicsModule::shutdown()
 {
-	LOG_INFO("PhysicsModule: Shut down");
-
-
+	
 }
 
 void PhysicsModule::tick(float deltaTime)
@@ -60,9 +49,9 @@ void PhysicsModule::setupWorldProperties()
 
 void PhysicsModule::registrateBodies()
 {
-	LOG_INFO("Physics Module: Rigistrate Rigidbodies");
+	m_logger->log(Logger::LogVerbosity::Info, "Registration rigid bodies", "Physics Module");
 
-	auto& world = ECSModule::getInstance().getCurrentWorld();
+	auto& world = m_ecsModule->getCurrentWorld();
 
 	auto query = world.query<RigidbodyComponent, PositionComponent, RotationComponent, MeshComponent>();
 

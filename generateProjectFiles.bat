@@ -12,4 +12,4 @@ if not exist build (
 cd build
 
 :: Вызываем CMake с правильным путём к conan_toolchain.cmake
-cmake .. -DCMAKE_TOOLCHAIN_FILE="Engine/ThirdParty/conan_toolchain.cmake" --fresh
+cmake .. -DCMAKE_TOOLCHAIN_FILE="Engine/ThirdParty/conan_toolchain.cmake" --fresh 

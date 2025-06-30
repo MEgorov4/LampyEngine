@@ -1,49 +1,51 @@
 #pragma once
+
 #include <memory>
-#include <functional>
+
+#include "../../EngineContext/IModule.h"
+#include "../../EngineContext/ModuleRegistry.h"
+
 #include "../EventModule/Event.h"
-class Window;
-/// <summary>
-/// Manages user input events such as keyboard, mouse movement, and scrolling.
-/// Uses function callbacks to handle input from a given window.
-/// </summary>
-class InputModule
+
+namespace Logger
 {
-public:
-    Event<int, int, int, int> OnKeyAction;
+    class Logger;
+}
 
-    Event<double, double> OnScrollAction;
+namespace WindowModule
+{
+    class WindowModule;
+}
 
-    Event<double, double> OnMousePosAction;
-
+namespace InputModule
+{
     /// <summary>
-    /// Constructs an empty InputModule.
+    /// Manages user input events such as keyboard, mouse movement, and scrolling.
+    /// Uses function callbacks to handle input from a given window.
     /// </summary>
-    InputModule() {}
-
-    /// <summary>
-    /// Destroys the InputModule.
-    /// </summary>
-    ~InputModule() {}
-
-    /// <summary>
-    /// Retrieves the singleton instance of the InputModule.
-    /// </summary>
-    /// <returns>Reference to the singleton InputModule instance.</returns>
-    static InputModule& getInstance()
+    class InputModule : public IModule
     {
-        static InputModule InputModule;
-        return InputModule;
-    }
+        std::shared_ptr<Logger::Logger> m_logger;
+        std::shared_ptr<WindowModule::WindowModule> m_windowModule;
+    public:
+        Event<int, int, int, int> OnKeyAction;
 
-    /// <summary>
-    /// Initializes the input system and registers callbacks for input events.
-    /// </summary>
-    /// <param name="window">Pointer to the window where input will be captured.</param>
-    void startup(Window* window);
+        Event<double, double> OnScrollAction;
 
-    /// <summary>
-    /// Shuts down the input system and clears registered callbacks.
-    /// </summary>
-    void shutDown();
-};
+        Event<double, double> OnMousePosAction;
+
+        /// <summary>
+        /// Initializes the input system and registers callbacks for input events.
+        /// </summary>
+        /// <param name="window">Pointer to the window where input will be captured.</param>
+        void startup(const ModuleRegistry& registry) override;
+
+        /// <summary>
+        /// Shuts down the input system and clears registered callbacks.
+        /// </summary>
+        void shutdown() override;
+
+    private:
+        InputModule& getInstance();
+    };
+}

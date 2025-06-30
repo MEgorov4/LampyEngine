@@ -10,6 +10,7 @@ add_library(LuaScriptModule ${LUA_SCRIPT_MODULE_SOURCE})
 target_link_libraries(LuaScriptModule 
     PUBLIC 
         sol2::sol2  
+        EngineContext
     PRIVATE 
         LoggerModule 
         EventModule 

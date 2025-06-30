@@ -1,45 +1,55 @@
 #include "EditorGUIModule.h"
 
 
+#include "../ImGuiModule/GUIObject.h"
 #include "../ImGuiModule/ImGuiModule.h"
 #include "../LoggerModule/Logger.h"
+#include "../ProjectModule/ProjectModule.h"
+#include "../LuaScriptModule/LuaScriptModule.h"
+#include "../RenderModule/RenderModule.h"
+#include "../InputModule/InputModule.h"
+#include "../FilesystemModule/FilesystemModule.h"
 
-void EditorGUIModule::startup()
+#include "EditorConsole.h"
+#include "EditorToolPanel.h"
+#include "EditorViewport.h"
+#include "MainMenuBar.h"
+#include "OutputLog.h"
+
+#include "ContentBrowser/ContentBrowser.h"
+#include "WorldInspector/WorldInspector.h"
+
+
+void EditorGUIModule::startup(const ModuleRegistry& registry)
 {
-    ImGuiModule::getInstance().startup();
-    LOG_INFO("EditorGUIModule: Startup");
-    m_toolPanel = std::make_unique<GUIEditorToolPanel>();
-    m_mainMenuBar = std::make_unique<GUIMainMenuBar>();
-    m_outputLog = std::make_unique<GUIOutputLog>();
-    m_contentBrowser = std::make_unique<GUIContentBrowser>();
-    m_worldInspector = std::make_unique<GUIWorldInspector>();
-    m_viewport = std::make_unique<GUIEditorViewport>();
-    m_console = std::make_unique<GUIEditorConsole>();
-    //m_scriptPanel = std::make_unique<GUIEditorScriptPanel>();
+    m_imGuiModule = std::dynamic_pointer_cast<ImGuiModule::ImGuiModule>(registry.getModule("ImGuiModule"));
+    m_inputModule = std::dynamic_pointer_cast<InputModule::InputModule>(registry.getModule("InputModule"));
+    m_projectModule = std::dynamic_pointer_cast<ProjectModule::ProjectModule>(registry.getModule("ProjectModule"));
+    m_filesystemModule = std::dynamic_pointer_cast<FilesystemModule::FilesystemModule>(registry.getModule("FilesystemModule"));
+    m_luaScriptModule = std::dynamic_pointer_cast<ScriptModule::LuaScriptModule>(registry.getModule("ScriptModule"));
+    m_ecsModule = std::dynamic_pointer_cast<ECSModule::ECSModule>(registry.getModule("ECSModule"));
+    m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
+    m_renderModule = std::dynamic_pointer_cast<RenderModule::RenderModule>(registry.getModule("RenderModule"));
+
+    m_logger->log(Logger::LogVerbosity::Info, "Startup", "EditorGUIModule");
+    
+    m_logger->log(Logger::LogVerbosity::Info, "Create GUI objects", "EditorGUIModule");
+    m_imGuiModule->addObject(new GUIEditorToolPanel(m_ecsModule, m_projectModule));
+    m_imGuiModule->addObject(new GUIMainMenuBar());
+    m_imGuiModule->addObject(new GUIOutputLog(m_logger));
+    m_imGuiModule->addObject(new GUIContentBrowser(m_filesystemModule, m_projectModule, m_ecsModule));
+    m_imGuiModule->addObject(new GUIWorldInspector(m_projectModule, m_filesystemModule, m_ecsModule));
+    m_imGuiModule->addObject(new GUIEditorViewport(m_renderModule, m_inputModule, m_ecsModule));
+    m_imGuiModule->addObject(new GUIEditorConsole(m_luaScriptModule));
 }
 
-void EditorGUIModule::render()
+void EditorGUIModule::shutdown()
 {
-	ImGuiModule::getInstance().renderUI();
+    m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "EditorGUIModule");
 }
 
-GUIMainMenuBar* EditorGUIModule::getMenuBar()
+void EditorGUIModule::render() const
 {
-    return m_mainMenuBar.get();
+	m_imGuiModule->renderUI();
 }
 
-void EditorGUIModule::shutDown()
-{
-    LOG_INFO("EditorGUIModule: Shut down");
-
-    m_toolPanel.reset();
-    m_mainMenuBar.reset();
-    m_outputLog.reset();
-    m_contentBrowser.reset();
-    m_worldInspector.reset();
-    m_viewport.reset();
-    m_console.reset();
-    //m_scriptPanel.reset();
-
-    ImGuiModule::getInstance().shutDown();
-}

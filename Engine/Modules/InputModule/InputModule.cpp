@@ -2,29 +2,39 @@
 
 #include "../LoggerModule/Logger.h"
 #include "../WindowModule/Window.h"
-
-void InputModule::startup(Window* window)
+#include "../WindowModule/WindowModule.h"
+namespace InputModule
 {
-    LOG_INFO("InputModule: Startup");
 
-    window->setKeyCallback([](GLFWwindow* win, int key, int scancode, int action, int mods) {
-        auto& instance = getInstance();
-        instance.OnKeyAction(key, scancode, action, mods);
-        });
+	void InputModule::startup(const ModuleRegistry& registry)
+	{
+		m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
+		m_windowModule = std::dynamic_pointer_cast<WindowModule::WindowModule>(registry.getModule("WindowModule"));
 
-    window->setCursorPositionCallback([](GLFWwindow* win, double xpos, double ypos) {
-        auto& instance = getInstance();
-        instance.OnMousePosAction(xpos, ypos);
-        });
+		WindowModule::Window* window = m_windowModule->getWindow();
+		m_logger->log(Logger::LogVerbosity::Info,"Set input callbacks", "InputModule");
+		if (window)
+		{
+			window->setKeyCallback([](GLFWwindow* win, int key, int scancode, int action, int mods) {
+				
+				//OnKeyAction(key, scancode, action, mods);
+				});
 
-    window->setScrollCallback([](GLFWwindow* win, double xoffset, double yoffset) {
-        auto& instance = getInstance();
-        instance.OnScrollAction(xoffset, yoffset);
-        });
-}
+			window->setCursorPositionCallback([](GLFWwindow* win, double xpos, double ypos) {
+				//OnMousePosAction(xpos, ypos);
+				});
 
+			window->setScrollCallback([](GLFWwindow* win, double xoffset, double yoffset) {
+				//OnScrollAction(xoffset, yoffset);
+				});
+		}
+		else
+		{
+			m_logger->log(Logger::LogVerbosity::Error, "Window instance is null", "InputModule");
+		}
+	}
 
-void InputModule::shutDown()
-{
-    LOG_INFO("InputModule: Shut down");
+	void InputModule::shutdown()
+	{
+	}
 }

@@ -1,12 +1,14 @@
 #include "BaseResource.h"
 
-
-std::string BaseResource::getGUID() const
+namespace ResourceModule
 {
-	return GUID;
-}
+	std::string BaseResource::getGUID() const
+	{
+		return GUID;
+	}
 
-void BaseResource::setGUID(std::string& newGUID)
-{
-	GUID = newGUID;
+	void BaseResource::setGUID(const std::string& newGUID)
+	{
+		GUID = newGUID;
+	}
 }

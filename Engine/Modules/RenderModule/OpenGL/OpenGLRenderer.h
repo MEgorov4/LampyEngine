@@ -1,50 +1,63 @@
-#pragma once 
+#pragma once
 
 #include <memory>
+#include <GL/glew.h>
 
 #include "../IRenderer.h"
-#include "../../WindowModule/Window.h"
 
-class OpenGLFramebuffer;
-class OpenGLShader;
-class OpenGLVertexBuffer;
-class OpenGLMesh2D;
-
-class OpenGLRenderer : public IRenderer
+namespace WindowModule
 {
-	Window* m_window;
+    class Window;
+}
 
-	std::unique_ptr<OpenGLFramebuffer> m_offscreenFramebuffer;
-	std::unique_ptr<OpenGLFramebuffer> m_shadowFramebuffer;
-	std::unique_ptr<OpenGLFramebuffer> m_reflectionFramebuffer;
-	std::unique_ptr<OpenGLFramebuffer> m_lightFramebuffer;
-	std::unique_ptr<OpenGLFramebuffer> m_finalFramebuffer;
-	std::unique_ptr<OpenGLFramebuffer> m_textureFramebuffer;
-	std::unique_ptr<OpenGLFramebuffer> m_customFramebuffer;
-	
-	std::unique_ptr<OpenGLMesh2D> m_quadMesh2D;
+namespace ResourceModule
+{
+    class ResourceManager;
+}
 
-	GLuint m_quadVAO;
-	GLuint m_quadVBO;
+namespace RenderModule::OpenGL
+{
+    class OpenGLFramebuffer;
+    class OpenGLShader;
+    class OpenGLVertexBuffer;
+    class OpenGLMesh2D;
 
-public:
-	OpenGLRenderer(Window* window);
+    class OpenGLRenderer : public IRenderer
+    {
+        WindowModule::Window* m_window;
 
-	void render() override;
+        std::unique_ptr<OpenGLFramebuffer> m_offscreenFramebuffer;
+        std::unique_ptr<OpenGLFramebuffer> m_shadowFramebuffer;
+        std::unique_ptr<OpenGLFramebuffer> m_reflectionFramebuffer;
+        std::unique_ptr<OpenGLFramebuffer> m_lightFramebuffer;
+        std::unique_ptr<OpenGLFramebuffer> m_finalFramebuffer;
+        std::unique_ptr<OpenGLFramebuffer> m_textureFramebuffer;
+        std::unique_ptr<OpenGLFramebuffer> m_customFramebuffer;
 
-	void* getOffscreenImageDescriptor() override;
+        std::unique_ptr<OpenGLMesh2D> m_quadMesh2D;
 
-	void waitIdle() override;
+        GLuint m_quadVAO;
+        GLuint m_quadVBO;
 
-	virtual void drawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color) override;
-private:
-	void init();
-	void initImGui();
+    public:
+        OpenGLRenderer(std::shared_ptr<ResourceModule::ResourceManager> resourceManager, std::shared_ptr<ECSModule::ECSModule> ecsModule, WindowModule::Window* window);
 
-	void debugMessageHandle(std::string& message);
+        void render() override;
 
-	void renderWorld();
+        void* getOffscreenImageDescriptor() override;
 
-	void renderPass(const RenderPassData& renderPassData);
+        void waitIdle() override;
 
-};
+        virtual void drawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color) override;
+
+    private:
+        void init();
+        void initImGui();
+
+        void debugMessageHandle(std::string& message);
+
+        void renderWorld();
+
+        void renderPass(const RenderPassData& renderPassData);
+    };
+}

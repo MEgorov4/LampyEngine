@@ -12,7 +12,15 @@
 
 class IComponentRenderer
 {
+protected:
+	std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
+	std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
+	
 public:
+	IComponentRenderer(const std::shared_ptr<ProjectModule::ProjectModule> projectModule,
+		const std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule) : m_projectModule(projectModule),
+	m_filesystemModule(filesystemModule){}
+	
 	virtual void render(flecs::entity& entity) = 0;
 	virtual ~IComponentRenderer() {}
 };
@@ -20,6 +28,12 @@ public:
 class PositionRenderer : public IComponentRenderer
 {
 public:
+	PositionRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
+		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
+		: IComponentRenderer(projectModule, filesystemModule)
+	{
+	}
+
 	void render(flecs::entity& entity) override
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
@@ -50,6 +64,12 @@ public:
 class RotationRenderer : public IComponentRenderer
 {
 public:
+	RotationRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
+		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
+		: IComponentRenderer(projectModule, filesystemModule)
+	{
+	}
+
 	void render(flecs::entity& entity) override
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
@@ -80,6 +100,12 @@ public:
 class ScaleRenderer : public IComponentRenderer
 {
 public:
+	ScaleRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
+		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
+		: IComponentRenderer(projectModule, filesystemModule)
+	{
+	}
+
 	void render(flecs::entity& entity) override
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
@@ -111,6 +137,12 @@ public:
 class MeshComponentRenderer : public IComponentRenderer
 {
 public:
+	MeshComponentRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
+		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
+		: IComponentRenderer(projectModule, filesystemModule)
+	{
+	}
+
 	void render(flecs::entity& entity) override
 	{
 		if (ImGui::BeginChildFrame(2, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4))) {
@@ -127,8 +159,11 @@ public:
 				ImGui::Text("Mesh path:");
 				ImGui::SameLine();
 
-				std::string resPath = ProjectModule::getInstance().getProjectConfig().getResourcesPath();
-				ImGui::Text(FS.getFileName(meshComponent->meshResourcePath).size() > 0 ? FS.getFileName(meshComponent->meshResourcePath).c_str() : "empty");
+				std::string resPath = m_projectModule->getProjectConfig().getResourcesPath();
+				if (!m_filesystemModule->getFileName(meshComponent->meshResourcePath).empty())
+					ImGui::Text(m_filesystemModule->getFileName(meshComponent->meshResourcePath).c_str());
+				else
+					ImGui::Text("empty");
 
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {
@@ -142,7 +177,9 @@ public:
 
 							entity.modified<MeshComponent>();
 
+							/*
 							LOG_INFO(std::format("Dropped file: {}", droppedPath));
+						*/
 						}
 					}
 					ImGui::EndDragDropTarget();
@@ -150,7 +187,7 @@ public:
 
 				ImGui::Text("Texture path:");
 				ImGui::SameLine();
-				ImGui::Text(FS.getFileName(meshComponent->texturePath).size() > 0 ? FS.getFileName(meshComponent->texturePath).c_str() : "empty");
+				ImGui::Text(m_filesystemModule->getFileName(meshComponent->texturePath).size() > 0 ? m_filesystemModule->getFileName(meshComponent->texturePath).c_str() : "empty");
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {
 						std::string droppedPath = static_cast<const char*>(payload->Data);
@@ -164,7 +201,9 @@ public:
 
 								entity.modified<MeshComponent>();
 
+								/*
 								LOG_INFO(std::format("Dropped file: {}", droppedPath));
+							*/
 							}
 						}
 					}
@@ -181,6 +220,12 @@ public:
 
 class ScriptRenderer : public IComponentRenderer {
 public:
+	ScriptRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
+		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
+		: IComponentRenderer(projectModule, filesystemModule)
+	{
+	}
+
 	void render(flecs::entity& entity) override {
 		if (ImGui::BeginChildFrame(3, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4))) {
 			if (const ScriptComponent* script = entity.get<ScriptComponent>()) {
@@ -196,8 +241,8 @@ public:
 				ImGui::Text("Path:");
 				ImGui::SameLine();
 
-				std::string resPath = ProjectModule::getInstance().getProjectConfig().getResourcesPath();
-				ImGui::Text(FS.getFileName(script->scriptPath).empty() ? "empty" : FS.getFileName(script->scriptPath).c_str());
+				std::string resPath = m_projectModule->getProjectConfig().getResourcesPath();
+				ImGui::Text(m_filesystemModule->getFileName(script->scriptPath).empty() ? "empty" : m_filesystemModule->getFileName(script->scriptPath).c_str());
 
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {
@@ -205,7 +250,9 @@ public:
 						if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".lua") {
 							entity.set<ScriptComponent>({droppedPath});
 						}
+						/*
 						LOG_INFO(std::format("Dropped file: {}", droppedPath));
+					*/
 					}
 					ImGui::EndDragDropTarget();
 				}
@@ -218,6 +265,12 @@ public:
 
 class DirectionalLightRenderer : public IComponentRenderer {
 public:
+	DirectionalLightRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
+		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
+		: IComponentRenderer(projectModule, filesystemModule)
+	{
+	}
+
 	void render(flecs::entity& entity) override {
 		if (ImGui::BeginChildFrame(4, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4))) {
 			if (const DirectionalLightComponent* dirLightComponent = entity.get<DirectionalLightComponent>())
@@ -243,6 +296,12 @@ public:
 class CameraRenderer : public IComponentRenderer
 {
 public:
+	CameraRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
+		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
+		: IComponentRenderer(projectModule, filesystemModule)
+	{
+	}
+
 	void render(flecs::entity& entity) override
 	{
 		if (ImGui::BeginChildFrame(3, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 2.25))) {
@@ -308,6 +367,12 @@ public:
 class RigidbodyRenderer : public IComponentRenderer
 {
 public:
+	RigidbodyRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
+		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
+		: IComponentRenderer(projectModule, filesystemModule)
+	{
+	}
+
 	void render(flecs::entity& entity) override
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);

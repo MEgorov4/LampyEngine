@@ -1,42 +1,45 @@
-#pragma once 
-
-#include <string>
+#pragma once
 #include <optional>
 #include <vector>
+#include <string>
 #include <filesystem>
+#include <memory>
 
 #include "FilesystemModule.h"
 
-namespace fs = std::filesystem;
-
-class DirectoryIterator
+namespace FilesystemModule
 {
-	std::optional<uint64_t> m_dirLastEditTime;
-	fs::path m_rootPath;
-	fs::path m_currentPath;
-public:
-	using constr = const std::string&;
+    namespace fs = std::filesystem;
 
-	/// <summary>
-	/// Default constructor. Iterator begins from default resources path.
-	/// </summary>
-	DirectoryIterator();
-	
-	/// <summary>
-	/// Constructor with initialisation from startup path.
-	/// </summary>
-	/// <param name="startupPath">Startup path</param>
-	DirectoryIterator(constr startupPath);
+    class DirectoryIterator
+    {
+        FilesystemModule* m_filesystemModule;
+        std::shared_ptr<Logger::Logger> m_logger;
+        std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
 
-	FResult stepIntoRoot();
-	FResult stepIntoParent();
-	FResult stepIntoFolder(constr folderName);
+        std::optional<uint64_t> m_dirLastEditTime;
+        fs::path m_rootPath;
+        fs::path m_currentPath;
 
-	std::string getCurrentDirName();
-	std::string getCurrentDir();
-	std::string getCurrentDirWithAppend(constr appendName);
-	std::vector<std::string> getCurrentDirContents(const ContentSearchFilter& filter);
+    public:
+        using constr = const std::string&;
 
-	bool isRootPath();
-	bool isCurrentDirChanged();
-};
+        DirectoryIterator(FilesystemModule* filesystemModule
+                          , std::shared_ptr<Logger::Logger> logger
+                          , std::shared_ptr<ProjectModule::ProjectModule> projectModule
+                          , const std::string& rootPath
+                          , const std::string& currentPath);
+
+        FResult stepIntoRoot();
+        FResult stepIntoParent();
+        FResult stepIntoFolder(constr folderName);
+
+        std::string getCurrentDirName();
+        std::string getCurrentDir();
+        std::string getCurrentDirWithAppend(constr appendName);
+        std::vector<std::string> getCurrentDirContents(const ContentSearchFilter& filter);
+
+        bool isRootPath();
+        bool isCurrentDirChanged();
+    };
+}

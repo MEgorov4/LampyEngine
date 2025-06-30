@@ -1,58 +1,64 @@
 #pragma once
 #include <memory>
 
-#include "EditorToolPanel.h"
-#include "MainMenuBar.h"
-#include "OutputLog.h"
-#include "ContentBrowser/ContentBrowser.h"
-#include "EditorViewport.h"
-#include "EditorConsole.h"
-#include "EditorScriptPanel.h"
-#include "WorldInspector/WorldInspector.h"
-/// <summary>
-/// Manages the graphical user interface (GUI) of the editor, including tool panels, menu bars, logs, and content browsers.
-/// Implements a singleton pattern to ensure a single instance.
-/// </summary>
-class EditorGUIModule
+#include "../../EngineContext/IModule.h"
+#include "../../EngineContext/ModuleRegistry.h"
+
+namespace ScriptModule
 {
-    std::unique_ptr<GUIEditorToolPanel> m_toolPanel; ///< Unique pointer to the editor tool panel.
-    std::unique_ptr<GUIMainMenuBar> m_mainMenuBar; ///< Unique pointer to the main menu bar.
-    std::unique_ptr<GUIOutputLog> m_outputLog; ///< Unique pointer to the output log.
-    std::unique_ptr<GUIContentBrowser> m_contentBrowser; ///< Unique pointer to the content browser.
-    std::unique_ptr<GUIWorldInspector> m_worldInspector; ///< Unique pointer to the world inspector.
-    std::unique_ptr<GUIEditorViewport> m_viewport; ///< Unique pointer to the viewport.
-    std::unique_ptr<GUIEditorConsole> m_console; ///< Unique pointer to the console.
-    std::unique_ptr<GUIEditorScriptPanel> m_scriptPanel;
+    class LuaScriptModule;
+}
 
+namespace RenderModule
+{
+    class RenderModule;
+}
+
+namespace InputModule
+{
+    class InputModule;
+}
+
+namespace FilesystemModule
+{
+    class FilesystemModule;
+}
+
+namespace ECSModule
+{
+    class ECSModule;
+}
+
+namespace ProjectModule
+{
+    class ProjectModule;
+}
+
+namespace Logger
+{
+    class Logger;
+}
+
+namespace ImGuiModule
+{
+    class ImGuiModule;
+}
+
+
+class EditorGUIModule : public IModule
+{
+    std::shared_ptr<ImGuiModule::ImGuiModule> m_imGuiModule;
+    std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
+    std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
+    std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
+    std::shared_ptr<RenderModule::RenderModule> m_renderModule;
+    std::shared_ptr<InputModule::InputModule> m_inputModule;
+    std::shared_ptr<ScriptModule::LuaScriptModule> m_luaScriptModule;
+    
+    std::shared_ptr<Logger::Logger> m_logger;
 public:
-    /// <summary>
-    /// Retrieves the singleton instance of the EditorGUIModule.
-    /// </summary>
-    /// <returns>Reference to the singleton EditorGUIModule instance.</returns>
-    static EditorGUIModule& getInstance()
-    {
-        static EditorGUIModule EditorGUIModule;
-        return EditorGUIModule;
-    }
-
-    /// <summary>
-    /// Initializes the editor GUI by creating tool panels, menus, logs, and content browsers.
-    /// </summary>
-
-    void startup();
-    /// <summary>
-    /// Renders the GUI elements using the ImGui module.
-    /// </summary>
-    void render();
-
-    /// <summary>
-    /// Retrieves a pointer to the main menu bar instance.
-    /// </summary>
-    /// <returns>Pointer to the GUIMainMenuBar instance.</returns>
-    GUIMainMenuBar* getMenuBar();
-
-    /// <summary>
-    /// Shuts down the editor GUI by releasing all GUI components.
-    /// </summary>
-    void shutDown();
+    void startup(const ModuleRegistry& registry) override;
+    void shutdown() override;
+    
+    void render() const;
 };

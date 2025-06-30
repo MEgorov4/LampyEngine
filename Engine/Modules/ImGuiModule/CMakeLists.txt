@@ -10,6 +10,7 @@ add_library(ImGuiModule ${IMGUI_MODULE})
 target_link_libraries(ImGuiModule 
     PUBLIC 
         imgui::imgui
+        EngineContext
     PRIVATE
         glfw
         Vulkan::Loader
