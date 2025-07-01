@@ -47,7 +47,6 @@ void Engine::startup()
     m_moduleManager->createModule<ShaderCompiler::ShaderCompiler>("ShaderCompiler");
     m_moduleManager->createModule<ResourceModule::ResourceManager>("ResourceManager");
     m_renderModule = m_moduleManager->createModule<RenderModule::RenderModule>("RenderModule");
-    m_moduleManager->createModule<ImGUIModule::ImGUIModule>("ImGuiModule");
 
     m_ecsModule = m_moduleManager->createModule<ECSModule::ECSModule>("ECSModule");
     m_moduleManager->createModule<ScriptModule::LuaScriptModule>("ScriptModule");
