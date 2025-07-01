@@ -1,6 +1,6 @@
 #include "GUIObject.h"
 
-namespace ImGuiModule
+namespace ImGUIModule
 {
     GUIObject::GUIObject()
     {

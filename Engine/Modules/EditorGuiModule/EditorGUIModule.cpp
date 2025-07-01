@@ -22,7 +22,7 @@
 
 void EditorGUIModule::startup(const ModuleRegistry& registry)
 {
-    m_imGuiModule = std::dynamic_pointer_cast<ImGuiModule::ImGuiModule>(registry.getModule("ImGuiModule"));
+    m_imGuiModule = std::dynamic_pointer_cast<ImGUIModule::ImGUIModule>(registry.getModule("ImGuiModule"));
     m_inputModule = std::dynamic_pointer_cast<InputModule::InputModule>(registry.getModule("InputModule"));
     m_projectModule = std::dynamic_pointer_cast<ProjectModule::ProjectModule>(registry.getModule("ProjectModule"));
     m_filesystemModule = std::dynamic_pointer_cast<FilesystemModule::FilesystemModule>(registry.getModule("FilesystemModule"));
@@ -49,8 +49,9 @@ void EditorGUIModule::shutdown()
     m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "EditorGUIModule");
 }
 
-void EditorGUIModule::render() const
+
+void EditorGUIModule::render(float deltaTime) const
 {
-	m_imGuiModule->renderUI();
+	m_imGuiModule->renderUI(deltaTime);
 }
 

@@ -10,7 +10,10 @@
 #include "../../../EngineContext/ModuleRegistry.h"
 
 
-class PhysicsModule;
+namespace PhysicsModule
+{
+    class PhysicsModule;
+}
 
 namespace ScriptModule
 {
@@ -19,17 +22,19 @@ namespace ScriptModule
 
 namespace FilesystemModule
 {
-   class FilesystemModule; 
+    class FilesystemModule;
 }
 
 namespace ProjectModule
 {
     class ProjectModule;
 }
+
 namespace ResourceModule
 {
     class ResourceManager;
 }
+
 namespace Logger
 {
     class Logger;
@@ -44,18 +49,18 @@ namespace ECSModule
         std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
         std::shared_ptr<ResourceModule::ResourceManager> m_resourceManager;
         std::shared_ptr<ScriptModule::LuaScriptModule> m_luaScriptModule;
-        std::shared_ptr<PhysicsModule> m_physicsModule;
-        
+        std::shared_ptr<PhysicsModule::PhysicsModule> m_physicsModule;
+
         bool m_tickEnabled = false;
         std::string m_currentWorldFile;
         std::string m_currentWorldData;
         flecs::world m_world;
         std::vector<std::pair<flecs::id_t, std::string>> m_registeredComponents;
-    public:
 
+    public:
         void startup(const ModuleRegistry& registry) override;
         void shutdown() override;
-        
+
         void fillDefaultWorld();
         void loadWorldFromFile(const std::string& path);
         void setCurrentWorldPath(const std::string& path);

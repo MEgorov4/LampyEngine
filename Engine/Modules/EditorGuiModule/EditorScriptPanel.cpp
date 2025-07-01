@@ -10,7 +10,7 @@ GUIEditorScriptPanel::GUIEditorScriptPanel(const std::shared_ptr<FilesystemModul
 			, FilesystemModule::ContentSearchFilter{ FilesystemModule::DirContentType::ALL, std::vector<std::string>({".lua"})});
 }
 
-void GUIEditorScriptPanel::render()
+void GUIEditorScriptPanel::render(float deltaTime)
 {
 	if (ImGui::Begin("ScriptComponent Panel"))
 	{

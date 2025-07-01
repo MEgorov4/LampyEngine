@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace ImGuiModule
+namespace ImGUIModule
 {
     /// <summary>
     /// Represents a base class for GUI objects that can be rendered using ImGui.
@@ -25,7 +25,7 @@ namespace ImGuiModule
         /// Virtual function for rendering the GUI object.
         /// Override this method in derived classes to implement custom rendering logic.
         /// </summary>
-        virtual void render() = 0;
+        virtual void render(float deltaTime) = 0;
 
         /// <summary>
         /// Retrieves the unique ID of the GUI object.

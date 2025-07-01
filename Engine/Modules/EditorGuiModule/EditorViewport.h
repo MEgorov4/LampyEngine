@@ -16,7 +16,7 @@ namespace RenderModule
     class RenderModule;
 }
 
-class GUIEditorViewport : public ImGuiModule::GUIObject
+class GUIEditorViewport : public ImGUIModule::GUIObject
 {
     std::shared_ptr<Logger::Logger> m_logger;
     std::shared_ptr<RenderModule::RenderModule> m_renderModule;
@@ -34,7 +34,7 @@ class GUIEditorViewport : public ImGuiModule::GUIObject
     glm::vec3 m_cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
     float m_cameraSpeed = 0.10f;
-
+    float m_deltaTime = 0.f;
     bool m_firstMouse = true;
     float m_lastX, m_lastY;
 
@@ -46,7 +46,7 @@ public:
                       const std::shared_ptr<ECSModule::ECSModule>& ecsModule);
     virtual ~GUIEditorViewport() override;
 
-    virtual void render() override;
+    virtual void render(float deltaTime) override;
 
 private:
     void onKeyAction(SDL_KeyboardEvent event);

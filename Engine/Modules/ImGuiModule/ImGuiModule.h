@@ -14,7 +14,7 @@ namespace Logger
 {
     class Logger;
 }
-namespace ImGuiModule
+namespace ImGUIModule
 {
     class GUIObject;
 
@@ -22,7 +22,7 @@ namespace ImGuiModule
     /// Manages the ImGui user interface system, handling GUI object registration and rendering.
     /// Implements a singleton pattern to ensure a single instance.
     /// </summary>
-    class ImGuiModule : public IModule
+    class ImGUIModule : public IModule
     {
         std::shared_ptr<Logger::Logger> m_logger;
         std::shared_ptr<InputModule::InputModule> m_inputModule;
@@ -37,7 +37,7 @@ namespace ImGuiModule
         /// Renders the ImGui user interface.
         /// Calls the render function of all registered GUI objects.
         /// </summary>
-        void renderUI() const;
+        void renderUI(float deltaTime) const;
 
         std::weak_ptr<GUIObject> addObject(GUIObject* object);
         void removeObject(const std::weak_ptr<GUIObject>& object);

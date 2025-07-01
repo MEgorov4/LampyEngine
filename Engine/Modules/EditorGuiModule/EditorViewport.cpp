@@ -12,7 +12,7 @@ GUIEditorViewport::GUIEditorViewport(const std::shared_ptr<Logger::Logger>& logg
                                      const std::shared_ptr<RenderModule::RenderModule>& renderModule,
                                      const std::shared_ptr<InputModule::InputModule>& inputModule,
                                      const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-    : ImGuiModule::GUIObject()
+    : ImGUIModule::GUIObject()
       , m_logger(logger)
       , m_renderModule(renderModule)
       , m_inputModule(inputModule)
@@ -36,8 +36,9 @@ GUIEditorViewport::~GUIEditorViewport()
     m_inputModule->OnMouseMotionEvent.unsubscribe(m_mouseActionHandlerID);
 }
 
-void GUIEditorViewport::render()
+void GUIEditorViewport::render(float deltaTime)
 {
+    m_deltaTime = deltaTime;
     if (ImGui::Begin("Viewport", 0, ImGuiWindowFlags_NoScrollbar))
     {
         m_processInput = ImGui::IsWindowFocused() && ImGui::IsMouseDown(ImGuiMouseButton_Right);
@@ -51,7 +52,7 @@ void GUIEditorViewport::render()
 
 void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
 {
-    m_logger->log(Logger::LogVerbosity::Info, "Key action catch: " + std::to_string(event.key),
+    m_logger->log(Logger::LogVerbosity::Info, "Key action catch: " + std::to_string(event.key) + '\n' + "Current delta time: " + std::to_string(m_deltaTime),
                   "EditorGUIModule_GUIEditorViewport");
     if (!m_processInput)
         return;
@@ -60,7 +61,6 @@ void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
 
     float speed = m_cameraSpeed;
     glm::vec3 movement(0.0f);
-
     glm::vec3 cameraFront = cameraRotation * glm::vec3(0, 0, -1);
     cameraFront = glm::normalize(cameraFront);
 
@@ -76,14 +76,14 @@ void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
     if (event.key == SDLK_D)
         movement += speed * cameraRight;
 
-    glm::vec3 cameraUp = cameraRotation * glm::vec3(0, 1, 0);
+    glm::vec3 cameraUp = cameraRotation * glm::vec4(0, 1, 0, 1);
     if (event.key == SDLK_SPACE)
         movement += speed * cameraUp;
     if (event.key == SDL_KMOD_CTRL)
         movement -= speed * cameraUp;
 
-    m_cameraPos += movement;
-
+    glm::vec3 newCameraPos = m_cameraPos + movement;
+    m_cameraPos = glm::mix(m_cameraPos, newCameraPos, 0.5) ;
     if (m_viewportEntity.is_alive())
     {
         m_viewportEntity.set<PositionComponent>({.x = m_cameraPos.x, .y = m_cameraPos.y, .z = m_cameraPos.z});

@@ -14,7 +14,7 @@ GUIOutputLog::~GUIOutputLog()
     m_logger->OnMessagePushed.unsubscribe(m_subscriberID);
 }
 
-void GUIOutputLog::render()
+void GUIOutputLog::render(float deltaTime)
 {
     ImGui::Begin("Console Log", nullptr, 0);
 

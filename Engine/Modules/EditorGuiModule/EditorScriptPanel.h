@@ -8,12 +8,12 @@ namespace FilesystemModule
 	class FilesystemModule;
 }
 
-class GUIEditorScriptPanel : ImGuiModule::GUIObject
+class GUIEditorScriptPanel : ImGUIModule::GUIObject
 {
 	std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
 public:
 	GUIEditorScriptPanel(const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule);
 	~GUIEditorScriptPanel() override = default;
 
-	void render() override;
+	void render(float deltaTime) override;
 };

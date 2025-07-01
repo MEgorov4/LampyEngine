@@ -4,7 +4,7 @@
 #include "../EventModule/Event.h"
 
 
-class GUIMainMenuBar : public ImGuiModule::GUIObject
+class GUIMainMenuBar : public ImGUIModule::GUIObject
 {
 public:
 	GUIMainMenuBar();
@@ -12,5 +12,5 @@ public:
 
 	Event<std::string> OnOpenClicked;
 	
-	virtual void render() override;
+	virtual void render(float deltaTime) override;
 };

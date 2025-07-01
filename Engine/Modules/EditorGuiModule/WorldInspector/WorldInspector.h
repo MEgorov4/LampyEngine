@@ -20,7 +20,7 @@ namespace ECSModule
     class ECSModule;
 }
 
-class GUIWorldInspector : public ImGuiModule::GUIObject
+class GUIWorldInspector : public ImGUIModule::GUIObject
 {
     std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
     std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
@@ -35,7 +35,7 @@ public:
                       const std::shared_ptr<ECSModule::ECSModule>& ecsModule);
     virtual ~GUIWorldInspector() override = default;
 
-    virtual void render() override;
+    virtual void render(float deltaTime) override;
 
 private:
     void renderEntityTreePopup();

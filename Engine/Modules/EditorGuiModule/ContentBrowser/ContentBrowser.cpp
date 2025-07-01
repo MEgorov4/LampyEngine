@@ -11,7 +11,7 @@
 GUIContentBrowser::GUIContentBrowser(std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule,
                                      std::shared_ptr<ProjectModule::ProjectModule> projectModule,
                                      std::shared_ptr<ECSModule::ECSModule> ecsModule)
-    : ImGuiModule::GUIObject()
+    : ImGUIModule::GUIObject()
       , m_filesystemModule(filesystemModule)
       , m_projectModule(projectModule)
       , m_ecsModule(ecsModule)
@@ -38,7 +38,7 @@ void GUIContentBrowser::updateContent()
     thread.detach();
 }
 
-void GUIContentBrowser::render()
+void GUIContentBrowser::render(float deltaTime)
 {
     if (ImGui::Begin("Content Browser"))
     {

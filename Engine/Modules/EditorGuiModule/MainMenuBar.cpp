@@ -9,7 +9,7 @@ GUIMainMenuBar::~GUIMainMenuBar()
 {
 }
 
-void GUIMainMenuBar::render()
+void GUIMainMenuBar::render(float deltaTime)
 {
     if (ImGui::BeginMainMenuBar()) 
     {

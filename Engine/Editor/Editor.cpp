@@ -14,7 +14,7 @@ void Editor::initMajor(ModuleManager* moduleManager)
 
 void Editor::tick(float deltaTime)
 {
-	m_editorGUIModule->render();	
+	m_editorGUIModule->render(deltaTime);	
 }
 
 void Editor::shutdown()

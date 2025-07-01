@@ -39,15 +39,15 @@ namespace Logger
     class Logger;
 }
 
-namespace ImGuiModule
+namespace ImGUIModule
 {
-    class ImGuiModule;
+    class ImGUIModule;
 }
 
 
 class EditorGUIModule : public IModule
 {
-    std::shared_ptr<ImGuiModule::ImGuiModule> m_imGuiModule;
+    std::shared_ptr<ImGUIModule::ImGUIModule> m_imGuiModule;
     std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
     std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
     std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
@@ -60,5 +60,5 @@ public:
     void startup(const ModuleRegistry& registry) override;
     void shutdown() override;
     
-    void render() const;
+    void render(float deltaTime) const;
 };

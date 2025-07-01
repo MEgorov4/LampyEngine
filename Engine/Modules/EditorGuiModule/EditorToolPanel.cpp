@@ -10,11 +10,11 @@
 
 GUIEditorToolPanel::GUIEditorToolPanel(std::shared_ptr<ECSModule::ECSModule> ecsModule,
                                        std::shared_ptr<ProjectModule::ProjectModule> projectModule) :
-    ImGuiModule::GUIObject(), m_ecsModule(ecsModule), m_projectModule(projectModule)
+    ImGUIModule::GUIObject(), m_ecsModule(ecsModule), m_projectModule(projectModule)
 {
 }
 
-void GUIEditorToolPanel::render()
+void GUIEditorToolPanel::render(float deltaTime)
 {
     if (ImGui::Begin("Tool panel", nullptr, 0))
     {

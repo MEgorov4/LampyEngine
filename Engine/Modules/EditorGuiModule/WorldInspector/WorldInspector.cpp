@@ -48,7 +48,7 @@ GUIWorldInspector::GUIWorldInspector(const std::shared_ptr<ProjectModule::Projec
     });
 }
 
-void GUIWorldInspector::render()
+void GUIWorldInspector::render(float deltaTime)
 {
     if (ImGui::Begin("WorldInspector", nullptr, 0))
     {

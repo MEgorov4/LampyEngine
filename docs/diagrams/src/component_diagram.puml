@@ -1,0 +1,89 @@
+@startuml
+!pragma layout smetana
+
+title Lamppy Engine Component Diagram (DI centric)
+
+package EngineCore {
+  component [Engine] as Engine
+  component [Logger Module] as LoggerModule
+  component [Window Module] as WindowModule
+  component [Input Module] as InputModule
+  component [Event Module] as EventModule
+  component [Render Module] as RenderModule
+  component [ShaderCompiler Module] as ShaderCompilerModule
+  component [Resource Module] as ResourceModule
+  component [Physics Module] as PhysicsModule
+  component [ObjectCore Module] as ObjectCoreModule
+  component [ECS Module] as ECSModule
+  component [ImGui Module] as ImGuiModule
+  component [LuaScript Module] as LuaScriptModule
+  component [Filesystem Module] as FilesystemModule
+}
+
+package EngineContext_Core {
+  interface [IEngineContext] as IEngineContext
+  interface [IModule] as IModule
+  component [ModuleManager] as ModuleManager
+
+  ' ModuleManager содержит (управляет жизненным циклом) IModule
+  IModule "*" --* ModuleManager : contains
+}
+
+package EditorView {
+  component [Editor] as Editor
+  component [Project Module] as ProjectModule
+  component [EditorGui Module] as EditorGuiModule
+}
+
+package GameView {
+  component [Game] as Game
+}
+
+' =========================================================================
+' Основные отношения:
+' Engine управляет IEngineContext
+Engine *-- "1" IEngineContext : manages
+
+' Editor и Game реализуют IEngineContext
+Editor ..|> IEngineContext
+Game ..|> IEngineContext
+
+' =========================================================================
+' Зависимости модулей от EngineContext
+' Каждый модуль зависит от IEngineContext, чтобы получить другие модули, которые ему нужны.
+' Это ключевая идея DI.
+
+LoggerModule ..> IEngineContext : uses
+WindowModule ..> IEngineContext : uses
+InputModule ..> IEngineContext : uses
+EventModule ..> IEngineContext : uses
+RenderModule ..> IEngineContext : uses
+ShaderCompilerModule ..> IEngineContext : uses
+ResourceModule ..> IEngineContext : uses
+PhysicsModule ..> IEngineContext : uses
+ObjectCoreModule ..> IEngineContext : uses
+ECSModule ..> IEngineContext : uses
+ImGuiModule ..> IEngineContext : uses
+LuaScriptModule ..> IEngineContext : uses
+FilesystemModule ..> IEngineContext : uses
+ProjectModule ..> IEngineContext : uses
+EditorGuiModule ..> IEngineContext : uses
+
+' =========================================================================
+' Дополнительные зависимости:
+' Некоторые зависимости могут быть не через IEngineContext, а напрямую (например, если один модуль
+' является частью внутреннего контракта другого или предоставляет сервис, который не является
+' "модулем" в смысле IModule, но является частью API другого модуля).
+' Однако, если все зависимости через DI, эти стрелки будут отсутствовать.
+' Я добавлю несколько, которые логичны, даже при DI, например, компилятор шейдеров для рендера.
+
+RenderModule ..> ShaderCompilerModule : uses for compilation
+RenderModule ..> ResourceModule : loads assets
+
+ImGuiModule ..> WindowModule : init with SDL_Window
+EditorGuiModule ..> ImGuiModule : builds UI
+
+' Engine явно управляет ModuleManager, чтобы зарегистрировать и инициализировать модули
+Engine ..> ModuleManager : manages modules
+
+@enduml

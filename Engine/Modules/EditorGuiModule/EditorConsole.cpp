@@ -8,7 +8,7 @@ GUIEditorConsole::GUIEditorConsole(const std::shared_ptr<ScriptModule::LuaScript
 
 }
 
-void GUIEditorConsole::render()
+void GUIEditorConsole::render(float deltaTime)
 {
 	ImGui::Begin("Console");
 

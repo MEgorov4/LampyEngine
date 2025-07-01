@@ -25,7 +25,7 @@ namespace ECSModule
         m_filesystemModule = std::dynamic_pointer_cast<FilesystemModule::FilesystemModule>(registry.getModule("FilesystemModule"));
         m_resourceManager = std::dynamic_pointer_cast<ResourceModule::ResourceManager>(registry.getModule("ResourceManager"));
         m_luaScriptModule = std::dynamic_pointer_cast<ScriptModule::LuaScriptModule>(registry.getModule("ScriptModule"));
-        m_physicsModule = std::dynamic_pointer_cast<PhysicsModule>(registry.getModule("PhysicsModule"));
+        m_physicsModule = std::dynamic_pointer_cast<PhysicsModule::PhysicsModule>(registry.getModule("PhysicsModule"));
 
         m_logger->log(Logger::LogVerbosity::Info, "Startup", "ECSModule");
         /*

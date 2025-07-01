@@ -24,7 +24,7 @@ namespace FilesystemModule
 
 class GUIFolderActionPopup;
 
-class GUIContentBrowser : public ImGuiModule::GUIObject
+class GUIContentBrowser : public ImGUIModule::GUIObject
 {
     std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
     std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
@@ -45,7 +45,7 @@ public:
                       std::shared_ptr<ECSModule::ECSModule> ecsModule);
     ~GUIContentBrowser() override = default;
 
-    void render() override;
+    void render(float deltaTime) override;
 private:
     void renderFoldersSectionPopup();
     void renderFilePopup(const std::string& filePath);

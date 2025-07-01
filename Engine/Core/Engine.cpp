@@ -33,7 +33,7 @@ void Engine::run()
 void Engine::startup()
 {
     m_moduleManager = std::make_unique<ModuleManager>();
-    m_moduleManager->createModule<Logger::Logger>("Logger");
+    m_logger = m_moduleManager->createModule<Logger::Logger>("Logger");
     m_moduleManager->createModule<FilesystemModule::FilesystemModule>("FilesystemModule");
 
     ContextCreate();
@@ -47,11 +47,11 @@ void Engine::startup()
     m_moduleManager->createModule<ShaderCompiler::ShaderCompiler>("ShaderCompiler");
     m_moduleManager->createModule<ResourceModule::ResourceManager>("ResourceManager");
     m_renderModule = m_moduleManager->createModule<RenderModule::RenderModule>("RenderModule");
-    m_moduleManager->createModule<ImGuiModule::ImGuiModule>("ImGuiModule");
+    m_moduleManager->createModule<ImGUIModule::ImGUIModule>("ImGuiModule");
 
     m_ecsModule = m_moduleManager->createModule<ECSModule::ECSModule>("ECSModule");
     m_moduleManager->createModule<ScriptModule::LuaScriptModule>("ScriptModule");
-    m_physicsModule = m_moduleManager->createModule<PhysicsModule>("PhysicsModule");
+    m_physicsModule = m_moduleManager->createModule<PhysicsModule::PhysicsModule>("PhysicsModule");
 
     ContextMajorInit();
 
@@ -85,12 +85,15 @@ void Engine::engineTick()
 
     WindowModule::Window* window = m_windowModule->getWindow();
     float lastTime = window->currentTimeInSeconds();
+    m_logger->log(Logger::LogVerbosity::Info, "Last time: " + std::to_string(lastTime), "Engine");
 
     while (!window->shouldClose())
     {
         float currentTime = window->currentTimeInSeconds();
+        m_logger->log(Logger::LogVerbosity::Info, "Current time: " + std::to_string(currentTime), "Engine");
 
         deltaTime = currentTime - lastTime;
+        m_logger->log(Logger::LogVerbosity::Info, "Delta time: " + std::to_string(deltaTime), "Engine");
         lastTime = currentTime;
 
         window->pollEvents();

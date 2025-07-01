@@ -13,7 +13,7 @@ namespace Logger
 /// A GUI component for displaying log messages in an ImGui window.
 /// This class subscribes to the Logger module and updates the UI with log messages.
 /// </summary>
-class GUIOutputLog : public ImGuiModule::GUIObject
+class GUIOutputLog : public ImGUIModule::GUIObject
 {
     std::shared_ptr<Logger::Logger> m_logger; 
     std::vector<std::string> m_messages; ///< Stores log messages to be displayed.
@@ -33,7 +33,7 @@ public:
     /// <summary>
     /// Renders the log messages inside an ImGui window.
     /// </summary>
-    void render() override;
+    void render(float deltaTime) override;
 
     /// <summary>
     /// Receives a log message from the Logger and stores it for display.

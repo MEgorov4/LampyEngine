@@ -11,14 +11,14 @@
 
 #include "GUIObject.h"
 
-namespace ImGuiModule
+namespace ImGUIModule
 {
-    void ImGuiModule::startup(const ModuleRegistry& registry)
+    void ImGUIModule::startup(const ModuleRegistry& registry)
     {
         m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
         m_inputModule = std::dynamic_pointer_cast<InputModule::InputModule>(registry.getModule("InputModule"));
 
-        m_inputModule->OnEvent.subscribe(std::bind(&ImGuiModule::onEvent, this, std::placeholders::_1));
+        m_inputModule->OnEvent.subscribe(std::bind(&ImGUIModule::onEvent, this, std::placeholders::_1));
         
         m_logger->log(Logger::LogVerbosity::Info, "Startup", "ImGuiModule");
         
@@ -26,12 +26,12 @@ namespace ImGuiModule
         setImGuiStyle();
     }
 
-    void ImGuiModule::shutdown()
+    void ImGUIModule::shutdown()
     {
         m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "ImGuiModule");
     }
 
-    void ImGuiModule::setImGuiStyle() const
+    void ImGUIModule::setImGuiStyle() const
     {
         m_logger->log(Logger::LogVerbosity::Info, "Set ImGui style", "ImGuiModule");
         
@@ -106,12 +106,12 @@ namespace ImGuiModule
         style.PopupBorderSize = 0.f;
     }
 
-    void ImGuiModule::onEvent(const ::SDL_Event& event)
+    void ImGUIModule::onEvent(const ::SDL_Event& event)
     {
         ImGui_ImplSDL3_ProcessEvent(&event);
     }
 
-    void ImGuiModule::renderUI() const
+    void ImGUIModule::renderUI(float deltaTime) const
     {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
@@ -122,7 +122,7 @@ namespace ImGuiModule
         {
             if (object)
             {
-                object->render();
+                object->render(deltaTime);
             }
         }
 
@@ -130,7 +130,7 @@ namespace ImGuiModule
         ImGui::EndFrame();
     }
 
-    std::weak_ptr<GUIObject> ImGuiModule::addObject(GUIObject* object)
+    std::weak_ptr<GUIObject> ImGUIModule::addObject(GUIObject* object)
     {
         if (object)
         {
@@ -144,7 +144,7 @@ namespace ImGuiModule
         return {};
     }
 
-    void ImGuiModule::removeObject(const std::weak_ptr<GUIObject>& object)
+    void ImGUIModule::removeObject(const std::weak_ptr<GUIObject>& object)
     {
         if (const std::shared_ptr<GUIObject>& shared_ptr = object.lock())
         {
