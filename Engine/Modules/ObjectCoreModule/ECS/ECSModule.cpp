@@ -260,7 +260,7 @@ namespace ECSModule
                .each([this](flecs::entity e, MeshComponent& mesh)
                {
                    using namespace ResourceModule;
-
+                   m_logger->log(Logger::LogVerbosity::Info, "Reload mesh: " + std::string(e.name().c_str()), "ECSModule");
                    std::shared_ptr<RMesh> resMesh = m_resourceManager->load<RMesh>(mesh.meshResourcePath);
                    if (resMesh && mesh.meshResource != resMesh) mesh.meshResource = resMesh;
 
@@ -284,6 +284,8 @@ namespace ECSModule
                .event(flecs::OnRemove)
                .each([this](flecs::entity e, MeshComponent& mesh)
                {
+                   m_logger->log(Logger::LogVerbosity::Info, "Remove mesh: " + std::string(e.name().c_str()), "ECSModule");
+                   
                    using namespace ResourceModule;
                    if (mesh.meshResource)
                        m_resourceManager->unload<RMesh>(mesh.meshResource.value()->getGUID());

@@ -97,47 +97,33 @@ namespace ScriptModule
 
     void LuaScriptModule::registerEvent()
     {
-        m_luaState.new_usertype<Event<int, int, int, int>>("EventInt",
-                                                           sol::constructors<Event<int, int, int, int>()>(),
+        m_luaState.new_usertype<Event<SDL_KeyboardEvent>>("EventKeyboard",
+                                                           sol::constructors<Event<SDL_KeyboardEvent>()>(),
 
                                                            "subscribe",
-                                                           [](Event<int, int, int, int>& self, sol::function luaHandler)
+                                                           [](Event<SDL_KeyboardEvent>& self, sol::function luaHandler)
                                                            {
                                                                return self.subscribe(
-                                                                   [luaHandler](int arg1, int arg2, int arg3, int arg4)
+                                                                   [luaHandler](SDL_KeyboardEvent keyboardEvent)
                                                                    {
-                                                                       luaHandler(arg1, arg2, arg3, arg4);
+                                                                       luaHandler(keyboardEvent);
                                                                    });
                                                            },
 
-                                                           "unsubscribe", &Event<int, int, int, int>::unsubscribe,
+                                                           "unsubscribe", &Event<SDL_KeyboardEvent>::unsubscribe,
 
-                                                           "invoke", &Event<int, int, int, int>::operator()
-        );
-
-        m_luaState.new_usertype<Event<double, double>>("EventDouble",
-                                                       sol::constructors<Event<double, double>()>(),
-
-                                                       "subscribe",
-                                                       [](Event<double, double>& self, sol::function luaHandler)
-                                                       {
-                                                           return self.subscribe([luaHandler](double arg1, double arg2)
-                                                           {
-                                                               luaHandler(arg1, arg2);
-                                                           });
-                                                       },
-
-                                                       "unsubscribe", &Event<double, double>::unsubscribe,
-
-                                                       "invoke", &Event<double, double>::operator()
+                                                           "invoke", &Event<SDL_KeyboardEvent>::operator()
         );
     }
 
     void LuaScriptModule::registerInputModuleEvents()
     {
-        m_luaState["OnKeyAction"] = &m_inputModule->OnKeyAction;
-        m_luaState["OnMousePosAction"] = &m_inputModule->OnMousePosAction;
-        m_luaState["OnScrollAction"] = &m_inputModule->OnScrollAction;
+        m_luaState["OnKeyboardEvent"] = &m_inputModule->OnKeyboardEvent;
+        /*
+        m_luaState["OnMouseButtonEvent"] = &m_inputModule->OnMouseButtonEvent;
+        m_luaState["OnMouseMotionEvent"] = &m_inputModule->OnMouseMotionEvent;
+        m_luaState["OnMouseWheelEvent"] = &m_inputModule->OnMouseWheelEvent;
+    */
     }
 
     void LuaScriptModule::registerAudioModule()

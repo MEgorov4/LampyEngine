@@ -14,6 +14,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Engine/Core)
 find_package(VulkanLoader REQUIRED)
 find_package(glew REQUIRED)
 find_package(glfw3 REQUIRED)
+find_package(SDL3 REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
@@ -48,5 +49,4 @@ if (MSVC)
 endif()
 
 add_subdirectory(Engine)
-# add_subdirectory(Projects)
 

@@ -1,11 +1,17 @@
 #pragma once
 
-#include "GL/glew.h"
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
 #include <vector>
 #include <memory>
+#include <unordered_map>
+
+#include <SDL3/SDL.h>
+#include "../EventModule/Event.h"
+
+
+namespace InputModule
+{
+	class InputModule;
+}
 
 namespace Logger
 {
@@ -19,11 +25,20 @@ namespace WindowModule
 	/// </summary>
 	class Window
 	{
-		GLFWwindow* m_window; ///< Pointer to the GLFW window instance.
+		/*
+		GLFWwindow* m_window;
+		*/
+		SDL_GLContext m_glContext;
+		SDL_Window* m_window; ///< Pointer to the GLFW window instance.
 		bool m_framebufferResized = false; ///< Flag indicating if the window was resized.
 
+		Uint64 m_performanceFrequency;
 		std::shared_ptr<Logger::Logger> m_logger;
+		std::shared_ptr<InputModule::InputModule> m_inputModule;
+		
+		bool m_shouldClose{false};
 	public:
+		Event<> OnWindowResized;
 		/// <summary>
 		/// Constructs a new GLFW window.
 		/// </summary>
@@ -31,63 +46,24 @@ namespace WindowModule
 		/// <param name="height">Height of the window in pixels.</param>
 		/// <param name="title">Title of the window.</param>
 		/// <exception cref="std::runtime_error">Thrown if GLFW initialization fails.</exception>
-		Window(std::shared_ptr<Logger::Logger> m_logger, int width, int height, const char* title);
+		Window(std::shared_ptr<Logger::Logger> m_logger, std::shared_ptr<InputModule::InputModule> inputModule, int width, int height, const char* title);
 
 		/// <summary>
 		/// Destroys the GLFW window and terminates GLFW.
 		/// </summary>
 		~Window();
 
-		/// <summary>
-		/// Checks if the GLFW window is valid.
-		/// </summary>
-		/// <returns>True if the window is successfully created, otherwise false.</returns>
-		bool glfwWindowIsValid() const { return m_window != nullptr; }
-
-		/// <summary>
-		/// Retrieves the current window extent (width and height).
-		/// </summary>
-		/// <returns>VkExtent2D structure with the window dimensions.</returns>
-		VkExtent2D getExtent();
-
-		/// <summary>
-		/// Creates and retrieves the Vulkan surface associated with the window.
-		/// </summary>
-		/// <param name="instance">The Vulkan instance.</param>
-		/// <returns>Handle to the created Vulkan surface.</returns>
-		/// <exception cref="std::runtime_error">Thrown if surface creation fails.</exception>
-		VkSurfaceKHR getWindowSurface(VkInstance instance);
-
-		/// <summary>
-		/// Retrieves the required instance extensions for Vulkan.
-		/// </summary>
-		/// <returns>A vector of required Vulkan instance extensions.</returns>
-		/// <exception cref="std::runtime_error">Thrown if extension retrieval fails.</exception>
-		std::vector<const char*> getRequiredInstanceExtensions();
-
+		void registerEventHandlers();
+		/*
 		/// <summary>
 		/// Retrieves the raw GLFW window handle.
 		/// </summary>
 		/// <returns>Pointer to the GLFW window.</returns>
 		GLFWwindow* getGLFWWindow() { return m_window; }
+		*/
 
-		/// <summary>
-		/// Sets the key callback function.
-		/// </summary>
-		/// <param name="keyCallback">GLFW key callback function.</param>
-		void setKeyCallback(GLFWkeyfun keyCallback);
-
-		/// <summary>
-		/// Sets the cursor position callback function.
-		/// </summary>
-		/// <param name="cursorPosCallback">GLFW cursor position callback function.</param>
-		void setCursorPositionCallback(GLFWcursorposfun cursorPosCallback);
-
-		/// <summary>
-		/// Sets the scroll callback function.
-		/// </summary>
-		/// <param name="scrollCallback">GLFW scroll callback function.</param>
-		void setScrollCallback(GLFWscrollfun scrollCallback);
+		SDL_Window* getSDLWindow() {return m_window;}
+		SDL_GLContext& getGLContext() {return m_glContext;}
 
 		/// <summary>
 		/// Checks if the window was resized.
@@ -100,21 +76,22 @@ namespace WindowModule
 		/// </summary>
 		void resetResizedFlag() { m_framebufferResized = false; }
 
+		std::pair<int, int> getWindowSize() const;
 		/// <summary>
 		/// Polls for GLFW window events.
 		/// </summary>
-		void pollEvents() { glfwPollEvents(); }
+		void pollEvents();
 
 		/// <summary>
 		/// Checks if the window should close.
 		/// </summary>
 		/// <returns>True if the window should close, otherwise false.</returns>
-		bool shouldClose() const { return glfwWindowShouldClose(m_window); }
+		bool shouldClose() const { return m_shouldClose; }
 
 		/// <summary>
 		/// Retrieves the current time since GLFW initialization.
 		/// </summary>
 		/// <returns>Elapsed time in seconds.</returns>
-		float currentTimeInSeconds();
+		float currentTimeInSeconds() const;
 	};
 }

@@ -11,7 +11,7 @@ target_link_libraries(ImGuiModule
     PUBLIC 
         imgui::imgui
         EngineContext
+        sdl::sdl
     PRIVATE
         glfw
-        Vulkan::Loader
 )

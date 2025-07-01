@@ -27,8 +27,7 @@ void Engine::run()
 {
     startup();
     engineTick();
-    shutDownEngineContextObject();
-    shutDownModules();
+    shutdown();
 }
 
 void Engine::startup()
@@ -41,8 +40,9 @@ void Engine::startup()
     ContextMinorInit();
 
     m_moduleManager->createModule<AudioModule::AudioModule>("AudioModule");
+    m_inputModule = m_moduleManager->createModule<InputModule::InputModule>("InputModule");
+
     m_windowModule = m_moduleManager->createModule<WindowModule::WindowModule>("WindowModule");
-    m_moduleManager->createModule<InputModule::InputModule>("InputModule");
 
     m_moduleManager->createModule<ShaderCompiler::ShaderCompiler>("ShaderCompiler");
     m_moduleManager->createModule<ResourceModule::ResourceManager>("ResourceManager");
@@ -56,6 +56,12 @@ void Engine::startup()
     ContextMajorInit();
 
     m_moduleManager->startupAll();
+}
+
+void Engine::shutdown()
+{
+    m_engineContext->shutdown();
+    m_moduleManager->shutdownAll();
 }
 
 void Engine::ContextCreate()
@@ -96,15 +102,4 @@ void Engine::engineTick()
         m_renderModule->getRenderer()->render();
     }
     m_renderModule->getRenderer()->waitIdle();
-}
-
-
-void Engine::shutDownEngineContextObject()
-{
-    m_engineContext->shutdown();
-}
-
-void Engine::shutDownModules()
-{
-    m_moduleManager->shutdownAll();
 }

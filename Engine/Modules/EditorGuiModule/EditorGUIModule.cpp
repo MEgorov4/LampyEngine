@@ -34,12 +34,13 @@ void EditorGUIModule::startup(const ModuleRegistry& registry)
     m_logger->log(Logger::LogVerbosity::Info, "Startup", "EditorGUIModule");
     
     m_logger->log(Logger::LogVerbosity::Info, "Create GUI objects", "EditorGUIModule");
+    
     m_imGuiModule->addObject(new GUIEditorToolPanel(m_ecsModule, m_projectModule));
     m_imGuiModule->addObject(new GUIMainMenuBar());
     m_imGuiModule->addObject(new GUIOutputLog(m_logger));
     m_imGuiModule->addObject(new GUIContentBrowser(m_filesystemModule, m_projectModule, m_ecsModule));
     m_imGuiModule->addObject(new GUIWorldInspector(m_projectModule, m_filesystemModule, m_ecsModule));
-    m_imGuiModule->addObject(new GUIEditorViewport(m_renderModule, m_inputModule, m_ecsModule));
+    m_imGuiModule->addObject(new GUIEditorViewport(m_logger, m_renderModule, m_inputModule, m_ecsModule));
     m_imGuiModule->addObject(new GUIEditorConsole(m_luaScriptModule));
 }
 

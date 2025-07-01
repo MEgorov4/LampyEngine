@@ -5,6 +5,11 @@
 
 #include "Abstract/RenderObject.h"
 
+namespace Logger
+{
+    class Logger;
+}
+
 namespace ECSModule
 {
     class ECSModule;
@@ -22,10 +27,8 @@ namespace RenderModule
 
     class IRenderer
     {
-        std::shared_ptr<ResourceModule::ResourceManager> m_resourceManager;
-        std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
+        int m_onECSChanged{};
         
-        int m_onECSChanged;
         std::shared_ptr<IShader> m_shadowsShader;
         std::shared_ptr<IShader> m_reflectionsShader;
         std::shared_ptr<IShader> m_lightsShader;
@@ -33,8 +36,12 @@ namespace RenderModule
         std::shared_ptr<IShader> m_textureShader;
         
     protected:
-        RenderPipelineData m_activeRenderPipelineData;
-        RenderPipelineData m_updateRenderPipelineData;
+        std::shared_ptr<ResourceModule::ResourceManager> m_resourceManager;
+        std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
+        std::shared_ptr<Logger::Logger> m_logger;
+        
+        RenderPipelineData m_activeRenderPipelineData{};
+        RenderPipelineData m_updateRenderPipelineData{};
 
         std::shared_ptr<ITexture> m_albedoGeneric;
         std::shared_ptr<ITexture> m_emissionGeneric;
@@ -46,7 +53,7 @@ namespace RenderModule
         /// <summary>
         /// Constructs an IRenderer with no assigned scene.
         /// </summary>
-        IRenderer(std::shared_ptr<ResourceModule::ResourceManager> resourceManager, std::shared_ptr<ECSModule::ECSModule> ecsModule);
+        IRenderer(std::shared_ptr<Logger::Logger> logger, std::shared_ptr<ResourceModule::ResourceManager> resourceManager, std::shared_ptr<ECSModule::ECSModule> ecsModule);
 
         /// <summary>
         /// Virtual destructor to ensure proper cleanup of derived renderers.

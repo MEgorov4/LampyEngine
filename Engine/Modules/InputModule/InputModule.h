@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <SDL3/SDL_events.h>
 
 #include "../../EngineContext/IModule.h"
 #include "../../EngineContext/ModuleRegistry.h"
@@ -26,13 +27,13 @@ namespace InputModule
     class InputModule : public IModule
     {
         std::shared_ptr<Logger::Logger> m_logger;
-        std::shared_ptr<WindowModule::WindowModule> m_windowModule;
     public:
-        Event<int, int, int, int> OnKeyAction;
-
-        Event<double, double> OnScrollAction;
-
-        Event<double, double> OnMousePosAction;
+        Event<SDL_Event> OnEvent;
+        
+		Event<SDL_KeyboardEvent> OnKeyboardEvent;
+		Event<SDL_MouseButtonEvent> OnMouseButtonEvent;
+		Event<SDL_MouseMotionEvent> OnMouseMotionEvent;
+		Event<SDL_MouseWheelEvent> OnMouseWheelEvent;
 
         /// <summary>
         /// Initializes the input system and registers callbacks for input events.
@@ -44,6 +45,12 @@ namespace InputModule
         /// Shuts down the input system and clears registered callbacks.
         /// </summary>
         void shutdown() override;
+
+        void pushEvent(const SDL_Event& event);
+        void pushKeyboardEvent(const SDL_KeyboardEvent& event);
+        void pushMouseButtonEvent(const SDL_MouseButtonEvent& event);
+        void pushMouseMotionEvent(const SDL_MouseMotionEvent& event);
+        void pushMouseWheelEvent(const SDL_MouseWheelEvent& event);
 
     private:
         InputModule& getInstance();

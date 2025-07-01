@@ -11,6 +11,7 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "../LoggerModule/Logger.h"
 
 namespace ShaderCompiler
 {
@@ -55,6 +56,7 @@ namespace ResourceModule
 	template <>
 	inline std::shared_ptr<RMesh> ResourceManager::load<RMesh>(const std::string& path)
 	{
+		m_logger->log(Logger::LogVerbosity::Info, "Try load mesh: " + path, "ResourceManager");
 		if (path.empty())
 		{
 			return nullptr;
@@ -66,6 +68,7 @@ namespace ResourceModule
 	template <>
 	inline std::shared_ptr<RShader> ResourceManager::load<RShader>(const std::string& path)
 	{
+		m_logger->log(Logger::LogVerbosity::Info, "Try load shader: " + path, "ResourceManager");
 		if (path.empty())
 		{
 			return nullptr;
@@ -77,6 +80,7 @@ namespace ResourceModule
 	template <>
 	inline std::shared_ptr<RTexture> ResourceManager::load<RTexture>(const std::string& path)
 	{
+		m_logger->log(Logger::LogVerbosity::Info, "Try load texture: " + path, "ResourceManager");
 		if (path.empty())
 		{
 			return nullptr;
@@ -88,18 +92,21 @@ namespace ResourceModule
 	template <>
 	inline void ResourceManager::unload<RMesh>(const std::string& path)
 	{
+		m_logger->log(Logger::LogVerbosity::Info, "Try unload mesh: " + path, "ResourceManager");
 		meshCache.unload<RMesh>(m_filesystemModule->getEngineAbsolutePath(path));
 	}
 
 	template <>
 	inline void ResourceManager::unload<RShader>(const std::string& path)
 	{
+		m_logger->log(Logger::LogVerbosity::Info, "Try unload shader: " + path, "ResourceManager");
 		shaderCache.unload<RShader>(m_filesystemModule->getEngineAbsolutePath(path));
 	}
 
 	template <>
 	inline void ResourceManager::unload<RTexture>(const std::string& path)
 	{
+		m_logger->log(Logger::LogVerbosity::Info, "Try unload texture: " + path, "ResourceManager");
 		textureCache.unload<RTexture>(m_filesystemModule->getEngineAbsolutePath(path));
 	}
 }

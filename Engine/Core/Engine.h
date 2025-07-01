@@ -4,6 +4,11 @@
 #include "../EngineContext/EngineContext.h"
 #include "../EngineContext/ModuleManager.h"
 
+namespace InputModule
+{
+	class InputModule;
+}
+
 namespace ECSModule
 {
 	class ECSModule;
@@ -25,6 +30,7 @@ namespace WindowModule
 /// Manages the initialization, execution, and shutdown of the game engine.
 /// </summary>
 class Engine {
+	std::shared_ptr<InputModule::InputModule> m_inputModule;
 	std::shared_ptr<WindowModule::WindowModule> m_windowModule;
 	std::shared_ptr<RenderModule::RenderModule> m_renderModule;
 	std::shared_ptr<PhysicsModule> m_physicsModule;
@@ -51,25 +57,7 @@ public:
 	void ContextMinorInit() const;
 
 private:
-	/// <summary>
-	/// Initializes all core engine modules (Window, Input, Rendering, Audio,
-	/// ECS...).
-	/// </summary>
 	void startup();
-
-	/// <summary>
-	/// Runs the main game loop, handling delta time updates, rendering, and ECS
-	/// updates.
-	/// </summary>
+	void shutdown();
 	void engineTick();
-
-	/// <summary>
-	/// Shuts down the engine context object before closing the engine.
-	/// </summary>
-	void shutDownEngineContextObject();
-
-	/// <summary>
-	/// Shuts down all engine modules in a proper order.
-	/// </summary>
-	void shutDownModules();
 };

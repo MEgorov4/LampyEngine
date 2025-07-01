@@ -8,6 +8,7 @@ add_library(InputModule STATIC ${INPUT_MODULE_SOURCE})
 
 target_link_libraries(InputModule PRIVATE
     glfw
+    sdl::sdl
     WindowModule
     EventModule
     LoggerModule

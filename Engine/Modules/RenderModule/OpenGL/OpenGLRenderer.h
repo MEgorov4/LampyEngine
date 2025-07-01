@@ -40,7 +40,9 @@ namespace RenderModule::OpenGL
         GLuint m_quadVBO;
 
     public:
-        OpenGLRenderer(std::shared_ptr<ResourceModule::ResourceManager> resourceManager, std::shared_ptr<ECSModule::ECSModule> ecsModule, WindowModule::Window* window);
+        OpenGLRenderer(std::shared_ptr<Logger::Logger> logger,
+            std::shared_ptr<ResourceModule::ResourceManager> resourceManager,
+                       std::shared_ptr<ECSModule::ECSModule> ecsModule, WindowModule::Window* window);
 
         void render() override;
 
@@ -54,7 +56,7 @@ namespace RenderModule::OpenGL
         void init();
         void initImGui();
 
-        void debugMessageHandle(std::string& message);
+        void debugMessageHandle(const std::string& message) const;
 
         void renderWorld();
 

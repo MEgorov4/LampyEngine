@@ -1,9 +1,8 @@
 #include "WindowModule.h"
 
-#include <cassert>
 
 #include "../LoggerModule/Logger.h"
-#include "../RenderModule/RenderConfig.h"
+#include "../InputModule/InputModule.h"
 
 #include "Window.h"
 
@@ -12,7 +11,8 @@ namespace WindowModule
 	void WindowModule::startup(const ModuleRegistry& registry)
 	{
 		m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-		m_window = std::make_unique<Window>(m_logger, 800, 600, "Lampy Engine");
+		m_inputModule = std::dynamic_pointer_cast<InputModule::InputModule>(registry.getModule("InputModule"));
+		m_window = std::make_unique<Window>(m_logger, m_inputModule, 800, 600, "Lampy Engine");
 		
 		m_logger->log(Logger::LogVerbosity::Info, "Startup", "WindowModule");
 	}

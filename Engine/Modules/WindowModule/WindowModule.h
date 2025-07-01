@@ -6,6 +6,11 @@
 #include "../../EngineContext/ModuleRegistry.h"
 
 
+namespace InputModule
+{
+	class InputModule;
+}
+
 namespace Logger
 {
 	class Logger;
@@ -21,6 +26,7 @@ namespace WindowModule
 	{
 		std::unique_ptr<Window> m_window; ///< Unique pointer to the managed window.
 		std::shared_ptr<Logger::Logger> m_logger;
+		std::shared_ptr<InputModule::InputModule> m_inputModule;
 	public:
 		/// <summary>
 		/// Initializes the window module and creates a new window.

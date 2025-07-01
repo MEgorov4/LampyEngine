@@ -5,11 +5,15 @@
 #include "../../EngineContext/IModule.h"
 #include "../../EngineContext/ModuleRegistry.h"
 
+#include "SDL3/SDL.h"
+namespace InputModule
+{
+    class InputModule;
+}
 namespace Logger
 {
     class Logger;
 }
-
 namespace ImGuiModule
 {
     class GUIObject;
@@ -21,13 +25,13 @@ namespace ImGuiModule
     class ImGuiModule : public IModule
     {
         std::shared_ptr<Logger::Logger> m_logger;
+        std::shared_ptr<InputModule::InputModule> m_inputModule;
+        
         std::vector<std::shared_ptr<GUIObject>> m_guiObjects; ///< List of registered GUI objects.
 
     public:
         void startup(const ModuleRegistry& registry) override;
         void shutdown() override;
-
-        void setImGuiStyle();
 
         /// <summary>
         /// Renders the ImGui user interface.
@@ -37,5 +41,8 @@ namespace ImGuiModule
 
         std::weak_ptr<GUIObject> addObject(GUIObject* object);
         void removeObject(const std::weak_ptr<GUIObject>& object);
+    private:
+        void setImGuiStyle() const;
+        void onEvent(const SDL_Event& event);
     };
 }

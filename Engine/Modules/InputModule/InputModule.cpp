@@ -9,32 +9,36 @@ namespace InputModule
 	void InputModule::startup(const ModuleRegistry& registry)
 	{
 		m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-		m_windowModule = std::dynamic_pointer_cast<WindowModule::WindowModule>(registry.getModule("WindowModule"));
-
-		WindowModule::Window* window = m_windowModule->getWindow();
-		m_logger->log(Logger::LogVerbosity::Info,"Set input callbacks", "InputModule");
-		if (window)
-		{
-			window->setKeyCallback([](GLFWwindow* win, int key, int scancode, int action, int mods) {
-				
-				//OnKeyAction(key, scancode, action, mods);
-				});
-
-			window->setCursorPositionCallback([](GLFWwindow* win, double xpos, double ypos) {
-				//OnMousePosAction(xpos, ypos);
-				});
-
-			window->setScrollCallback([](GLFWwindow* win, double xoffset, double yoffset) {
-				//OnScrollAction(xoffset, yoffset);
-				});
-		}
-		else
-		{
-			m_logger->log(Logger::LogVerbosity::Error, "Window instance is null", "InputModule");
-		}
+		m_logger->log(Logger::LogVerbosity::Info,"Startup", "InputModule");
 	}
 
 	void InputModule::shutdown()
 	{
+		m_logger->log(Logger::LogVerbosity::Info,"Shutdown", "InputModule");
+	}
+
+	void InputModule::pushEvent(const SDL_Event& event)
+	{
+		OnEvent(event);
+	}
+
+	void InputModule::pushKeyboardEvent(const SDL_KeyboardEvent& event)
+	{
+		OnKeyboardEvent(event);
+	}
+
+	void InputModule::pushMouseButtonEvent(const SDL_MouseButtonEvent& event)
+	{
+		OnMouseButtonEvent(event);
+	}
+
+	void InputModule::pushMouseMotionEvent(const SDL_MouseMotionEvent& event)
+	{
+		OnMouseMotionEvent(event);	
+	}
+
+	void InputModule::pushMouseWheelEvent(const SDL_MouseWheelEvent& event)
+	{
+		OnMouseWheelEvent(event);
 	}
 }

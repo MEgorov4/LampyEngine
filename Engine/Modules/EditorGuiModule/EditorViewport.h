@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/vec3.hpp>
+#include <SDL3/SDL_events.h>
 
 #include "../ImGuiModule/GUIObject.h"
 #include "../ObjectCoreModule/ECS/ECSModule.h"
@@ -17,6 +18,7 @@ namespace RenderModule
 
 class GUIEditorViewport : public ImGuiModule::GUIObject
 {
+    std::shared_ptr<Logger::Logger> m_logger;
     std::shared_ptr<RenderModule::RenderModule> m_renderModule;
     std::shared_ptr<InputModule::InputModule> m_inputModule;
     std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
@@ -34,12 +36,12 @@ class GUIEditorViewport : public ImGuiModule::GUIObject
     float m_cameraSpeed = 0.10f;
 
     bool m_firstMouse = true;
-    double m_lastX, m_lastY;
+    float m_lastX, m_lastY;
 
     bool m_processInput = false;
 
 public:
-    GUIEditorViewport(const std::shared_ptr<RenderModule::RenderModule>& renderModule,
+    GUIEditorViewport(const std::shared_ptr<Logger::Logger>& logger, const std::shared_ptr<RenderModule::RenderModule>& renderModule,
                       const std::shared_ptr<InputModule::InputModule>& inputModule,
                       const std::shared_ptr<ECSModule::ECSModule>& ecsModule);
     virtual ~GUIEditorViewport() override;
@@ -47,6 +49,6 @@ public:
     virtual void render() override;
 
 private:
-    void onKeyAction(int code, int a, int b, int c);
-    void onMouseAction(double mouseX, double mouseY);
+    void onKeyAction(SDL_KeyboardEvent event);
+    void onMouseAction(SDL_MouseMotionEvent mouseMotion);
 };
