@@ -5,6 +5,7 @@
 
 #include "../ImGuiModule/GUIObject.h"
 #include "../ObjectCoreModule/ECS/ECSModule.h"
+#include "../RenderModule/Abstract/ITexture.h"
 
 namespace InputModule
 {
@@ -14,6 +15,7 @@ namespace InputModule
 namespace RenderModule
 {
     class RenderModule;
+    struct TextureHandle;
 }
 
 class GUIEditorViewport : public ImGUIModule::GUIObject
@@ -23,7 +25,7 @@ class GUIEditorViewport : public ImGUIModule::GUIObject
     std::shared_ptr<InputModule::InputModule> m_inputModule;
     std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
 
-    void* m_offscreenImageDescriptor;
+    RenderModule::TextureHandle m_offscreenImageDescriptor;
 
     flecs::entity m_viewportEntity;
     int m_keyActionHandlerID;

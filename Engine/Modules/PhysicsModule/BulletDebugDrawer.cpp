@@ -14,8 +14,5 @@ namespace PhysicsModule
 
     void BulletDebugDrawer::reportErrorWarning(const char* warningString)
     {
-        /*
-        LOG_INFO(std::format("BULLET DEBUG DRAWER ERROR: {}", warningString));
-    */
     }
 }

@@ -17,7 +17,6 @@ GUIEditorViewport::GUIEditorViewport(const std::shared_ptr<Logger::Logger>& logg
       , m_renderModule(renderModule)
       , m_inputModule(inputModule)
       , m_ecsModule(ecsModule)
-      , m_offscreenImageDescriptor(m_renderModule->getRenderer()->getOffscreenImageDescriptor())
       , m_viewportEntity(m_ecsModule->getCurrentWorld().entity("ViewportCamera"))
 {
     m_keyActionHandlerID = m_inputModule->OnKeyboardEvent.subscribe(
@@ -27,7 +26,6 @@ GUIEditorViewport::GUIEditorViewport(const std::shared_ptr<Logger::Logger>& logg
 
     m_cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     m_cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
 }
 
 GUIEditorViewport::~GUIEditorViewport()
@@ -41,18 +39,18 @@ void GUIEditorViewport::render(float deltaTime)
     m_deltaTime = deltaTime;
     if (ImGui::Begin("Viewport", 0, ImGuiWindowFlags_NoScrollbar))
     {
+        m_offscreenImageDescriptor = m_renderModule->getRenderer()->getOutputRenderHandle();
+        ImGui::Image(m_offscreenImageDescriptor.id, ImVec2(ImGui::GetWindowSize().x, ImGui::GetWindowSize().y - 36));
         m_processInput = ImGui::IsWindowFocused() && ImGui::IsMouseDown(ImGuiMouseButton_Right);
-        if (m_offscreenImageDescriptor)
-        {
-            ImGui::Image(m_offscreenImageDescriptor, ImVec2(ImGui::GetWindowSize().x, ImGui::GetWindowSize().y - 35));
-        }
     }
     ImGui::End();
 }
 
 void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
 {
-    m_logger->log(Logger::LogVerbosity::Info, "Key action catch: " + std::to_string(event.key) + '\n' + "Current delta time: " + std::to_string(m_deltaTime),
+    m_logger->log(Logger::LogVerbosity::Info,
+                  "Key action catch: " + std::to_string(event.key) + '\n' + "Current delta time: " + std::to_string(
+                      m_deltaTime),
                   "EditorGUIModule_GUIEditorViewport");
     if (!m_processInput)
         return;
@@ -83,7 +81,7 @@ void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
         movement -= speed * cameraUp;
 
     glm::vec3 newCameraPos = m_cameraPos + movement;
-    m_cameraPos = glm::mix(m_cameraPos, newCameraPos, 0.5) ;
+    m_cameraPos = glm::mix(m_cameraPos, newCameraPos, 1000 * m_deltaTime);
     if (m_viewportEntity.is_alive())
     {
         m_viewportEntity.set<PositionComponent>({.x = m_cameraPos.x, .y = m_cameraPos.y, .z = m_cameraPos.z});

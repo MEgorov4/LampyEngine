@@ -1,8 +1,9 @@
 #include "OpenGLTexture.h"
+
+#include <GL/glew.h>
+
 namespace RenderModule::OpenGL
 {
-
-
 	OpenGLTexture::OpenGLTexture(const std::shared_ptr<ResourceModule::RTexture>& texture) : ITexture(texture)
 	{
 		glGenTextures(1, &m_textureID);

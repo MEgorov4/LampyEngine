@@ -61,7 +61,8 @@ namespace WindowModule
 		/// <returns>Pointer to the GLFW window.</returns>
 		GLFWwindow* getGLFWWindow() { return m_window; }
 		*/
-
+		void swapWindow();
+		
 		SDL_Window* getSDLWindow() {return m_window;}
 		SDL_GLContext& getGLContext() {return m_glContext;}
 

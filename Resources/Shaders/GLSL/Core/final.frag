@@ -3,28 +3,17 @@
 layout(location = 0) out vec4 outColor;
 layout(location = 0) in vec2 fragUV;
 
-layout(binding = 0) uniform sampler2D shadowMap;
-layout(binding = 1) uniform sampler2D reflectionMap;
-layout(binding = 2) uniform sampler2D lightMap;
-layout(binding = 3) uniform sampler2D customMap;
-layout(binding = 4) uniform sampler2D objectAlbedo;
-layout(binding = 5) uniform sampler2D objectNormal;
-layout(binding = 6) uniform sampler2D objectSpecular;
-layout(binding = 7) uniform sampler2D objectRoughness;
-layout(binding = 8) uniform sampler2D objectEmission;
-
+layout(binding = 0) uniform sampler2D shadow_pass_depth;
+layout(binding = 1) uniform sampler2D reflection_pass_depth;
+layout(binding = 2) uniform sampler2D light_pass_color;
+layout(binding = 3) uniform sampler2D texture_pass_color;
 
 void main() {
-    vec3 albedo = texture(objectAlbedo, fragUV).rgb;
-    vec3 normal = texture(objectNormal, fragUV).rgb * 2.0 - 1.0;
-    vec3 specular = texture(objectSpecular, fragUV).rgb;
-    float roughness = texture(objectRoughness, fragUV).r;
-    vec3 emission = texture(objectEmission, fragUV).rgb;
+    vec3 albedo = texture(texture_pass_color, fragUV).rgb;
 
-    float shadow = texture(shadowMap, fragUV).r;
-    vec3 reflection = texture(reflectionMap, fragUV).rgb;
-    vec3 light = texture(lightMap, fragUV).rgb;
-    vec3 custom = texture(customMap, fragUV).rgb;
+    float shadow = texture(shadow_pass_depth, fragUV).r;
+    vec3 reflection = texture(reflection_pass_depth, fragUV).rgb;
+    vec3 light = texture(light_pass_color, fragUV).rgb;
 
     outColor = vec4(albedo, 1.0);
 }

@@ -1,36 +1,40 @@
 #pragma once
 
-#include <GL/glew.h>
+
+#include "../../Abstract/IFramebuffer.h"
+#include "../../Abstract/ITexture.h"
+
 namespace RenderModule::OpenGL
 {
-	class OpenGLFramebuffer
-	{
-	private:
-		GLuint fbo;
-		int m_width, m_height;
+    class OpenGLFramebuffer : public IFramebuffer
+    {
+        unsigned int fbo;
+        int m_width, m_height;
 
-		GLuint m_colorTexture;
-		GLuint m_depthTexture;
-		GLuint rbo;
+        unsigned int m_colorTexture;
+        unsigned int m_depthTexture;
+        unsigned int rbo;
 
-		bool m_depth;
-	public:
-		OpenGLFramebuffer(int width, int height, bool useDepth = true);
-		~OpenGLFramebuffer();
+        bool m_depth;
 
-		void bind();
-		void unbind();
-		void resize(int newWidth, int newHeight);
+    public:
+        OpenGLFramebuffer(const FramebufferData& data);
+        ~OpenGLFramebuffer() override;
 
-		void addColorAttachment(GLenum format = GL_RGBA8, GLenum type = GL_UNSIGNED_BYTE);
-		void addDepthAttachment(bool asTexture = true);
+        void bind() override;
+        void unbind() override;
+        void resize(int newWidth, int newHeight) override;
 
-		GLuint getColorTexture() const { return m_colorTexture; }
-		GLuint getDepthTexture() const { return m_depthTexture; }
+        TextureHandle getColorTexture() override { return {m_colorTexture}; }
+        TextureHandle getDepthTexture() override { return {m_depthTexture}; }
 
-		GLuint getFBO() const {
-			return fbo;
-		}
+        unsigned int getFBO() const
+        {
+            return fbo;
+        }
 
-	};
+    private:
+        void addColorAttachment(int format = 0x8058, unsigned int type = 0x1401);
+        void addDepthAttachment(bool asTexture = true);
+    };
 }

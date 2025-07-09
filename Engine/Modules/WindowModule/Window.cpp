@@ -92,6 +92,11 @@ namespace WindowModule
     {
     }
 
+    void Window::swapWindow()
+    {
+        SDL_GL_SwapWindow(m_window);
+    }
+
 
     std::pair<int, int> Window::getWindowSize() const
     {

@@ -8,7 +8,7 @@ format_source_group(${IMGUI_MODULE})
 add_library(ImGuiModule ${IMGUI_MODULE})
 
 target_link_libraries(ImGuiModule 
-    PUBLIC 
+    PUBLIC
         imgui::imgui
         EngineContext
         sdl::sdl

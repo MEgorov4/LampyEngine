@@ -1,7 +1,7 @@
 #include "OpenGLMesh2D.h"
 namespace RenderModule::OpenGL
 {
-	OpenGLMesh2D::OpenGLMesh2D() {
+	OpenGLMesh2D::OpenGLMesh2D() : IMesh(nullptr) {
 		constexpr float vertices[] = {
 			-1.0f, -1.0f,  0.0f,  0.0f,
 			 1.0f, -1.0f,  1.0f,  0.0f,
@@ -44,5 +44,10 @@ namespace RenderModule::OpenGL
 
 	void OpenGLMesh2D::unbind() const {
 		glBindVertexArray(0);
+	}
+
+	void OpenGLMesh2D::drawIndexed(int instanceCount) const
+	{
+		
 	}
 }

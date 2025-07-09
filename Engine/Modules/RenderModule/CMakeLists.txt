@@ -17,4 +17,5 @@ target_link_libraries(RenderModule PUBLIC
     glfw
     glm::glm
     EngineContext
+    sdl::sdl
 )

@@ -1,11 +1,14 @@
 #pragma once
-#include <vector>
 #include <memory>
 
 #include "../../EngineContext/IModule.h"
 #include "../../EngineContext/ModuleRegistry.h"
 
-#include "SDL3/SDL.h"
+namespace WindowModule
+{
+    class WindowModule;
+}
+
 namespace InputModule
 {
     class InputModule;
@@ -14,6 +17,9 @@ namespace Logger
 {
     class Logger;
 }
+
+union SDL_Event;
+
 namespace ImGUIModule
 {
     class GUIObject;
@@ -26,6 +32,7 @@ namespace ImGUIModule
     {
         std::shared_ptr<Logger::Logger> m_logger;
         std::shared_ptr<InputModule::InputModule> m_inputModule;
+        std::shared_ptr<WindowModule::WindowModule> m_windowModule;
         
         std::vector<std::shared_ptr<GUIObject>> m_guiObjects; ///< List of registered GUI objects.
 

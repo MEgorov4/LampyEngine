@@ -5,6 +5,11 @@
 
 #include "Abstract/RenderObject.h"
 
+namespace WindowModule
+{
+    class WindowModule;
+}
+
 namespace Logger
 {
     class Logger;
@@ -22,24 +27,23 @@ namespace ResourceModule
 
 namespace RenderModule
 {
+    class RenderPipelineHandler;
     class IShader;
     class ITexture;
 
     class IRenderer
     {
         int m_onECSChanged{};
-        
-        std::shared_ptr<IShader> m_shadowsShader;
-        std::shared_ptr<IShader> m_reflectionsShader;
-        std::shared_ptr<IShader> m_lightsShader;
-        std::shared_ptr<IShader> m_finalShader;
-        std::shared_ptr<IShader> m_textureShader;
-        
+
+        TextureHandle m_activeTextureHandle;
+        std::unique_ptr<RenderPipelineHandler> m_renderPipelineHandler;
+
     protected:
         std::shared_ptr<ResourceModule::ResourceManager> m_resourceManager;
         std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
         std::shared_ptr<Logger::Logger> m_logger;
-        
+        std::shared_ptr<WindowModule::WindowModule> m_windowModule;
+
         RenderPipelineData m_activeRenderPipelineData{};
         RenderPipelineData m_updateRenderPipelineData{};
 
@@ -53,7 +57,10 @@ namespace RenderModule
         /// <summary>
         /// Constructs an IRenderer with no assigned scene.
         /// </summary>
-        IRenderer(std::shared_ptr<Logger::Logger> logger, std::shared_ptr<ResourceModule::ResourceManager> resourceManager, std::shared_ptr<ECSModule::ECSModule> ecsModule);
+        IRenderer(std::shared_ptr<Logger::Logger> logger,
+                  std::shared_ptr<ResourceModule::ResourceManager> resourceManager,
+                  std::shared_ptr<ECSModule::ECSModule> ecsModule,
+                  std::shared_ptr<WindowModule::WindowModule> windowModule);
 
         /// <summary>
         /// Virtual destructor to ensure proper cleanup of derived renderers.
@@ -63,18 +70,20 @@ namespace RenderModule
         /// <summary>
         /// Renders a single frame.
         /// </summary>
-        virtual void render() = 0;
+        void render();
 
-        virtual void* getOffscreenImageDescriptor() = 0;
         /// <summary>
         /// Waits for the renderer to complete all rendering operations before proceeding.
         /// </summary>
         virtual void waitIdle() = 0;
 
-        // DEBUG FUNCTION
-        virtual void drawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color) = 0;
+        virtual void drawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color)
+        {
+        };
 
-        void updateRenderList();
+        virtual TextureHandle getOutputRenderHandle() { return m_activeTextureHandle; }
+
+        void updateRenderList() const;
         void postInit();
     };
 }

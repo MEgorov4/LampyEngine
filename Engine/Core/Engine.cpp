@@ -84,15 +84,21 @@ void Engine::engineTick()
 
     WindowModule::Window* window = m_windowModule->getWindow();
     float lastTime = window->currentTimeInSeconds();
+    /*
     m_logger->log(Logger::LogVerbosity::Info, "Last time: " + std::to_string(lastTime), "Engine");
+    */
 
     while (!window->shouldClose())
     {
         float currentTime = window->currentTimeInSeconds();
+        /*
         m_logger->log(Logger::LogVerbosity::Info, "Current time: " + std::to_string(currentTime), "Engine");
+        */
 
         deltaTime = currentTime - lastTime;
+        /*
         m_logger->log(Logger::LogVerbosity::Info, "Delta time: " + std::to_string(deltaTime), "Engine");
+        */
         lastTime = currentTime;
 
         window->pollEvents();

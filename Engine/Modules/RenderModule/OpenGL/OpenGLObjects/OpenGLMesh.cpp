@@ -1,4 +1,6 @@
 #include "OpenGLMesh.h"
+#include <GL/glew.h>
+
 #include "../../../LoggerModule/Logger.h"
 namespace RenderModule::OpenGL
 {

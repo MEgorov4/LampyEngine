@@ -4,6 +4,9 @@
 
 #include "../LoggerModule/Logger.h"
 #include "../InputModule/InputModule.h"
+#include "../WindowModule/WindowModule.h"
+#include "../WindowModule/Window.h"
+
 #include <SDL3/SDL.h>
 
 #include "OpenGLBackends/imgui_impl_opengl3.h"
@@ -17,10 +20,19 @@ namespace ImGUIModule
     {
         m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
         m_inputModule = std::dynamic_pointer_cast<InputModule::InputModule>(registry.getModule("InputModule"));
-
+        m_windowModule = std::dynamic_pointer_cast<WindowModule::WindowModule>(registry.getModule("WindowModule"));
+        
         m_inputModule->OnEvent.subscribe(std::bind(&ImGUIModule::onEvent, this, std::placeholders::_1));
         
         m_logger->log(Logger::LogVerbosity::Info, "Startup", "ImGuiModule");
+
+        ImGui::CreateContext();
+        auto window = m_windowModule->getWindow();
+        m_logger->log(Logger::LogVerbosity::Info, "Init dear ImGui", "ImGUIModule");
+        
+        ImGui_ImplSDL3_InitForOpenGL(window->getSDLWindow(), window->getGLContext());
+
+        ImGui_ImplOpenGL3_Init("#version 450");
         
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         setImGuiStyle();
@@ -128,6 +140,8 @@ namespace ImGUIModule
 
         ImGui::Render();
         ImGui::EndFrame();
+        
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
     std::weak_ptr<GUIObject> ImGUIModule::addObject(GUIObject* object)

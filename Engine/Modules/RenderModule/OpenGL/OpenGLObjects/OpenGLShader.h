@@ -3,7 +3,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include "../../../ResourceModule/Shader.h"
 #include "../../Abstract/IShader.h"
@@ -17,24 +16,24 @@ namespace RenderModule::OpenGL
 {
     class OpenGLShader : public IShader
     {
-        GLuint m_programID;
+        unsigned int m_programID;
 
-        GLuint m_cameraUBO;
-        GLuint m_modelUBO;
-        GLuint m_directionalLightUBO;
-        GLuint m_pointLightUBO;
+        unsigned int m_cameraUBO;
+        unsigned int m_modelUBO;
+        unsigned int m_directionalLightUBO;
+        unsigned int m_pointLightUBO;
 
-        std::unordered_map<std::string, GLuint> m_uniformBlocks;
-        std::unordered_map<std::string, GLuint> m_ubos;
+        std::unordered_map<std::string, unsigned int> m_uniformBlocks;
+        std::unordered_map<std::string, unsigned int> m_ubos;
 
-        std::unordered_map<std::string, GLuint> m_textureBindings;
+        std::unordered_map<int, TextureBinding> m_textureBindings;
 
     public:
         OpenGLShader(const std::shared_ptr<ResourceModule::RShader>& vertShader,
                      const std::shared_ptr<ResourceModule::RShader>& fragShader);
         ~OpenGLShader();
 
-        GLuint getProgramID() const { return m_programID; }
+        unsigned int getProgramID() const { return m_programID; }
         void use() override;
 
         void setUniformBlock(const ShaderUniformBlock& data) override;
@@ -42,14 +41,16 @@ namespace RenderModule::OpenGL
         void setUniformData(const std::string& blockName, const void* data, size_t dataSize) override;
         bool hasUniformBlock(const std::string& blockName) override;
 
-        void bindTextures(const std::unordered_map<std::string, uint32_t>& textures) override;
+        void bindTextures(const std::unordered_map<std::string, TextureHandle>& textures) override;
 
-        GLuint getOrCreateUBO(const std::string& blockName, size_t dataSize);
+        unsigned int getOrCreateUBO(const std::string& blockName, size_t dataSize);
 
         void debugPrintUBO(const std::string& blockName, size_t dataSize);
 
+        void scanTextureBindings(const std::unordered_map<std::string, int>& bindingMap) override;
     private:
-        GLuint createShaderFromSPIRV(const std::vector<uint8_t> spirvCode, GLenum shaderType);
+        unsigned int createShaderFromSPIRV(const std::vector<uint8_t> spirvCode, unsigned int shaderType);
+        unsigned int createShaderFromGLSL(const std::string& source, unsigned int shaderType);
 
         void unbind() override;
 
@@ -70,6 +71,5 @@ namespace RenderModule::OpenGL
         };
 
         void scanUniformBlocks();
-        void scanTextureBindings();
     };
 }
