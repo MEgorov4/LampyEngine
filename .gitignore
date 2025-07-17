@@ -1,6 +1,6 @@
 /build
 /LampyEngine-cppcheck-build-dir
-/.vscode
+.vscode/
 /.vs
 /x64
 /Engine/ThirdParty/*.bat
