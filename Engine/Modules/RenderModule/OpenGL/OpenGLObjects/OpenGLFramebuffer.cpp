@@ -1,18 +1,20 @@
 #include "OpenGLFramebuffer.h"
+#include <GL/glew.h>
+
 #include "../../../LoggerModule/Logger.h"
 
 namespace RenderModule::OpenGL
 {
-	OpenGLFramebuffer::OpenGLFramebuffer(int width, int height, bool useDepth)
-		: m_width(width), m_height(height), m_depth(useDepth), fbo(0),
-		m_colorTexture(0), m_depthTexture(0), rbo(0)
+	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferData& data)
+	: IFramebuffer(data), m_width(data.width), m_height(data.width), m_depth(data.useDepth), fbo(0),
+	m_colorTexture(0), m_depthTexture(0), rbo(0)
 	{
 		glGenFramebuffers(1, &fbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		addColorAttachment();
 
-		if (useDepth)
+		if (m_depth)
 			addDepthAttachment(true);
 
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -33,7 +35,15 @@ namespace RenderModule::OpenGL
 
 	void OpenGLFramebuffer::bind()
 	{
+		if (m_depth)
+			glEnable(GL_DEPTH_TEST);
+		else
+			glDisable(GL_DEPTH_TEST);
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		
+		glClear(m_depth ? (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) : GL_COLOR_BUFFER_BIT);
+		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glViewport(0, 0, m_width, m_height);
 	}
 
@@ -61,7 +71,7 @@ namespace RenderModule::OpenGL
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void OpenGLFramebuffer::addColorAttachment(GLenum format, GLenum type)
+	void OpenGLFramebuffer::addColorAttachment(GLint format, GLenum type)
 	{
 		glGenTextures(1, &m_colorTexture);
 		glBindTexture(GL_TEXTURE_2D, m_colorTexture);
@@ -79,7 +89,6 @@ namespace RenderModule::OpenGL
 	{
 		if (asTexture)
 		{
-			// Используем текстуру для глубины
 			glGenTextures(1, &m_depthTexture);
 			glBindTexture(GL_TEXTURE_2D, m_depthTexture);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_width, m_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
@@ -95,7 +104,6 @@ namespace RenderModule::OpenGL
 		}
 		else
 		{
-			// Используем Renderbuffer (лучше для производительности, но нельзя сэмплировать)
 			glGenRenderbuffers(1, &rbo);
 			glBindRenderbuffer(GL_RENDERBUFFER, rbo);
 			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, m_width, m_height);

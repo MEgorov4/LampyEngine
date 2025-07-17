@@ -21,7 +21,7 @@ namespace RenderModule
 
         m_logger->log(Logger::LogVerbosity::Info, "Startup", "RenderModule");
         m_logger->log(Logger::LogVerbosity::Info, "Create renderer", "RenderModule");
-        m_renderer = std::make_unique<OpenGL::OpenGLRenderer>(m_logger, resourceManager, ecsModule, windowModule->getWindow());
+        m_renderer = std::make_unique<OpenGL::OpenGLRenderer>(m_logger, resourceManager, ecsModule, windowModule);
 
         m_renderer->postInit();
     }

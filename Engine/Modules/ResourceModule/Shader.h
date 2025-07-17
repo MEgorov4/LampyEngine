@@ -21,6 +21,7 @@ namespace ResourceModule
 	struct ShaderInfo
 	{
 		std::vector<uint8_t> buffer;
+		std::string text;
 		size_t fileSize;
 	};
 
@@ -31,6 +32,7 @@ namespace ResourceModule
 			std::shared_ptr<ShaderCompiler::ShaderCompiler> shaderCompiler);
 
 		std::vector<uint8_t> getBuffer() const;
+		std::string getText() const;
 		const ShaderInfo& getShaderInfo() const
 		{
 			return m_shaderInfo;

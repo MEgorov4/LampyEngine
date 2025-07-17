@@ -18,6 +18,7 @@ namespace ResourceModule
 
 		if (extension == ".vert" || extension == ".frag")
 		{
+			m_shaderInfo.text = filesystemModule->readTextFile(path);
 			binaryResultPath = shaderCompiler->compileShader(path);
 		}
 
@@ -32,5 +33,10 @@ namespace ResourceModule
 	std::vector<uint8_t> RShader::getBuffer() const
 	{
 		return std::vector<uint8_t>(m_shaderInfo.buffer.begin(), m_shaderInfo.buffer.end());
+	}
+
+	std::string RShader::getText() const
+	{
+		return m_shaderInfo.text;	
 	}
 }

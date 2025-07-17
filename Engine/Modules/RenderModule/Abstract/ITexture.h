@@ -1,19 +1,26 @@
-#pragma once 
+#pragma once
 #include <memory>
 #include "../../ResourceModule/Texture.h"
 
 namespace RenderModule
 {
-	class ITexture
-	{
-	public:
-		ITexture(const std::shared_ptr<ResourceModule::RTexture>& texture) {};
+    struct TextureHandle
+    {
+        uint32_t id;
+    };
 
-		virtual ~ITexture() = default;
+    class ITexture
+    {
+    public:
+        ITexture(const std::shared_ptr<ResourceModule::RTexture>& texture)
+        {
+        };
 
-		virtual void bind() const = 0;
-		virtual void unbind() const = 0;
+        virtual ~ITexture() = default;
 
-		virtual uint32_t getTextureID() = 0;
-	};
+        virtual void bind() const = 0;
+        virtual void unbind() const = 0;
+
+        virtual TextureHandle getTextureID() = 0;
+    };
 }
