@@ -54,7 +54,9 @@ Engine/
 ├── CMakeLists.txt
 └── README.md
 ```
-## [Документация](https://megorov4.github.io/LampyEngine/)
+### 
+[Project Docs]()
+[Code Docs](https://megorov4.github.io/LampyEngine/)
 
 ## Демо
 ![image](https://github.com/user-attachments/assets/491758a3-1f7c-46d7-9091-c5e7c2d9155d)
