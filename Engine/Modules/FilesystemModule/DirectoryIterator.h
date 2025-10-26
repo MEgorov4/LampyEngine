@@ -14,8 +14,8 @@ namespace FilesystemModule
     class DirectoryIterator
     {
         FilesystemModule* m_filesystemModule;
-        std::shared_ptr<Logger::Logger> m_logger;
-        std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
+        Logger::Logger* m_logger;
+        ProjectModule::ProjectModule* m_projectModule;
 
         std::optional<uint64_t> m_dirLastEditTime;
         fs::path m_rootPath;
@@ -25,8 +25,6 @@ namespace FilesystemModule
         using constr = const std::string&;
 
         DirectoryIterator(FilesystemModule* filesystemModule
-                          , std::shared_ptr<Logger::Logger> logger
-                          , std::shared_ptr<ProjectModule::ProjectModule> projectModule
                           , const std::string& rootPath
                           , const std::string& currentPath);
 

@@ -2,8 +2,9 @@
 #include <imgui.h>
 
 #include "../LuaScriptModule/LuaScriptModule.h"
+#include "../../EngineContext/CoreGlobal.h"
 
-GUIEditorConsole::GUIEditorConsole(const std::shared_ptr<ScriptModule::LuaScriptModule>& scriptModule) : GUIObject(), m_luaScriptModule(scriptModule)
+GUIEditorConsole::GUIEditorConsole() : GUIObject(), m_luaScriptModule(GCM(ScriptModule::LuaScriptModule))
 {
 
 }

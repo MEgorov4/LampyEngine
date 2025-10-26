@@ -9,16 +9,16 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "Texture.h"
+#include "../../EngineContext/CoreGlobal.h"
 
 namespace ResourceModule
 {
-    void ResourceManager::startup(const ModuleRegistry& registry)
+    void ResourceManager::startup()
     {
-        m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-        m_filesystemModule = std::dynamic_pointer_cast<FilesystemModule::FilesystemModule>(
-            registry.getModule("FilesystemModule"));
-        m_shaderCompiler = std::dynamic_pointer_cast<ShaderCompiler::ShaderCompiler>(
-            registry.getModule("ShaderCompiler"));
+        m_logger = GCM(Logger::Logger);
+        m_filesystemModule = GCM(FilesystemModule::FilesystemModule);
+            
+        m_shaderCompiler = GCM(ShaderCompiler::ShaderCompiler);
 
         m_logger->log(Logger::LogVerbosity::Info, "Startup", "ResourceManager");
         

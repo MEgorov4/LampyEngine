@@ -1,8 +1,6 @@
 #pragma once
-#include <memory>
 
-#include "../EngineContext/EngineContext.h"
-#include "../EngineContext/ModuleManager.h"
+#include <EngineMinimal.h>
 
 namespace Logger
 {
@@ -40,17 +38,13 @@ namespace WindowModule
 class Engine
 {
     std::shared_ptr<InputModule::InputModule> m_inputModule;
-    std::shared_ptr<Logger::Logger> m_logger;
     std::shared_ptr<WindowModule::WindowModule> m_windowModule;
     std::shared_ptr<RenderModule::RenderModule> m_renderModule;
     std::shared_ptr<PhysicsModule::PhysicsModule> m_physicsModule;
     std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
 
-    std::unique_ptr<IEngineContext>
-    m_engineContext; ///< Unique pointer to the engine context.
-    std::unique_ptr<ModuleManager>
-    m_moduleManager;
-
+    std::unique_ptr<IEngineContext> m_engineContext; ///< Unique pointer to the engine context.
+    std::unique_ptr<ContextLocator> m_contextLocator;
 public:
     Engine() = default;
     ~Engine() = default;
@@ -63,12 +57,9 @@ public:
     /// Runs the engine, handling startup, execution, and shutdown processes.
     /// </summary>
     void run();
-    void ContextCreate();
-    void ContextMajorInit() const;
-    void ContextMinorInit() const;
-
 private:
-    void startup();
+    void startupMajor();
+    void startupMinor();
     void shutdown();
     void engineTick();
 };

@@ -8,8 +8,7 @@
 #else
 #endif
 
-#include "../LoggerModule/Logger.h"
-#include "../ProjectModule/ProjectModule.h"
+#include <Modules/ProjectModule/ProjectModule.h>
 
 #include "DirectoryIterator.h"
 
@@ -17,14 +16,17 @@ namespace FilesystemModule
 {
     namespace fs = std::filesystem;
 
-    void FilesystemModule::startup(const ModuleRegistry& registry)
+    void FilesystemModule::startup()
     {
-        m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-        m_projectModule = std::dynamic_pointer_cast<ProjectModule::ProjectModule>(registry.getModule("ProjectModule"));
+        m_logger = GCM(Logger::Logger);
+        m_projectModule = GCM(ProjectModule::ProjectModule);
+
+        m_logger->log(Logger::LogVerbosity::Info, "startup", "FilesystemModule");
     }
 
     void FilesystemModule::shutdown()
     {
+        m_logger->log(Logger::LogVerbosity::Info, "shutdown", "FilesystemModule");
     }
 
     FResult FilesystemModule::deleteFile(constr path)
@@ -322,7 +324,7 @@ namespace FilesystemModule
     DirectoryIterator FilesystemModule::createDirectoryIterator()
     {
         std::string resourcesPath = m_projectModule->getProjectConfig().getResourcesPath();
-        return DirectoryIterator(this, m_logger, m_projectModule, resourcesPath, resourcesPath);
+        return DirectoryIterator(this, resourcesPath, resourcesPath); // WARNING: апед
     }
 
     FResult FilesystemModule::writeTextFile(constr filePath, constr content)

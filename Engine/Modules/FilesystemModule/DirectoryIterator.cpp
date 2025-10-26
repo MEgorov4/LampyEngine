@@ -3,17 +3,16 @@
 
 #include "../ProjectModule/ProjectModule.h"
 #include "../LoggerModule/Logger.h"
+#include "../../EngineContext/CoreGlobal.h"
 
 namespace FilesystemModule
 {
 	DirectoryIterator::DirectoryIterator(FilesystemModule* filesystemModule
-		, std::shared_ptr<Logger::Logger> logger
-		, std::shared_ptr<ProjectModule::ProjectModule> projectModule
 		, const std::string& rootPath
 		, const std::string& currentPath)
 		: m_filesystemModule(filesystemModule)
-		, m_logger(logger)
-		, m_projectModule(projectModule)
+		, m_logger(GCM(Logger::Logger))
+		, m_projectModule(GCM(ProjectModule::ProjectModule))
 	{
 		assert(m_filesystemModule);
 		m_rootPath = !filesystemModule->isPathExists(rootPath) ? m_projectModule->getProjectConfig().getResourcesPath() : rootPath;

@@ -1,12 +1,5 @@
 #pragma once 
-#include <string>
-#include <optional>
-#include <memory>
-#include <vector>
-
-#include "../../EngineContext/IModule.h"
-#include "../../EngineContext/ModuleRegistry.h"
-
+#include <EngineMinimal.h>
 
 namespace ProjectModule
 {
@@ -46,12 +39,11 @@ namespace FilesystemModule
 
 	class FilesystemModule : public IModule
 	{
-		std::shared_ptr<Logger::Logger> m_logger;
-		std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
+		ProjectModule::ProjectModule* m_projectModule;
 	public:
 		using constr = const std::string&;
 
-		void startup(const ModuleRegistry& registry) override;
+		void startup() override;
 		void shutdown() override;
 
 		FResult createFile(constr dirPath, constr fileName);

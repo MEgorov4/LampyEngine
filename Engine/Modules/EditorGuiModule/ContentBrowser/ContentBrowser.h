@@ -26,9 +26,9 @@ class GUIFolderActionPopup;
 
 class GUIContentBrowser : public ImGUIModule::GUIObject
 {
-    std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
-    std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
-    std::shared_ptr<ECSModule::ECSModule>   m_ecsModule;
+    FilesystemModule::FilesystemModule* m_filesystemModule;
+    ProjectModule::ProjectModule* m_projectModule;
+
     FilesystemModule::DirectoryIterator m_dirIter;
     std::string m_rootPath;
     std::string m_currentPath;
@@ -40,9 +40,7 @@ class GUIContentBrowser : public ImGUIModule::GUIObject
 
     void updateContent();
 public:
-    GUIContentBrowser(std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule,
-                      std::shared_ptr<ProjectModule::ProjectModule> projectModule,
-                      std::shared_ptr<ECSModule::ECSModule> ecsModule);
+    GUIContentBrowser();
     ~GUIContentBrowser() override = default;
 
     void render(float deltaTime) override;

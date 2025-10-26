@@ -1,64 +1,60 @@
 #pragma once
-#include <memory>
 
-#include "../../EngineContext/IModule.h"
-#include "../../EngineContext/ModuleRegistry.h"
+#include <EngineMinimal.h>
 
 namespace ScriptModule
 {
-    class LuaScriptModule;
+	class LuaScriptModule;
 }
 
 namespace RenderModule
 {
-    class RenderModule;
+	class RenderModule;
 }
 
 namespace InputModule
 {
-    class InputModule;
+	class InputModule;
 }
 
 namespace FilesystemModule
 {
-    class FilesystemModule;
+	class FilesystemModule;
 }
 
 namespace ECSModule
 {
-    class ECSModule;
+	class ECSModule;
 }
 
 namespace ProjectModule
 {
-    class ProjectModule;
+	class ProjectModule;
 }
 
 namespace Logger
 {
-    class Logger;
+	class Logger;
 }
 
 namespace ImGUIModule
 {
-    class ImGUIModule;
+	class ImGUIModule;
 }
 
 
 class EditorGUIModule : public IModule
 {
-    std::shared_ptr<ImGUIModule::ImGUIModule> m_imGuiModule;
-    std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
-    std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
-    std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
-    std::shared_ptr<RenderModule::RenderModule> m_renderModule;
-    std::shared_ptr<InputModule::InputModule> m_inputModule;
-    std::shared_ptr<ScriptModule::LuaScriptModule> m_luaScriptModule;
-    
-    std::shared_ptr<Logger::Logger> m_logger;
+	ImGUIModule::ImGUIModule* m_imGuiModule;
+	ProjectModule::ProjectModule* m_projectModule;
+	FilesystemModule::FilesystemModule* m_filesystemModule;
+	ECSModule::ECSModule* m_ecsModule;
+	RenderModule::RenderModule* m_renderModule;
+	InputModule::InputModule* m_inputModule;
+	ScriptModule::LuaScriptModule* m_luaScriptModule;
 public:
-    void startup(const ModuleRegistry& registry) override;
-    void shutdown() override;
-    
-    void render(float deltaTime) const;
+	void startup() override;
+	void shutdown() override;
+
+	void render(float deltaTime) const;
 };

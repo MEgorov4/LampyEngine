@@ -1,20 +1,16 @@
 #include "InputModule.h"
 
-#include "../LoggerModule/Logger.h"
-#include "../WindowModule/Window.h"
-#include "../WindowModule/WindowModule.h"
 namespace InputModule
 {
 
-	void InputModule::startup(const ModuleRegistry& registry)
+	void InputModule::startup()
 	{
-		m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-		m_logger->log(Logger::LogVerbosity::Info,"Startup", "InputModule");
+		LT_LOG(LogVerbosity::Info, "InputModule", "Startup");
 	}
 
 	void InputModule::shutdown()
 	{
-		m_logger->log(Logger::LogVerbosity::Info,"Shutdown", "InputModule");
+		LT_LOG(LogVerbosity::Info, "InputModule", "Shutdown");
 	}
 
 	void InputModule::pushEvent(const SDL_Event& event)

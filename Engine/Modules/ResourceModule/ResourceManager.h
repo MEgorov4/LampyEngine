@@ -4,7 +4,6 @@
 #include <memory>
 
 #include "../../EngineContext/IModule.h"
-#include "../../EngineContext/ModuleRegistry.h"
 
 #include "../FilesystemModule/FilesystemModule.h"
 #include "ResourceCache.h"
@@ -33,15 +32,15 @@ namespace ResourceModule
 
 	class ResourceManager : public IModule
 	{
-		std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
-		std::shared_ptr<ShaderCompiler::ShaderCompiler> m_shaderCompiler;
-		std::shared_ptr<Logger::Logger> m_logger;
+		FilesystemModule::FilesystemModule* m_filesystemModule;
+		ShaderCompiler::ShaderCompiler* m_shaderCompiler;
+		Logger::Logger* m_logger;
 
 		ResourceCache<RMesh> meshCache;
 		ResourceCache<RShader> shaderCache;
 		ResourceCache<RTexture> textureCache;
 	public:
-		void startup(const ModuleRegistry& registry) override;
+		void startup() override;
 		void shutdown() override;
 
 		template<class T>

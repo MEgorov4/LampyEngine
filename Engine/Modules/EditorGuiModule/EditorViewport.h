@@ -20,10 +20,10 @@ namespace RenderModule
 
 class GUIEditorViewport : public ImGUIModule::GUIObject
 {
-    std::shared_ptr<Logger::Logger> m_logger;
-    std::shared_ptr<RenderModule::RenderModule> m_renderModule;
-    std::shared_ptr<InputModule::InputModule> m_inputModule;
-    std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
+    Logger::Logger* m_logger;
+    RenderModule::RenderModule* m_renderModule;
+    InputModule::InputModule* m_inputModule;
+    ECSModule::ECSModule* m_ecsModule;
 
     RenderModule::TextureHandle m_offscreenImageDescriptor;
 
@@ -35,17 +35,16 @@ class GUIEditorViewport : public ImGUIModule::GUIObject
     glm::vec3 m_cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 m_cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-    float m_cameraSpeed = 0.10f;
+    float m_cameraSpeed = 30.f;
     float m_deltaTime = 0.f;
     bool m_firstMouse = true;
     float m_lastX, m_lastY;
 
     bool m_processInput = false;
+    static constexpr float aspectRatio = 16.0f / 9.0f;
 
 public:
-    GUIEditorViewport(const std::shared_ptr<Logger::Logger>& logger, const std::shared_ptr<RenderModule::RenderModule>& renderModule,
-                      const std::shared_ptr<InputModule::InputModule>& inputModule,
-                      const std::shared_ptr<ECSModule::ECSModule>& ecsModule);
+    GUIEditorViewport();
     virtual ~GUIEditorViewport() override;
 
     virtual void render(float deltaTime) override;
@@ -53,4 +52,7 @@ public:
 private:
     void onKeyAction(SDL_KeyboardEvent event);
     void onMouseAction(SDL_MouseMotionEvent mouseMotion);
+
+    void drawGuizmo(int x, int y);
+    void drawGrid();
 };

@@ -15,7 +15,7 @@ namespace Logger
 /// </summary>
 class GUIOutputLog : public ImGUIModule::GUIObject
 {
-    std::shared_ptr<Logger::Logger> m_logger; 
+    Logger::Logger* m_logger; 
     std::vector<std::string> m_messages; ///< Stores log messages to be displayed.
     int m_subscriberID; ///< ID for unsubscribing from the Logger event.
 
@@ -23,7 +23,7 @@ public:
     /// <summary>
     /// Constructs a GUI log output panel and subscribes to the Logger event.
     /// </summary>
-    GUIOutputLog(std::shared_ptr<Logger::Logger> logger);
+    GUIOutputLog();
 
     /// <summary>
     /// Destroys the log output panel and unsubscribes from the Logger event.

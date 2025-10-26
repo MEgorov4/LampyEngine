@@ -1,105 +1,97 @@
 #include "Engine.h"
 
-#include "../EngineContext/EngineContext.h"
-#include "../Editor/Editor.h"
+#include <Editor/Editor.h>
 
-#include "../Modules/WindowModule/WindowModule.h"
-#include "../Modules/WindowModule/Window.h"
+#include <Modules/WindowModule/WindowModule.h>
+#include <Modules/WindowModule/Window.h>
 
-#include "../Modules/InputModule/InputModule.h"
-#include "../Modules/RenderModule/RenderModule.h"
-#include "../Modules/FilesystemModule/FilesystemModule.h"
-#include "../Modules/ProjectModule/ProjectModule.h"
-#include "../Modules/RenderModule/IRenderer.h"
-#include "../Modules/AudioModule/AudioModule.h"
-#include "../Modules/ObjectCoreModule/ECS/ECSModule.h"
-#include "../Modules/ShaderCompilerModule/ShaderCompiler.h"
-#include "../Modules/LoggerModule/Logger.h"
-#include "../Modules/LuaScriptModule/LuaScriptModule.h"
-#include "../Modules/ResourceModule/ResourceManager.h"
-#include "../Modules/PhysicsModule/PhysicsModule.h"
+#include <Modules/InputModule/InputModule.h>
+#include <Modules/RenderModule/RenderModule.h>
+#include <Modules/FilesystemModule/FilesystemModule.h>
+#include <Modules/ProjectModule/ProjectModule.h>
+#include <Modules/RenderModule/IRenderer.h>
+#include <Modules/AudioModule/AudioModule.h>
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
+#include <Modules/ShaderCompilerModule/ShaderCompiler.h>
+#include <Modules/LuaScriptModule/LuaScriptModule.h>
+#include <Modules/ResourceModule/ResourceManager.h>
+#include <Modules/PhysicsModule/PhysicsModule.h>
+#include <Modules/EditorGuiModule/EditorGUIModule.h>
+#include <Modules/ImGuiModule/ImGuiModule.h>
 
 #include "EngineConfig.h"
-#include "../Modules/EditorGuiModule/EditorGUIModule.h"
-#include "../Modules/ImGuiModule/ImGuiModule.h"
 
 void Engine::run()
 {
-    startup();
+    LT_LOG(LogVerbosity::Debug, "Engine", "run");
+    startupMinor();
+    startupMajor();
+
+    LT_LOG(LogVerbosity::Debug, "Engine", "create engine tick");
     engineTick();
     shutdown();
 }
 
-void Engine::startup()
+void Engine::startupMinor()
 {
-    m_moduleManager = std::make_unique<ModuleManager>();
-    m_logger = m_moduleManager->createModule<Logger::Logger>("Logger");
-    m_moduleManager->createModule<FilesystemModule::FilesystemModule>("FilesystemModule");
+    LT_LOG(LogVerbosity::Debug, "Engine", "startupMinor");
+    Core::Register(std::make_shared<FilesystemModule::FilesystemModule>(), 5);
+    Core::Register(std::make_shared<ProjectModule::ProjectModule>(), 10);
+    Core::Register(std::make_shared<ResourceModule::ResourceManager>(), 15);
+    Core::Register(std::make_shared<AudioModule::AudioModule>(), 20);
+    Core::Register(std::make_shared<ScriptModule::LuaScriptModule>(), 25);
+    Core::StartupAll();
 
-    ContextCreate();
-    ContextMinorInit();
+    m_contextLocator = std::make_unique<ContextLocator>(Core::Locator());
+    Context::SetLocator(m_contextLocator.get());
 
-    m_moduleManager->createModule<AudioModule::AudioModule>("AudioModule");
-    m_inputModule = m_moduleManager->createModule<InputModule::InputModule>("InputModule");
+    m_engineContext = std::make_unique<Editor>();
+    m_engineContext->initMinor(*m_contextLocator);
+}
 
-    m_windowModule = m_moduleManager->createModule<WindowModule::WindowModule>("WindowModule");
+void Engine::startupMajor()
+{
+    LT_LOG(LogVerbosity::Debug, "Engine", "startupMajor");
+    Core::Register(std::make_shared<WindowModule::WindowModule>(), 40);
+    Core::Register(std::make_shared<InputModule::InputModule>(), 30);
+    Core::Register(std::make_shared<ShaderCompiler::ShaderCompiler>(), 50);
+    Core::Register(std::make_shared<RenderModule::RenderModule>(), 60);
+    Core::Register(std::make_shared<ECSModule::ECSModule>(), 70);
+    Core::Register(std::make_shared<PhysicsModule::PhysicsModule>(), 80);
+    Core::StartupAll();
 
-    m_moduleManager->createModule<ShaderCompiler::ShaderCompiler>("ShaderCompiler");
-    m_moduleManager->createModule<ResourceModule::ResourceManager>("ResourceManager");
-    m_renderModule = m_moduleManager->createModule<RenderModule::RenderModule>("RenderModule");
-
-    m_ecsModule = m_moduleManager->createModule<ECSModule::ECSModule>("ECSModule");
-    m_moduleManager->createModule<ScriptModule::LuaScriptModule>("ScriptModule");
-    m_physicsModule = m_moduleManager->createModule<PhysicsModule::PhysicsModule>("PhysicsModule");
-
-    ContextMajorInit();
-
-    m_moduleManager->startupAll();
+    m_engineContext->initMajor(*m_contextLocator);
 }
 
 void Engine::shutdown()
 {
+    LT_LOG(LogVerbosity::Debug, "Engine", "shutdown");
     m_engineContext->shutdown();
-    m_moduleManager->shutdownAll();
-}
-
-void Engine::ContextCreate()
-{
-    m_engineContext = std::make_unique<Editor>();
-}
-
-void Engine::ContextMinorInit() const 
-{
-    m_engineContext->initMinor(m_moduleManager.get());
-}
-
-void Engine::ContextMajorInit() const
-{
-    m_engineContext->initMajor(m_moduleManager.get());
+    m_contextLocator->shutdownAll();
+    Core::ShutdownAll();
 }
 
 void Engine::engineTick()
 {
-    float deltaTime = 0.0f;
+    using clock = std::chrono::steady_clock;
+    auto prevTime = clock::now();
+    double smothedDt = 1.0 / 60.0;
+    const double alpha = 0.1;
+    
 
     WindowModule::Window* window = m_windowModule->getWindow();
-    float lastTime = window->currentTimeInSeconds();
-    /*
-    m_logger->log(Logger::LogVerbosity::Info, "Last time: " + std::to_string(lastTime), "Engine");
-    */
-
+    
     while (!window->shouldClose())
     {
-        float currentTime = window->currentTimeInSeconds();
-        /*
-        m_logger->log(Logger::LogVerbosity::Info, "Current time: " + std::to_string(currentTime), "Engine");
-        */
+        auto now = clock::now();
+        double rawDt = std::chrono::duration<double>(now - prevTime).count();
+        prevTime = now;
 
-        deltaTime = currentTime - lastTime;
-        /*
-        m_logger->log(Logger::LogVerbosity::Info, "Delta time: " + std::to_string(deltaTime), "Engine");
-        */
-        lastTime = currentTime;
+        rawDt = std::clamp(rawDt, 1e-6, 0.25);
+
+
+        smothedDt += alpha * (rawDt - smothedDt);
+        float deltaTime = static_cast<float>(smothedDt);
 
         window->pollEvents();
 
@@ -108,6 +100,7 @@ void Engine::engineTick()
 
         m_engineContext->tick(deltaTime);
         m_renderModule->getRenderer()->render();
+        m_windowModule->getWindow()->swapWindow();
     }
     m_renderModule->getRenderer()->waitIdle();
 }

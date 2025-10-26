@@ -1,4 +1,3 @@
-add_subdirectory(ThirdParty)
 add_subdirectory(Modules)
 add_subdirectory(EngineContext)
 add_subdirectory(Core)

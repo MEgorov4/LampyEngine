@@ -4,17 +4,17 @@
 
 #include "../LoggerModule/Logger.h"
 #include "../FilesystemModule/FilesystemModule.h"
+#include "../../EngineContext/CoreGlobal.h"
 
 
 namespace ShaderCompiler
 {
-
 	namespace bp = boost::process;
 
-	void ShaderCompiler::startup(const ModuleRegistry& registry)
+	void ShaderCompiler::startup()
 	{
-		m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-		m_filesystemModule = std::dynamic_pointer_cast<FilesystemModule::FilesystemModule>(registry.getModule("FilesystemModule"));
+		m_logger = GCM(Logger::Logger);
+		m_filesystemModule = GCM(FilesystemModule::FilesystemModule);
 
 		m_logger->log(Logger::LogVerbosity::Info, "Startup", "ShaderCompiler");
 	}
@@ -55,9 +55,6 @@ namespace ShaderCompiler
 		return fullOuputFilePath;
 	}
 
-	void ShaderCompiler::compileShaders(const std::vector<std::string>& shaderPaths)
-	{
-	}
 
 	bool ShaderCompiler::isShaderPrecompiled(const std::string& shaderPath)
 	{
@@ -81,6 +78,4 @@ namespace ShaderCompiler
 
 		return m_filesystemModule->isPathExists(possiblePrecompiledShaderPath);
 	}
-
-
 }

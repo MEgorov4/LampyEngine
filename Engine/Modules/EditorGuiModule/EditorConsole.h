@@ -12,9 +12,9 @@ namespace ScriptModule
 
 class GUIEditorConsole : public ImGUIModule::GUIObject
 {
-	std::shared_ptr<ScriptModule::LuaScriptModule> m_luaScriptModule;
+	ScriptModule::LuaScriptModule* m_luaScriptModule;
 public:
-	GUIEditorConsole(const std::shared_ptr<ScriptModule::LuaScriptModule>& scriptModule);
+	GUIEditorConsole();
 	~GUIEditorConsole() override = default;
 
 	void render(float deltaTime) override;

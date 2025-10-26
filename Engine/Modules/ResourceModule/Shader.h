@@ -28,8 +28,8 @@ namespace ResourceModule
 	class RShader : public BaseResource
 	{
 	public:
-		RShader(const std::string& path, std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule,
-			std::shared_ptr<ShaderCompiler::ShaderCompiler> shaderCompiler);
+		RShader(const std::string& path, FilesystemModule::FilesystemModule* filesystemModule,
+			ShaderCompiler::ShaderCompiler* shaderCompiler);
 
 		std::vector<uint8_t> getBuffer() const;
 		std::string getText() const;

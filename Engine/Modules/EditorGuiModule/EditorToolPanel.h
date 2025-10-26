@@ -13,14 +13,19 @@ namespace ECSModule
 {
     class ECSModule;
 }
+namespace FilesystemModule
+{
+    class FilesystemModule;
+}
 
 class GUIEditorToolPanel : public ImGUIModule::GUIObject
 {
-    std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
-    std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
+    ECSModule::ECSModule* m_ecsModule;
+    ProjectModule::ProjectModule* m_projectModule;
+    FilesystemModule::FilesystemModule* m_filesystemModule;
 
 public:
-    GUIEditorToolPanel(std::shared_ptr<ECSModule::ECSModule> ecsModule, std::shared_ptr<ProjectModule::ProjectModule> projectModule);
+    GUIEditorToolPanel();
     virtual ~GUIEditorToolPanel() override = default;
 
     virtual void render(float deltaTime) override;

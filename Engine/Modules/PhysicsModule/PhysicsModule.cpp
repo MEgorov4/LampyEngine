@@ -4,15 +4,17 @@
 #include "BulletDebugDrawer.h"
 #include "../LoggerModule/Logger.h"
 #include "../ObjectCoreModule/ECS/ECSModule.h"
-#include "../ObjectCoreModule/ECS/ECSPhysicsSystem.h"
+#include "../ObjectCoreModule/ECS/Components/ECSComponents.h"
+#include "../ObjectCoreModule/ECS/Systems/ECSPhysicsSystem.h"
+#include "../../EngineContext/CoreGlobal.h"
 
 
 namespace PhysicsModule
 {
-	void PhysicsModule::startup(const ModuleRegistry& registry)
+	void PhysicsModule::startup()
 	{
-		m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-		m_ecsModule = std::dynamic_pointer_cast<ECSModule::ECSModule>(registry.getModule("ECSModule"));
+		m_logger = GCM(Logger::Logger);
+		m_ecsModule = GCM(ECSModule::ECSModule);
 	
 		m_debugDrawer.reset(new BulletDebugDrawer());
 

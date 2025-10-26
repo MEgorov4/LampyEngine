@@ -3,7 +3,6 @@
 #include <memory>
 
 #include "../../EngineContext/IModule.h"
-#include "../../EngineContext/ModuleRegistry.h"
 
 
 namespace InputModule
@@ -24,9 +23,9 @@ namespace WindowModule
 	/// </summary>
 	class WindowModule : public IModule
 	{
+		Logger::Logger* m_logger;
+
 		std::unique_ptr<Window> m_window; ///< Unique pointer to the managed window.
-		std::shared_ptr<Logger::Logger> m_logger;
-		std::shared_ptr<InputModule::InputModule> m_inputModule;
 	public:
 		/// <summary>
 		/// Initializes the window module and creates a new window.
@@ -36,7 +35,7 @@ namespace WindowModule
 		/// <param name="title">The title of the window.</param>
 		/// <exception cref="std::runtime_error">Thrown if window creation fails.</exception>
 		/// 
-		void startup(const ModuleRegistry& registry) override;
+		void startup() override;
 
 		/// <summary>
 		/// Shuts down the window module and destroys the window.

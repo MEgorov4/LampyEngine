@@ -8,8 +8,8 @@
 
 namespace ResourceModule
 {
-	RShader::RShader(const std::string& path, std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule,
-			std::shared_ptr<ShaderCompiler::ShaderCompiler> shaderCompiler) : BaseResource(path)
+	RShader::RShader(const std::string& path, FilesystemModule::FilesystemModule* filesystemModule,
+			ShaderCompiler::ShaderCompiler* shaderCompiler) : BaseResource(path)
 	{
 		
 		std::string extension = filesystemModule->getFileExtensions(path);

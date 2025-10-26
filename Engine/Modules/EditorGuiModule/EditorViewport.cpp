@@ -1,22 +1,26 @@
-#include "EditorViewport.h"
+﻿#include "EditorViewport.h"
 #include <imgui.h>
 
 #include "../LoggerModule/Logger.h"
 #include "../RenderModule/RenderModule.h"
 #include "../InputModule/InputModule.h"
 #include "../RenderModule/IRenderer.h"
+#include <flecs.h>
+#include "WorldInspector/WorldInspector.h"
+#include "../ObjectCoreModule/ECS/Components/ECSComponents.h"
+#include <format>
+#include "../ImGuiModule/ImGuizmo.h"
 
-#include "../ObjectCoreModule/ECS/ECSComponents.h"
+#include <glm/gtc/type_ptr.hpp>       // glm::value_ptr
+#include <glm/gtx/matrix_decompose.hpp> // glm::decompose
+#include "../../EngineContext/CoreGlobal.h"
 
-GUIEditorViewport::GUIEditorViewport(const std::shared_ptr<Logger::Logger>& logger,
-                                     const std::shared_ptr<RenderModule::RenderModule>& renderModule,
-                                     const std::shared_ptr<InputModule::InputModule>& inputModule,
-                                     const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
+GUIEditorViewport::GUIEditorViewport()
     : ImGUIModule::GUIObject()
-      , m_logger(logger)
-      , m_renderModule(renderModule)
-      , m_inputModule(inputModule)
-      , m_ecsModule(ecsModule)
+      , m_logger(GCM(Logger::Logger))
+      , m_renderModule(GCM(RenderModule::RenderModule))
+      , m_inputModule(GCM(InputModule::InputModule))
+      , m_ecsModule(GCM(ECSModule::ECSModule))
       , m_viewportEntity(m_ecsModule->getCurrentWorld().entity("ViewportCamera"))
 {
     m_keyActionHandlerID = m_inputModule->OnKeyboardEvent.subscribe(
@@ -39,19 +43,100 @@ void GUIEditorViewport::render(float deltaTime)
     m_deltaTime = deltaTime;
     if (ImGui::Begin("Viewport", 0, ImGuiWindowFlags_NoScrollbar))
     {
-        m_offscreenImageDescriptor = m_renderModule->getRenderer()->getOutputRenderHandle();
-        ImGui::Image(m_offscreenImageDescriptor.id, ImVec2(ImGui::GetWindowSize().x, ImGui::GetWindowSize().y - 36));
+        ImVec2 avail = ImGui::GetContentRegionAvail();
+
+        // 1. Отрисовываем рендер-таргет
+        ImGui::Image(
+            m_renderModule->getRenderer()->getOutputRenderHandle(avail.x, avail.y).id,
+            avail,
+            ImVec2(0, 1), ImVec2(1, 0) // если текстура перевёрнута по Y
+        );
+
+        // --- вычисляем реальный экранный прямоугольник картинки ---
+        ImVec2 imgMin = ImGui::GetItemRectMin();
+
         m_processInput = ImGui::IsWindowFocused() && ImGui::IsMouseDown(ImGuiMouseButton_Right);
+        
+        // 2. ImGuizmo
+        ImGuizmo::AllowAxisFlip(false);
+        ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
+        ImGuizmo::SetRect(imgMin.x, imgMin.y, avail.x, avail.y);
+
+        auto& world = m_ecsModule->getCurrentWorld();
+        if (auto ent = GUIWorldInspector::m_selectedEntity)
+        {
+            glm::vec3 pos{ 0.f };
+            glm::quat rot{ 1.f, 0.f, 0.f, 0.f };
+            glm::vec3 scl{ 1.f };
+
+            if (const PositionComponent* pComp = ent.get<PositionComponent>())
+                pos = pComp->toGLMVec();
+            if (const RotationComponent* rComp = ent.get<RotationComponent>())
+                rot = rComp->toQuat();
+            if (const ScaleComponent* sComp = ent.get<ScaleComponent>())
+                scl = sComp->toGLMVec();
+
+            // 3. Собираем модельную матрицу
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, pos);
+            model *= glm::mat4_cast(rot);   
+            model = glm::scale(model, scl); 
+
+            // 4. Матрицы камеры — те же, что и в рендере
+            const PositionComponent* cPosComp = m_viewportEntity.get<PositionComponent>();
+            const RotationComponent* cRotComp = m_viewportEntity.get<RotationComponent>();
+            const CameraComponent* camComp = m_viewportEntity.get<CameraComponent>();
+
+            float aspect = avail.x > 0 ? float(avail.x) / float(avail.y) : 1.0f;
+
+glm::mat4 proj = glm::perspective(
+    glm::radians(camComp->fov),
+    aspect,
+    camComp->nearClip,
+    camComp->farClip
+);         
+            glm::vec3 cameraPos = cPosComp->toGLMVec();
+            glm::quat camRot = cRotComp->toQuat();
+            glm::vec3 forward = camRot * glm::vec3(0, 0, -1);
+            glm::vec3 up = camRot * glm::vec3(0, 1, 0);
+
+            glm::mat4 view = glm::lookAt(cameraPos, cameraPos + forward, up);
+
+            // 5. Гизмо
+static ImGuizmo::OPERATION gizmoOp = ImGuizmo::TRANSLATE;
+static ImGuizmo::MODE gizmoMode = ImGuizmo::LOCAL;
+
+if (ImGuizmo::Manipulate(glm::value_ptr(view),
+                         glm::value_ptr(proj),
+                         gizmoOp, gizmoMode,
+                         glm::value_ptr(model)))
+{
+    // robust TRS-деcompose
+    glm::vec3 skew; glm::vec4 persp;
+    glm::vec3 newS; glm::quat newR; glm::vec3 newT;
+    glm::decompose(model, newS, newR, newT, skew, persp); // <glm/gtx/matrix_decompose.hpp>
+
+    // Обновляем ECS компоненты
+    ent.set<PositionComponent>({ newT.x, newT.y, newT.z });
+
+    if (auto* rc = ent.get_mut<RotationComponent>()) {
+        rc->fromQuat(newR); // сохраняем в тех же Y->X->Z
+        ent.modified<RotationComponent>();
+    }
+
+    ent.set<ScaleComponent>({ newS.x, newS.y, newS.z });
+}
+            // Хоткеи для переключения операций
+            if (ImGui::IsKeyPressed(ImGuiKey_T)) gizmoOp = ImGuizmo::TRANSLATE;
+            if (ImGui::IsKeyPressed(ImGuiKey_R)) gizmoOp = ImGuizmo::ROTATE;
+            if (ImGui::IsKeyPressed(ImGuiKey_S)) gizmoOp = ImGuizmo::SCALE;
+        }
     }
     ImGui::End();
 }
 
 void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
 {
-    m_logger->log(Logger::LogVerbosity::Info,
-                  "Key action catch: " + std::to_string(event.key) + '\n' + "Current delta time: " + std::to_string(
-                      m_deltaTime),
-                  "EditorGUIModule_GUIEditorViewport");
     if (!m_processInput)
         return;
     m_cameraPos = m_viewportEntity.get<PositionComponent>()->toGLMVec();
@@ -65,9 +150,9 @@ void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
     glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, m_cameraUp));
 
     if (event.key == SDLK_W)
-        movement -= speed * cameraFront;
-    if (event.key == SDLK_S)
         movement += speed * cameraFront;
+    if (event.key == SDLK_S)
+        movement -= speed * cameraFront;
 
     if (event.key == SDLK_A)
         movement -= speed * cameraRight;
@@ -81,7 +166,15 @@ void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
         movement -= speed * cameraUp;
 
     glm::vec3 newCameraPos = m_cameraPos + movement;
-    m_cameraPos = glm::mix(m_cameraPos, newCameraPos, 1000 * m_deltaTime);
+glm::vec3 velocity{0.0f}; // хранить как член класса
+float accel = 20.0f;
+float damping = 5.0f;
+
+glm::vec3 targetVel = movement / m_deltaTime; // какая скорость нужна
+velocity += (targetVel - velocity) * accel * m_deltaTime;
+velocity *= 1.0f / (1.0f + damping * m_deltaTime);
+
+m_cameraPos += velocity * m_deltaTime;
     if (m_viewportEntity.is_alive())
     {
         m_viewportEntity.set<PositionComponent>({.x = m_cameraPos.x, .y = m_cameraPos.y, .z = m_cameraPos.z});
@@ -125,4 +218,14 @@ void GUIEditorViewport::onMouseAction(SDL_MouseMotionEvent mouseMotion)
     {
         m_viewportEntity.set<RotationComponent>({pitch, yaw, rotation->z});
     }
+}
+
+
+void GUIEditorViewport::drawGuizmo(int x, int y)
+{
+}
+
+void GUIEditorViewport::drawGrid()
+{
+
 }

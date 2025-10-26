@@ -3,8 +3,6 @@
 #include <fstream>
 #include "../../LoggerModule/Logger.h"
 #include "../../ProjectModule/ProjectModule.h"
-#include "ECSLuaScriptsSystem.h"
-#include "ECSPhysicsSystem.h"
 #include "../../ResourceModule/ResourceManager.h"
 #include "../../ResourceModule/Mesh.h"
 #include "../../ResourceModule/Shader.h"
@@ -12,303 +10,247 @@
 
 #include "../../FilesystemModule/FilesystemModule.h"
 #include "../../PhysicsModule/PhysicsModule.h"
-#include <btBulletDynamicsCommon.h>
 
-#include "ECSComponents.h"
+#include "Systems/ECSLuaScriptsSystem.h"
+#include "Systems/ECSPhysicsSystem.h"
+#include "Components/ECSComponents.h"
 
+#include "Additionals/ECSSerializeTypes.h"
+#include "../../../EngineContext/CoreGlobal.h"
 namespace ECSModule
 {
-    void ECSModule::startup(const ModuleRegistry& registry)
-    {
-        m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-        m_projectModule = std::dynamic_pointer_cast<ProjectModule::ProjectModule>(registry.getModule("ProjectModule"));
-        m_filesystemModule = std::dynamic_pointer_cast<FilesystemModule::FilesystemModule>(registry.getModule("FilesystemModule"));
-        m_resourceManager = std::dynamic_pointer_cast<ResourceModule::ResourceManager>(registry.getModule("ResourceManager"));
-        m_luaScriptModule = std::dynamic_pointer_cast<ScriptModule::LuaScriptModule>(registry.getModule("ScriptModule"));
-        m_physicsModule = std::dynamic_pointer_cast<PhysicsModule::PhysicsModule>(registry.getModule("PhysicsModule"));
+	void ECSModule::startup()
+	{
+		m_logger = GCM(Logger::Logger);
+		m_projectModule = GCM(ProjectModule::ProjectModule);
+		m_filesystemModule = GCM(FilesystemModule::FilesystemModule);
+		m_resourceManager = GCM(ResourceModule::ResourceManager);
+		m_luaScriptModule = GCM(ScriptModule::LuaScriptModule);
+		m_physicsModule = GCM(PhysicsModule::PhysicsModule);
 
-        m_logger->log(Logger::LogVerbosity::Info, "Startup", "ECSModule");
-        /*
-        LOG_INFO("ECSModule: startup");
-        */
-        m_world = flecs::world();
-        m_world.import<flecs::stats>();
+		m_logger->log(Logger::LogVerbosity::Info, "Startup", "ECSModule");
 
-        m_currentWorldFile = m_projectModule->getProjectConfig().getEditorStartWorld();
+		m_world = flecs::world();
 
-        registerComponents();
-        registerObservers();
+		openBasicWorld();
+	}
 
-        fillDefaultWorld();
+	void ECSModule::shutdown()
+	{
+		m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "ECSModule");
+		m_world.reset();
+	}
 
-        ECSluaScriptsSystem::getInstance().registerSystem(m_world, m_luaScriptModule);
-        ECSPhysicsSystem::getInstance().registerSystem(m_world);
-    }
+	void ECSModule::openWorld(const std::string& worldData)
+	{
+		m_logger->log(Logger::LogVerbosity::Info, "OpenWorld: Data: " + worldData, "ECSModule");
+		resetWorld();
+		m_world.from_json(worldData.c_str());
+	}
 
-    void ECSModule::shutdown()
-    {
-        m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "ECSModule");
-        m_world.reset();
-    }
+	void ECSModule::openBasicWorld()
+	{
+		resetWorld();
+		//openWorld(m_filesystemModule->readTextFile("../Resources/World/Templates/basic_world.lworld"));
 
-    void ECSModule::fillDefaultWorld()
-    {
-        clearWorld();
+		auto& viewport_camera = m_world.entity("ViewportCamera")
+			.set<PositionComponent>({ 0.f, 2.f, 5.f })      // чуть выше и позади
+			.set<RotationComponent>({ -15.f, 0.f, 0.f })    // смотреть на -Z (к центру)
+			.set<CameraComponent>({ 75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true });
 
+		m_world.entity("Room")
+			.set<PositionComponent>({ 0.f, 0.f, 0.f })
+			.set<RotationComponent>({ 0.f, 0.f, 0.f })
+			.set<ScaleComponent>({ 1.f, 1.f, 1.f })
+			.set<MeshComponent>({
+				"../Resources/Meshes/BaseGeometry/cube.obj", "", "",
+				""
+				});
+	}
 
-        if (!isWorldSetted())
-        {
-            auto& viewport_camera = m_world.entity("ViewportCamera")
-                                           .set<PositionComponent>({0.f, 2.f, -1.f})
-                                           .set<RotationComponent>({60.f, 0.0f, 0.0f})
-                                           .set<CameraComponent>({75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true})
-                                           .add<InvisibleTag>();
+	void ECSModule::resetWorld()
+	{
+		m_world.reset();
+		m_world.import<flecs::stats>();
 
-            m_world.entity("Room")
-                   .set<PositionComponent>({0.f, 0.f, 0.f})
-                   .set<RotationComponent>({0.f, 0.f, 0.f})
-                   .set<ScaleComponent>({1.f, 1.f, 1.f})
-                   .set<MeshComponent>({
-                       "../Resources/Meshes/viking_room.obj", "", "", "../Resources/Textures/viking_room.png"
-                   });
-        }
-        else
-        {
-            loadWorldFromFile(m_currentWorldFile);
-        }
-    }
+		registerTypes();
+		registerComponents();
+		registerObservers();
 
-    void ECSModule::saveCurrentWorld()
-    {
-        /*
-        LOG_DEBUG("ECSModule: saveCurrentWorld");
-        */
-        std::string strJson = m_world.to_json().c_str();
+		ECSluaScriptsSystem::getInstance().registerSystem(m_world, m_luaScriptModule);
+		ECSPhysicsSystem::getInstance().registerSystem(m_world);
+	}
 
-        if (m_filesystemModule->writeTextFile(m_currentWorldFile, strJson) == FilesystemModule::FResult::SUCCESS)
-            m_currentWorldData = strJson;
-        else
-            m_logger->log(Logger::LogVerbosity::Error, "Save world failed", "ECSModule");
-    }
+	void ECSModule::simulate(bool state)
+	{
+		if (state)
+		{
+			m_worldTemp = getCurrentWorldData();
+			m_inSimulate = true;
+			m_physicsModule->setTickEnabled(true);
+			ECSluaScriptsSystem::getInstance().startSystem(m_world);
+		}
+		else
+		{
+			ECSluaScriptsSystem::getInstance().stopSystem(m_world);
+			m_physicsModule->setTickEnabled(false);
+			m_inSimulate = false;
+			openWorld(m_worldTemp);
+		}
+	}
 
-    void ECSModule::loadWorldFromFile(const std::string& path)
-    {
-        /*
-        LOG_DEBUG("ECSModule: loadWorldFromFile path: " + path);
-        */
-        m_currentWorldFile = path;
+	void ECSModule::ecsTick(float deltaTime)
+	{
+		if (m_inSimulate)
+		{
+			if (m_world.progress(deltaTime))
+			{
+			}
+		}
+	}
 
-        std::string strData = m_filesystemModule->readTextFile(path);
+	template <typename T>
+	void ECSModule::registerComponent(const std::string& name)
+	{
+		auto component = m_world.component<T>();
+		m_registeredComponents.emplace_back(component.id(), name);
+	}
 
-        m_world.from_json(strData.c_str());
-        m_currentWorldData = m_currentWorldData = m_world.to_json();
-    }
+	void ECSModule::registerTypes() {
+		m_world.component<std::string>()
+			.opaque(flecs::String)
+			.serialize(Utils::string_serialize)
+			.assign_string(Utils::string_assign_string)
+			.assign_null(Utils::string_assign_null);
+	}
+	void ECSModule::registerComponents()
+	{
+		m_world.component<PositionComponent>()
+			.member("x", &PositionComponent::x)
+			.member("y", &PositionComponent::y)
+			.member("z", &PositionComponent::z);
+		registerComponent<PositionComponent>("PositionComponent");
 
-    void ECSModule::setCurrentWorldPath(const std::string& path)
-    {
-        /*
-        LOG_DEBUG("ECSModule: setCurrentWorldPath path: " + path);
-        */
+		m_world.component<RotationComponent>()
+			.member("x", &RotationComponent::x)
+			.member("y", &RotationComponent::y)
+			.member("z", &RotationComponent::z);
+		registerComponent<RotationComponent>("RotationComponent");
 
-        m_currentWorldFile = path;
-        fillDefaultWorld();
-        saveCurrentWorld();
-    }
-
-
-    bool ECSModule::isWorldSetted()
-    {
-        if (m_currentWorldFile == "default")
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    void ECSModule::clearWorld()
-    {
-        m_world.each([](flecs::entity& e)
-        {
-            if (!e.has<InvisibleTag>())
-            {
-                e.destruct();
-            }
-        });
-    }
-
-    void ECSModule::startSystems()
-    {
-        /*
-        LOG_INFO("ECSModule: Start systems");
-        */
-
-        ECSluaScriptsSystem::getInstance().startSystem(m_world);
-        m_tickEnabled = true;
-        m_physicsModule->setTickEnabled(true);
-    }
-
-    void ECSModule::stopSystems()
-    {
-        /*
-        LOG_INFO("ECSModule: Stop systems");
-        */
-        m_tickEnabled = false;
-
-        m_physicsModule->setTickEnabled(false);
-        ECSluaScriptsSystem::getInstance().stopSystem(m_world);
-
-        fillDefaultWorld();
-    }
+		m_world.component<ScaleComponent>()
+			.member("x", &ScaleComponent::x)
+			.member("y", &ScaleComponent::y)
+			.member("z", &ScaleComponent::z);
+		registerComponent<ScaleComponent>("ScaleComponent");
 
 
+		m_world.component<ScriptComponent>()
+			.member("scriptPath", &ScriptComponent::scriptPath);
 
-    template <typename T>
-    void ECSModule::registerComponent(const std::string& name)
-    {
-        auto component = m_world.component<T>();
-        m_registeredComponents.emplace_back(component.id(), name);
-    }
+		registerComponent<ScriptComponent>("ScriptComponent");
 
-    void ECSModule::registerComponents()
-    {
-        m_world.component<PositionComponent>()
-               .member("Px", &PositionComponent::x)
-               .member("Py", &PositionComponent::y)
-               .member("Pz", &PositionComponent::z);
-        registerComponent<PositionComponent>("PositionComponent");
+		m_world.component<CameraComponent>()
+			.member("fov", &CameraComponent::fov)
+			.member("aspect", &CameraComponent::aspect)
+			.member("farClip", &CameraComponent::farClip)
+			.member("nearClip", &CameraComponent::nearClip);
+		registerComponent<CameraComponent>("CameraComponent");
 
-        m_world.component<RotationComponent>()
-               .member("Rx", &RotationComponent::x)
-               .member("Ry", &RotationComponent::y)
-               .member("Rz", &RotationComponent::z);
-        registerComponent<RotationComponent>("RotationComponent");
+		m_world.component<MeshComponent>()
+			.member("meshResourcePath", &MeshComponent::meshResourcePath)
+			.member("vertShaderPath", &MeshComponent::vertShaderPath)
+			.member("fragShaderPath", &MeshComponent::fragShaderPath)
+			.member("texturePath", &MeshComponent::texturePath);
+		registerComponent<MeshComponent>("MeshComponent");
 
-        m_world.component<ScaleComponent>()
-               .member("Sx", &ScaleComponent::x)
-               .member("Sy", &ScaleComponent::y)
-               .member("Sz", &ScaleComponent::z);
-        registerComponent<ScaleComponent>("ScaleComponent");
+		m_world.component<RigidbodyComponent>()
+			.member("mass", &RigidbodyComponent::mass);
+		registerComponent<RigidbodyComponent>("RigidbodyComponent");
 
-        m_world.component<ScriptComponent>()
-               .member("scriptPath", &ScriptComponent::scriptPath);
-        registerComponent<ScriptComponent>("ScriptComponent");
+		m_world.component<InvisibleTag>();
+	}
 
-        m_world.component<CameraComponent>()
-               .member("fov", &CameraComponent::fov)
-               .member("aspect", &CameraComponent::aspect)
-               .member("farClip", &CameraComponent::farClip)
-               .member("nearClip", &CameraComponent::nearClip);
-        registerComponent<CameraComponent>("CameraComponent");
+	void ECSModule::registerObservers()
+	{
+		m_world.observer<PositionComponent>()
+			.event(flecs::OnSet)
+			.each([this](flecs::entity e, PositionComponent& mesh)
+				{
+					this->OnComponentsChanged();
+				});
 
-        m_world.component<MeshComponent>()
-               .member("meshResourcePath", &MeshComponent::meshResourcePath)
-               .member("vertShaderPath", &MeshComponent::vertShaderPath)
-               .member("fragShaderPath", &MeshComponent::fragShaderPath)
-               .member("texturePath", &MeshComponent::texturePath);
-        registerComponent<MeshComponent>("MeshComponent");
+		m_world.observer<RotationComponent>()
+			.event(flecs::OnSet)
+			.each([this](flecs::entity e, RotationComponent& mesh)
+				{
+					this->OnComponentsChanged();
+				});
 
-        m_world.component<RigidbodyComponent>()
-               .member("mass", &RigidbodyComponent::mass);
-        registerComponent<RigidbodyComponent>("RigidbodyComponent");
+		m_world.observer<ScaleComponent>()
+			.event(flecs::OnSet)
+			.each([this](flecs::entity e, ScaleComponent& mesh)
+				{
+					this->OnComponentsChanged();
+				});
 
-        m_world.component<InvisibleTag>();
-    }
+		m_world.observer<CameraComponent>()
+			.event(flecs::OnSet)
+			.each([this](flecs::entity e, CameraComponent& mesh)
+				{
+					this->OnComponentsChanged();
+				});
 
+		m_world.observer<DirectionalLightComponent>()
+			.event(flecs::OnSet)
+			.each([this](flecs::entity e, DirectionalLightComponent& dirLight)
+				{
+					this->OnComponentsChanged();
+				});
 
-    void ECSModule::registerObservers()
-    {
-        m_world.observer<PositionComponent>()
-               .event(flecs::OnSet)
-               .each([this](flecs::entity e, PositionComponent& mesh)
-               {
-                   this->OnComponentsChanged();
-               });
+		m_world.observer<MeshComponent>()
+			.event(flecs::OnSet)
+			.each([this](flecs::entity e, MeshComponent& mesh)
+				{
+					using namespace ResourceModule;
+					m_logger->log(Logger::LogVerbosity::Info, "Reload mesh: " + std::string(e.name().c_str()), "ECSModule");
+					std::shared_ptr<RMesh> resMesh = m_resourceManager->load<RMesh>(mesh.meshResourcePath);
+					if (resMesh && mesh.meshResource != resMesh) mesh.meshResource = resMesh;
 
-        m_world.observer<RotationComponent>()
-               .event(flecs::OnSet)
-               .each([this](flecs::entity e, RotationComponent& mesh)
-               {
-                   this->OnComponentsChanged();
-               });
+					std::shared_ptr<RShader> resVertShader = m_resourceManager->load<RShader>(mesh.vertShaderPath);
+					std::shared_ptr<RShader> resFragShader = m_resourceManager->load<RShader>(mesh.fragShaderPath);
+					if ((resVertShader && mesh.vertShaderResource != resVertShader) && (resFragShader && mesh.
+						fragShaderResource != resFragShader))
+					{
+						mesh.vertShaderResource = resVertShader;
+						mesh.fragShaderResource = resFragShader;
+					}
 
-        m_world.observer<ScaleComponent>()
-               .event(flecs::OnSet)
-               .each([this](flecs::entity e, ScaleComponent& mesh)
-               {
-                   this->OnComponentsChanged();
-               });
+					std::shared_ptr<RTexture> resTexturePath = m_resourceManager->load<RTexture>(mesh.texturePath);
+					if (resTexturePath && mesh.textureResource != resTexturePath)
+						mesh.textureResource = resTexturePath;
 
-        m_world.observer<CameraComponent>()
-               .event(flecs::OnSet)
-               .each([this](flecs::entity e, CameraComponent& mesh)
-               {
-                   this->OnComponentsChanged();
-               });
+					OnComponentsChanged();
+				});
 
-        m_world.observer<DirectionalLightComponent>()
-               .event(flecs::OnSet)
-               .each([this](flecs::entity e, DirectionalLightComponent& dirLight)
-               {
-                   this->OnComponentsChanged();
-               });
+		m_world.observer<MeshComponent>()
+			.event(flecs::OnRemove)
+			.each([this](flecs::entity e, MeshComponent& mesh)
+				{
+					m_logger->log(Logger::LogVerbosity::Info, "Remove mesh: " + std::string(e.name().c_str()), "ECSModule");
 
-        m_world.observer<MeshComponent>()
-               .event(flecs::OnSet)
-               .each([this](flecs::entity e, MeshComponent& mesh)
-               {
-                   using namespace ResourceModule;
-                   m_logger->log(Logger::LogVerbosity::Info, "Reload mesh: " + std::string(e.name().c_str()), "ECSModule");
-                   std::shared_ptr<RMesh> resMesh = m_resourceManager->load<RMesh>(mesh.meshResourcePath);
-                   if (resMesh && mesh.meshResource != resMesh) mesh.meshResource = resMesh;
+					using namespace ResourceModule;
+					if (mesh.meshResource)
+						m_resourceManager->unload<RMesh>(mesh.meshResource.value()->getGUID());
 
-                   std::shared_ptr<RShader> resVertShader = m_resourceManager->load<RShader>(mesh.vertShaderPath);
-                   std::shared_ptr<RShader> resFragShader = m_resourceManager->load<RShader>(mesh.fragShaderPath);
-                   if ((resVertShader && mesh.vertShaderResource != resVertShader) && (resFragShader && mesh.
-                       fragShaderResource != resFragShader))
-                   {
-                       mesh.vertShaderResource = resVertShader;
-                       mesh.fragShaderResource = resFragShader;
-                   }
+					if (mesh.vertShaderResource)
+						m_resourceManager->unload<RShader>(mesh.vertShaderResource.value()->getGUID());
+					if (mesh.fragShaderResource)
+						m_resourceManager->unload<RShader>(mesh.fragShaderResource.value()->getGUID());
 
-                   std::shared_ptr<RTexture> resTexturePath = m_resourceManager->load<RTexture>(mesh.texturePath);
-                   if (resTexturePath && mesh.textureResource != resTexturePath)
-                       mesh.textureResource = resTexturePath;
+					if (mesh.textureResource)
+						m_resourceManager->unload<RShader>(mesh.textureResource.value()->getGUID());
 
-                   OnComponentsChanged();
-               });
-
-        m_world.observer<MeshComponent>()
-               .event(flecs::OnRemove)
-               .each([this](flecs::entity e, MeshComponent& mesh)
-               {
-                   m_logger->log(Logger::LogVerbosity::Info, "Remove mesh: " + std::string(e.name().c_str()), "ECSModule");
-                   
-                   using namespace ResourceModule;
-                   if (mesh.meshResource)
-                       m_resourceManager->unload<RMesh>(mesh.meshResource.value()->getGUID());
-
-                   if (mesh.vertShaderResource)
-                       m_resourceManager->unload<RShader>(mesh.vertShaderResource.value()->getGUID());
-                   if (mesh.fragShaderResource)
-                       m_resourceManager->unload<RShader>(mesh.fragShaderResource.value()->getGUID());
-
-                   if (mesh.textureResource)
-                       m_resourceManager->unload<RShader>(mesh.textureResource.value()->getGUID());
-
-                   OnComponentsChanged();
-               });
-    }
-
-    void ECSModule::ecsTick(float deltaTime)
-    {
-        if (m_tickEnabled)
-        {
-            if (m_world.progress(deltaTime))
-            {
-            }
-        }
-    }
+					OnComponentsChanged();
+				});
+	}
 }

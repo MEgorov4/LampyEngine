@@ -9,7 +9,6 @@
 
 #include "BulletDebugDrawer.h"
 #include "../../EngineContext/IModule.h"
-#include "../../EngineContext/ModuleRegistry.h"
 
 namespace ECSModule
 {
@@ -30,11 +29,11 @@ namespace PhysicsModule
 {
 	class PhysicsModule : public IModule
 	{
-		std::shared_ptr<Logger::Logger> m_logger;
-		std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
+		Logger::Logger*  m_logger;
+		ECSModule::ECSModule* m_ecsModule;
 	public:
 
-		void startup(const ModuleRegistry& registry) override;
+		void startup() override;
 		void shutdown() override;
 
 		void tick(float deltaTime);

@@ -1,7 +1,5 @@
 #pragma once
-#include <string>
-#include <memory>
-#include "../EngineContext/EngineContext.h"
+#include <EngineMinimal.h>
 
 namespace ImGUIModule
 {
@@ -24,9 +22,9 @@ public:
     /// <summary>
     /// Initializes the Editor context and starts necessary modules.
     /// </summary>
-    void initMinor(ModuleManager* moduleManager) override;
+    void initMinor(ContextLocator& locator) override;
 
-    void initMajor(ModuleManager* moduleManager) override;
+    void initMajor(ContextLocator& locator) override;
     /// <summary>
     /// Updates the Editor context every frame.
     /// </summary>

@@ -1,12 +1,8 @@
 #pragma once
 
-#include <memory>
+#include <EngineMinimal.h>
 #include <SDL3/SDL_events.h>
 
-#include "../../EngineContext/IModule.h"
-#include "../../EngineContext/ModuleRegistry.h"
-
-#include "../EventModule/Event.h"
 
 namespace Logger
 {
@@ -26,7 +22,6 @@ namespace InputModule
     /// </summary>
     class InputModule : public IModule
     {
-        std::shared_ptr<Logger::Logger> m_logger;
     public:
         Event<SDL_Event> OnEvent;
         
@@ -39,7 +34,7 @@ namespace InputModule
         /// Initializes the input system and registers callbacks for input events.
         /// </summary>
         /// <param name="window">Pointer to the window where input will be captured.</param>
-        void startup(const ModuleRegistry& registry) override;
+        void startup() override;
 
         /// <summary>
         /// Shuts down the input system and clears registered callbacks.

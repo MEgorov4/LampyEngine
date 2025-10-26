@@ -2,8 +2,7 @@
 #include <memory>
 
 #include "../../EngineContext/IModule.h"
-#include "../../EngineContext/ModuleRegistry.h"
-
+#include "vector"
 namespace WindowModule
 {
     class WindowModule;
@@ -30,14 +29,14 @@ namespace ImGUIModule
     /// </summary>
     class ImGUIModule : public IModule
     {
-        std::shared_ptr<Logger::Logger> m_logger;
-        std::shared_ptr<InputModule::InputModule> m_inputModule;
-        std::shared_ptr<WindowModule::WindowModule> m_windowModule;
+        Logger::Logger* m_logger;
+        InputModule::InputModule* m_inputModule;
+        WindowModule::WindowModule* m_windowModule;
         
         std::vector<std::shared_ptr<GUIObject>> m_guiObjects; ///< List of registered GUI objects.
 
     public:
-        void startup(const ModuleRegistry& registry) override;
+        void startup() override;
         void shutdown() override;
 
         /// <summary>

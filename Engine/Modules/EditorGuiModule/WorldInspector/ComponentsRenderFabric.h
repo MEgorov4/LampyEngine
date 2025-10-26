@@ -4,22 +4,25 @@
 #include <filesystem>
 #include <flecs.h>
 #include "../../ObjectCoreModule/ECS/ECSModule.h"
-#include "../../ObjectCoreModule/ECS/ECSLuaScriptsSystem.h"
-#include "../../ObjectCoreModule/ECS/ECSPhysicsSystem.h"
+#include "../../ObjectCoreModule/ECS/Systems/ECSLuaScriptsSystem.h"
+#include "../../ObjectCoreModule/ECS/Systems/ECSPhysicsSystem.h"
 #include "../../ProjectModule/ProjectModule.h"
 #include "../../FilesystemModule/FilesystemModule.h"
 #include <btBulletDynamicsCommon.h>
+#include "../../../EngineContext/CoreGlobal.h"
 
 class IComponentRenderer
 {
 protected:
-	std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
-	std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
+	ProjectModule::ProjectModule* m_projectModule;
+	FilesystemModule::FilesystemModule* m_filesystemModule;
 	
 public:
-	IComponentRenderer(const std::shared_ptr<ProjectModule::ProjectModule> projectModule,
-		const std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule) : m_projectModule(projectModule),
-	m_filesystemModule(filesystemModule){}
+	IComponentRenderer() 
+		: m_projectModule(GCXM(ProjectModule::ProjectModule))
+		, m_filesystemModule(GCM(FilesystemModule::FilesystemModule))
+	
+	{}
 	
 	virtual void render(flecs::entity& entity) = 0;
 	virtual ~IComponentRenderer() {}
@@ -28,9 +31,8 @@ public:
 class PositionRenderer : public IComponentRenderer
 {
 public:
-	PositionRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
-		: IComponentRenderer(projectModule, filesystemModule)
+	PositionRenderer()
+		: IComponentRenderer()
 	{
 	}
 
@@ -64,9 +66,8 @@ public:
 class RotationRenderer : public IComponentRenderer
 {
 public:
-	RotationRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
-		: IComponentRenderer(projectModule, filesystemModule)
+	RotationRenderer()
+		: IComponentRenderer()
 	{
 	}
 
@@ -84,7 +85,7 @@ public:
 				ImGui::Text("RotationComponent");
 
 				ImGui::SameLine();
-
+				
 				float rotation[3] = { rot->x, rot->y, rot->z };
 
 				if (ImGui::DragFloat3("##RotationComponent", rotation, 5.f)) {
@@ -100,9 +101,8 @@ public:
 class ScaleRenderer : public IComponentRenderer
 {
 public:
-	ScaleRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
-		: IComponentRenderer(projectModule, filesystemModule)
+	ScaleRenderer()
+		: IComponentRenderer()
 	{
 	}
 
@@ -137,9 +137,8 @@ public:
 class MeshComponentRenderer : public IComponentRenderer
 {
 public:
-	MeshComponentRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
-		: IComponentRenderer(projectModule, filesystemModule)
+	MeshComponentRenderer()
+		: IComponentRenderer()
 	{
 	}
 
@@ -171,10 +170,10 @@ public:
 
 						if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".obj") {
 							MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-
-							std::strncpy(meshComponentMut->meshResourcePath, droppedPath.c_str(), sizeof(meshComponentMut->meshResourcePath) - 1);
-							meshComponentMut->meshResourcePath[sizeof(meshComponentMut->meshResourcePath) - 1] = '\0';
-
+							if (meshComponentMut)
+							{
+								meshComponentMut->meshResourcePath = droppedPath;
+							}
 							entity.modified<MeshComponent>();
 
 							/*
@@ -194,16 +193,11 @@ public:
 
 						if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".png") {
 							MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-							if (meshComponent)
+							if (meshComponentMut)
 							{
-								std::strncpy(meshComponentMut->texturePath, droppedPath.c_str(), sizeof(meshComponentMut->texturePath) - 1);
-								meshComponentMut->texturePath[sizeof(meshComponentMut->texturePath) - 1] = '\0';
+								meshComponentMut->texturePath = droppedPath;
 
 								entity.modified<MeshComponent>();
-
-								/*
-								LOG_INFO(std::format("Dropped file: {}", droppedPath));
-							*/
 							}
 						}
 					}
@@ -220,9 +214,8 @@ public:
 
 class ScriptRenderer : public IComponentRenderer {
 public:
-	ScriptRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
-		: IComponentRenderer(projectModule, filesystemModule)
+	ScriptRenderer()
+		: IComponentRenderer()
 	{
 	}
 
@@ -242,17 +235,15 @@ public:
 				ImGui::SameLine();
 
 				std::string resPath = m_projectModule->getProjectConfig().getResourcesPath();
-				ImGui::Text(m_filesystemModule->getFileName(script->scriptPath).empty() ? "empty" : m_filesystemModule->getFileName(script->scriptPath).c_str());
+				ImGui::Text(m_filesystemModule->getFileName(script->scriptPath.c_str()).empty() ? "empty" : m_filesystemModule->getFileName(script->scriptPath.c_str()).c_str());
 
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath")) {
 						std::string droppedPath = static_cast<const char*>(payload->Data);
 						if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".lua") {
+							
 							entity.set<ScriptComponent>({droppedPath});
 						}
-						/*
-						LOG_INFO(std::format("Dropped file: {}", droppedPath));
-					*/
 					}
 					ImGui::EndDragDropTarget();
 				}
@@ -265,9 +256,8 @@ public:
 
 class DirectionalLightRenderer : public IComponentRenderer {
 public:
-	DirectionalLightRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
-		: IComponentRenderer(projectModule, filesystemModule)
+	DirectionalLightRenderer()
+		: IComponentRenderer()
 	{
 	}
 
@@ -296,9 +286,8 @@ public:
 class CameraRenderer : public IComponentRenderer
 {
 public:
-	CameraRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
-		: IComponentRenderer(projectModule, filesystemModule)
+	CameraRenderer()
+		: IComponentRenderer()
 	{
 	}
 
@@ -367,9 +356,8 @@ public:
 class RigidbodyRenderer : public IComponentRenderer
 {
 public:
-	RigidbodyRenderer(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-		const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule)
-		: IComponentRenderer(projectModule, filesystemModule)
+	RigidbodyRenderer()
+		: IComponentRenderer()
 	{
 	}
 

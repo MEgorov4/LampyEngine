@@ -5,14 +5,14 @@
 #include "../InputModule/InputModule.h"
 
 #include "Window.h"
+#include "../../EngineContext/CoreGlobal.h"
 
 namespace WindowModule
 {
-	void WindowModule::startup(const ModuleRegistry& registry)
+	void WindowModule::startup()
 	{
-		m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-		m_inputModule = std::dynamic_pointer_cast<InputModule::InputModule>(registry.getModule("InputModule"));
-		m_window = std::make_unique<Window>(m_logger, m_inputModule, 800, 600, "Lampy Engine");
+		m_logger = GCM(Logger::Logger);
+		m_window = std::make_unique<Window>(800, 600, "Lampy Engine");
 		
 		m_logger->log(Logger::LogVerbosity::Info, "Startup", "WindowModule");
 	}

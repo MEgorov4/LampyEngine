@@ -7,21 +7,22 @@
 #include "../LoggerModule/Logger.h"
 #include "../InputModule/InputModule.h"
 #include "../ObjectCoreModule/ECS/ECSModule.h"
-#include "../ObjectCoreModule/ECS/ECSComponents.h"
+#include "../ObjectCoreModule/ECS/Components/ECSComponents.h"
 #include "../AudioModule/AudioModule.h"
 
 
 #include <sol/sol.hpp>
+#include "../../EngineContext/CoreGlobal.h"
 
 
 namespace ScriptModule
 {
-    void LuaScriptModule::startup(const ModuleRegistry& registry)
+    void LuaScriptModule::startup()
     {
-        m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-        m_inputModule = std::dynamic_pointer_cast<InputModule::InputModule>(registry.getModule("InputModule"));
-        m_audioModule = std::dynamic_pointer_cast<AudioModule::AudioModule>(registry.getModule("AudioModule"));
-        m_ecsModule = std::dynamic_pointer_cast<ECSModule::ECSModule>(registry.getModule("ECSModule"));
+        m_logger = GCM(Logger::Logger);
+        m_inputModule = GCM(InputModule::InputModule);
+        m_audioModule = GCM(AudioModule::AudioModule);
+        m_ecsModule = GCM(ECSModule::ECSModule);
 
         m_luaState.open_libraries(sol::lib::base, sol::lib::package, sol::lib::os, sol::lib::string);
 

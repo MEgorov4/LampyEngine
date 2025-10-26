@@ -6,21 +6,20 @@
 #include "../InputModule/InputModule.h"
 #include "../WindowModule/WindowModule.h"
 #include "../WindowModule/Window.h"
-
 #include <SDL3/SDL.h>
-
+#include <GL/glew.h>
 #include "OpenGLBackends/imgui_impl_opengl3.h"
 #include "SDLBackends/imgui_impl_sdl3.h"
-
 #include "GUIObject.h"
+#include "../../EngineContext/CoreGlobal.h"
 
 namespace ImGUIModule
 {
-    void ImGUIModule::startup(const ModuleRegistry& registry)
+    void ImGUIModule::startup()
     {
-        m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-        m_inputModule = std::dynamic_pointer_cast<InputModule::InputModule>(registry.getModule("InputModule"));
-        m_windowModule = std::dynamic_pointer_cast<WindowModule::WindowModule>(registry.getModule("WindowModule"));
+        m_logger = GCM(Logger::Logger);
+        m_inputModule = GCM(InputModule::InputModule);
+        m_windowModule = GCM(WindowModule::WindowModule);
         
         m_inputModule->OnEvent.subscribe(std::bind(&ImGUIModule::onEvent, this, std::placeholders::_1));
         
@@ -125,11 +124,20 @@ namespace ImGUIModule
 
     void ImGUIModule::renderUI(float deltaTime) const
     {
+        int w = m_windowModule->getWindow()->getWindowSize().first;
+        int h = m_windowModule->getWindow()->getWindowSize().second;
+    
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, w, h);
+        glDisable(GL_DEPTH_TEST);
+        glClearColor(0.07f, 0.07f, 0.09f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
-
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+
         for (auto& object : m_guiObjects)
         {
             if (object)
@@ -137,7 +145,7 @@ namespace ImGUIModule
                 object->render(deltaTime);
             }
         }
-
+        ImGui::ShowMetricsWindow();
         ImGui::Render();
         ImGui::EndFrame();
         
