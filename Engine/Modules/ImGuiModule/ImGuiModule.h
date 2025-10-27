@@ -1,8 +1,7 @@
 #pragma once
-#include <memory>
 
-#include "../../EngineContext/IModule.h"
-#include "vector"
+#include <EngineMinimal.h>
+
 namespace WindowModule
 {
     class WindowModule;
@@ -11,10 +10,6 @@ namespace WindowModule
 namespace InputModule
 {
     class InputModule;
-}
-namespace Logger
-{
-    class Logger;
 }
 
 union SDL_Event;
@@ -29,7 +24,6 @@ namespace ImGUIModule
     /// </summary>
     class ImGUIModule : public IModule
     {
-        Logger::Logger* m_logger;
         InputModule::InputModule* m_inputModule;
         WindowModule::WindowModule* m_windowModule;
         

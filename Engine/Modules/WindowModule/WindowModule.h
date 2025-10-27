@@ -1,18 +1,10 @@
 #pragma once
 
-#include <memory>
-
-#include "../../EngineContext/IModule.h"
-
+#include <EngineMinimal.h>
 
 namespace InputModule
 {
 	class InputModule;
-}
-
-namespace Logger
-{
-	class Logger;
 }
 
 namespace WindowModule
@@ -23,8 +15,6 @@ namespace WindowModule
 	/// </summary>
 	class WindowModule : public IModule
 	{
-		Logger::Logger* m_logger;
-
 		std::unique_ptr<Window> m_window; ///< Unique pointer to the managed window.
 	public:
 		/// <summary>

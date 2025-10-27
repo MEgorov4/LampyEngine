@@ -1,81 +1,72 @@
 #include "ShaderCompiler.h"
-#include <filesystem>
+
 #include <boost/process.hpp>
-
-#include "../LoggerModule/Logger.h"
-#include "../FilesystemModule/FilesystemModule.h"
-#include "../../EngineContext/CoreGlobal.h"
-
 
 namespace ShaderCompiler
 {
-	namespace bp = boost::process;
+namespace bp = boost::process;
 
-	void ShaderCompiler::startup()
-	{
-		m_logger = GCM(Logger::Logger);
-		m_filesystemModule = GCM(FilesystemModule::FilesystemModule);
-
-		m_logger->log(Logger::LogVerbosity::Info, "Startup", "ShaderCompiler");
-	}
-
-	void ShaderCompiler::shutdown()
-	{
-		m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "ShaderCompiler");
-	}
-
-	std::string ShaderCompiler::compileShader(const std::string& shaderPath)
-	{
-		
-		if (!m_filesystemModule->isPathExists(shaderPath))
-		{
-			m_logger->log(Logger::LogVerbosity::Error, "Invalid absolute path", "ShaderCompiler");
-			return "";
-		}
-
-		std::string extension = m_filesystemModule->getFileExtensions(shaderPath);
-		if (extension != ".frag" && extension != ".vert")
-		{
-			m_logger->log(Logger::LogVerbosity::Error, "Invalid file input extension must be .frag or .vert", "ShaderCompiler");
-			return "";
-		}
-
-		std::string fileName = m_filesystemModule->getFileName(shaderPath);
-
-		std::string fullOuputFilePath = m_filesystemModule->getCurrentPath() + "/../Resources/Shaders/Precompile/" + fileName + ".spv";
-
-		int code = bp::system("../Resources/Shaders/Compiler/glslc.exe " + shaderPath + " -o " + fullOuputFilePath);
-
-		if (code != 0)
-		{
-			m_logger->log(Logger::LogVerbosity::Error, "Failed to compile shader", "ShaderCompiler");
-			return "";
-		}
-
-		return fullOuputFilePath;
-	}
-
-
-	bool ShaderCompiler::isShaderPrecompiled(const std::string& shaderPath)
-	{
-		if (!m_filesystemModule->isPathExists(shaderPath))
-		{
-			m_logger->log(Logger::LogVerbosity::Error, "Invalid absolute path", "ShaderCompiler");
-			return "";
-		}
-
-		std::string extension = m_filesystemModule->getFileExtensions(shaderPath);
-
-		if (extension != ".frag" && extension != ".vert")
-		{
-			m_logger->log(Logger::LogVerbosity::Error, "Invalid shader file input", "ShaderCompiler");
-			return false;
-		}
-
-		std::string fileName = m_filesystemModule->getFileName(shaderPath);
-		std::string possiblePrecompiledShaderPath = m_filesystemModule->getCurrentPath() + "/../Resources/Shaders/Precompile/" + fileName + ".spv";
-
-
-		return m_filesystemModule->isPathExists(possiblePrecompiledShaderPath);
-	}
+void ShaderCompiler::startup()
+{
+    LT_LOG(LogVerbosity::Info, "ShaderCompiler", "Startup");
 }
+
+void ShaderCompiler::shutdown()
+{
+    LT_LOG(LogVerbosity::Info, "ShaderCompiler", "Shudown");
+}
+
+std::string ShaderCompiler::compileShader(const std::string& shaderPath)
+{
+    if (!Fs::exists(shaderPath))
+    {
+        LT_LOG(LogVerbosity::Error, "ShaderCompiler", "Invalid absolute path");
+        return "";
+    }
+
+    std::string extension = Fs::extension(shaderPath);
+    if (extension != ".frag" && extension != ".vert")
+    {
+        LT_LOG(LogVerbosity::Error, "ShaderCompiler", "Invalid file input extension must be .frag or.vert");
+        return "";
+    }
+
+    std::string fileName = Fs::fileName(shaderPath);
+
+    std::string fullOuputFilePath = Fs::currentPath() + "/../Resources/Shaders/Precompile/" + fileName + ".spv";
+
+    int code = bp::system("../Resources/Shaders/Compiler/glslc.exe " + shaderPath + " -o " + fullOuputFilePath);
+
+    if (code != 0)
+    {
+        LT_LOG(LogVerbosity::Error, "ShaderCompiler", "Failed to compile shared");
+        return "";
+    }
+
+    return fullOuputFilePath;
+}
+
+bool ShaderCompiler::isShaderPrecompiled(const std::string& shaderPath)
+{
+    if (!Fs::exists(shaderPath))
+    {
+        LT_LOG(LogVerbosity::Error, "ShaderCompiler", "Invalid absolute path");
+        return "";
+    }
+
+    std::string extension = Fs::extension(shaderPath);
+
+    if (extension != ".frag" && extension != ".vert")
+    {
+        LT_LOG(LogVerbosity::Error, "ShaderCompiler", "Invalid shader file input");
+        return false;
+    }
+
+    std::string fileName = Fs::fileName(shaderPath);
+    std::string possiblePrecompiledShaderPath =
+        Fs::currentPath() + "/../Resources/Shaders/Precompile/" + fileName + ".spv";
+
+    return Fs::exists(possiblePrecompiledShaderPath);
+}
+
+} // namespace ShaderCompiler

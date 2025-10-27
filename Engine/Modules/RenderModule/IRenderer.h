@@ -1,18 +1,11 @@
 #pragma once
-
-#include <glm/glm.hpp>
-#include <memory>
+#include <EngineMinimal.h>
 
 #include "Abstract/RenderObject.h"
 
 namespace WindowModule
 {
     class WindowModule;
-}
-
-namespace Logger
-{
-    class Logger;
 }
 
 namespace ECSModule

@@ -1,12 +1,8 @@
 #pragma once
-#include <memory>
-#include <optional>
-#include <string>
+
+#include <EngineMinimal.h>
+
 #include <flecs.h>
-
-#include "../../EventModule/Event.h"
-
-#include "../../../EngineContext/IModule.h"
 
 
 namespace PhysicsModule
@@ -19,11 +15,6 @@ namespace ScriptModule
     class LuaScriptModule;
 }
 
-namespace FilesystemModule
-{
-    class FilesystemModule;
-}
-
 namespace ProjectModule
 {
     class ProjectModule;
@@ -34,17 +25,10 @@ namespace ResourceModule
     class ResourceManager;
 }
 
-namespace Logger
-{
-    class Logger;
-}
-
 namespace ECSModule
 {
     class ECSModule : public IModule
     {
-        Logger::Logger* m_logger;
-        FilesystemModule::FilesystemModule* m_filesystemModule;
         ProjectModule::ProjectModule* m_projectModule;
         ResourceModule::ResourceManager* m_resourceManager;
         ScriptModule::LuaScriptModule* m_luaScriptModule;

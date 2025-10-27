@@ -1,20 +1,17 @@
 #include "OutputLog.h"
 #include <imgui.h>
 
-#include "../LoggerModule/Logger.h"
-#include "../../EngineContext/CoreGlobal.h"
 
 GUIOutputLog::GUIOutputLog() 
     : GUIObject()
-    , m_logger(GCM(Logger::Logger))
 {
-    m_subscriberID = m_logger->OnMessagePushed.subscribe(
-        std::bind(&GUIOutputLog::receiveLogMessage, this, std::placeholders::_1));
+    //m_subscriberID = m_logger->OnMessagePushed.subscribe(
+    //    std::bind(&GUIOutputLog::receiveLogMessage, this, std::placeholders::_1));
 }
 
 GUIOutputLog::~GUIOutputLog()
 {
-    m_logger->OnMessagePushed.unsubscribe(m_subscriberID);
+    //m_logger->OnMessagePushed.unsubscribe(m_subscriberID);
 }
 
 void GUIOutputLog::render(float deltaTime)

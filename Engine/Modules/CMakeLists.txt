@@ -1,7 +1,5 @@
 include_directories(PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory(FilesystemModule)
-
 add_subdirectory(MemoryModule)
 add_subdirectory(ResourceModule)
 add_subdirectory(WindowModule)

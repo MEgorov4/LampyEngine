@@ -1,34 +1,27 @@
 #include "ECSModule.h"
-#include <format>
-#include <fstream>
-#include "../../LoggerModule/Logger.h"
-#include "../../ProjectModule/ProjectModule.h"
-#include "../../ResourceModule/ResourceManager.h"
-#include "../../ResourceModule/Mesh.h"
-#include "../../ResourceModule/Shader.h"
-#include "../../ResourceModule/Texture.h"
 
-#include "../../FilesystemModule/FilesystemModule.h"
-#include "../../PhysicsModule/PhysicsModule.h"
+#include <Modules/ProjectModule/ProjectModule.h>
+#include <Modules/ResourceModule/ResourceManager.h>
+#include <Modules/ResourceModule/Mesh.h>
+#include <Modules/ResourceModule/Shader.h>
+#include <Modules/ResourceModule/Texture.h>
+#include <Modules/PhysicsModule/PhysicsModule.h>
 
 #include "Systems/ECSLuaScriptsSystem.h"
 #include "Systems/ECSPhysicsSystem.h"
 #include "Components/ECSComponents.h"
 
 #include "Additionals/ECSSerializeTypes.h"
-#include "../../../EngineContext/CoreGlobal.h"
 namespace ECSModule
 {
 	void ECSModule::startup()
 	{
-		m_logger = GCM(Logger::Logger);
 		m_projectModule = GCM(ProjectModule::ProjectModule);
-		m_filesystemModule = GCM(FilesystemModule::FilesystemModule);
 		m_resourceManager = GCM(ResourceModule::ResourceManager);
 		m_luaScriptModule = GCM(ScriptModule::LuaScriptModule);
 		m_physicsModule = GCM(PhysicsModule::PhysicsModule);
-
-		m_logger->log(Logger::LogVerbosity::Info, "Startup", "ECSModule");
+		
+		LT_LOGI("ECSModule", "Startup");
 
 		m_world = flecs::world();
 
@@ -37,13 +30,14 @@ namespace ECSModule
 
 	void ECSModule::shutdown()
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "ECSModule");
+		LT_LOGI("ECSModule", "Shutdown");
 		m_world.reset();
 	}
 
 	void ECSModule::openWorld(const std::string& worldData)
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "OpenWorld: Data: " + worldData, "ECSModule");
+		LT_LOGI("ECSModule", "OpenWorld: Data: " + worldData);
+
 		resetWorld();
 		m_world.from_json(worldData.c_str());
 	}
@@ -212,7 +206,8 @@ namespace ECSModule
 			.each([this](flecs::entity e, MeshComponent& mesh)
 				{
 					using namespace ResourceModule;
-					m_logger->log(Logger::LogVerbosity::Info, "Reload mesh: " + std::string(e.name().c_str()), "ECSModule");
+					LT_LOGI("ECSModule", "Reload mesh: " + std::string(e.name().c_str()));
+
 					std::shared_ptr<RMesh> resMesh = m_resourceManager->load<RMesh>(mesh.meshResourcePath);
 					if (resMesh && mesh.meshResource != resMesh) mesh.meshResource = resMesh;
 
@@ -236,7 +231,7 @@ namespace ECSModule
 			.event(flecs::OnRemove)
 			.each([this](flecs::entity e, MeshComponent& mesh)
 				{
-					m_logger->log(Logger::LogVerbosity::Info, "Remove mesh: " + std::string(e.name().c_str()), "ECSModule");
+					LT_LOGI("ECSModule", "Remove mesh: " + std::string(e.name().c_str()));
 
 					using namespace ResourceModule;
 					if (mesh.meshResource)

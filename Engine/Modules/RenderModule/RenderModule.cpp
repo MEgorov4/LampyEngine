@@ -1,20 +1,17 @@
 #include "RenderModule.h"
 
-#include "../LoggerModule/Logger.h"
-#include "../WindowModule/WindowModule.h"
-#include "../ResourceModule/ResourceManager.h"
-#include "../ObjectCoreModule/ECS/ECSModule.h"
+#include <Modules/WindowModule/WindowModule.h>
+#include <Modules/ResourceModule/ResourceManager.h>
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 
 #include "OpenGL/OpenGLRenderer.h"
-#include "../../EngineContext/CoreGlobal.h"
 
 namespace RenderModule
 {
     void RenderModule::startup()
     {
-        m_logger = GCM(Logger::Logger);
-        m_logger->log(Logger::LogVerbosity::Info, "Startup", "RenderModule");
-        m_logger->log(Logger::LogVerbosity::Info, "Create renderer", "RenderModule");
+        LT_LOGI("RenderModule", "Startup");
+        LT_LOGI("RenderModule", "Create renderer");
         m_renderer = std::make_unique<OpenGL::OpenGLRenderer>();
 
         m_renderer->postInit();
@@ -27,13 +24,10 @@ namespace RenderModule
         return renderer;
     }
 
-    /// <summary>
-    /// Shuts down the rendering module and releases all resources.
-    /// </summary>
     void RenderModule::shutdown()
     {
-        m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "RenderModule");
-        m_logger->log(Logger::LogVerbosity::Info, "Destroy renderer", "RenderModule");
+        LT_LOGI("RenderModule", "Shutdown");
+        LT_LOGI("RenderModule", "Destroy renderer");
         m_renderer.reset();
     }
 }

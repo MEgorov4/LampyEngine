@@ -1,18 +1,6 @@
 #pragma once
 
-#include <memory>
-
-#include "../../EngineContext/IModule.h"
-
-namespace Logger
-{
-	class Logger;
-}
-
-namespace ResourceModule
-{
-	class ResourceManager;
-}
+#include <EngineMinimal.h>
 
 namespace RenderModule
 {
@@ -20,8 +8,6 @@ namespace RenderModule
 	
 	class RenderModule : public IModule
 	{
-		Logger::Logger* m_logger;
-
 		std::unique_ptr<IRenderer> m_renderer; 
 	public:
 		void startup() override;

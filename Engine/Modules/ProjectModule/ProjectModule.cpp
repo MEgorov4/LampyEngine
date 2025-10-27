@@ -4,9 +4,6 @@
 #include <nlohmann/json.hpp>
 #include <boost/process.hpp>
 
-
-#include <Modules/FilesystemModule/FilesystemModule.h>
-
 namespace ProjectModule
 {
 	ProjectConfig::ProjectConfig(std::string data)
@@ -77,15 +74,13 @@ namespace ProjectModule
 	
 	void ProjectModule::startup()
 	{
-		m_filesystemModule = GCM(FilesystemModule::FilesystemModule);
-				
-		LT_LOG(Logger::LogVerbosity::Info, "ProjectModule", "Startup");
+		LT_LOG(LogVerbosity::Info, "ProjectModule", "Startup");
 		setupProjectEnvironment();
 	}
 
 	void ProjectModule::shutdown()
 	{
-		LT_LOG(Logger::LogVerbosity::Info, "ProjectModule", "Shutdown");
+		LT_LOG(LogVerbosity::Info, "ProjectModule", "Shutdown");
 		saveProjectConfig();
 	}
 
@@ -93,7 +88,7 @@ namespace ProjectModule
 	{
 		namespace bp = boost::process;
 
-		LT_LOG(Logger::LogVerbosity::Info, "ProjectModule", "Load project config");
+		LT_LOG(LogVerbosity::Info, "ProjectModule", "Load project config");
 
 		bp::ipstream out_stream;
 		bp::child projectBrowserProcess("Debug/ProjectBrowser.exe", bp::std_out > out_stream);
@@ -101,7 +96,7 @@ namespace ProjectModule
 		std::string line;
 		while (std::getline(out_stream, line))
 		{
-			LT_LOG(Logger::LogVerbosity::Info, "ProjectModule", "Loaded project info: " + line);
+			LT_LOG(LogVerbosity::Info, "ProjectModule", "Loaded project info: " + line);
 			m_projectConfig = ProjectConfig(line);
 		}
 
@@ -109,14 +104,14 @@ namespace ProjectModule
 
 		if (projectBrowserProcess.exit_code() != 0)
 		{
-			LT_LOG(Logger::LogVerbosity::Error, "ProjectModule", "Project browser exited with error, shutting down.");
+			LT_LOG(LogVerbosity::Error, "ProjectModule", "Project browser exited with error, shutting down.");
 			std::exit(0);
 		}
 	}
 
 	void ProjectModule::saveProjectConfig()
 	{
-		LT_LOG(Logger::LogVerbosity::Debug, "ProjectModule", "Save project config");
+		LT_LOG(LogVerbosity::Debug, "ProjectModule", "Save project config");
 
 		nlohmann::json jsonData;
 		jsonData["projectPath"] = m_projectConfig.getProjectPath();
@@ -130,15 +125,16 @@ namespace ProjectModule
 
 		std::string projectFilePath =
 			m_projectConfig.getProjectPath() + '/' + m_projectConfig.getProjectName() + ".lproj";
-
-		if (m_filesystemModule->writeTextFile(projectFilePath, jsonData.dump()) ==
-			FilesystemModule::FResult::SUCCESS)
+		
+			
+		if (Fs::writeTextFile(projectFilePath, jsonData.dump()) ==
+			FsResult::Success)
 		{
-			LT_LOG(Logger::LogVerbosity::Info, "ProjectModule", "Project config saved successfully.");
+			LT_LOG(LogVerbosity::Info, "ProjectModule", "Project config saved successfully.");
 		}
 		else
 		{
-			LT_LOG(Logger::LogVerbosity::Error, "ProjectModule", "Failed to save project config.");
+			LT_LOG(LogVerbosity::Error, "ProjectModule", "Failed to save project config.");
 		}
 	}
 

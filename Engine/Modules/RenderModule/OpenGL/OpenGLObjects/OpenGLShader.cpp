@@ -1,10 +1,5 @@
 #include "OpenGLShader.h"
 
-#include <iostream>
-
-#include "glm/gtx/string_cast.hpp"
-#include "../../../FilesystemModule/FilesystemModule.h"
-#include "../../../LoggerModule/Logger.h"
 
 #include <GL/glew.h>
 
@@ -15,14 +10,6 @@ namespace RenderModule::OpenGL
                                const std::shared_ptr<ResourceModule::RShader>& fragShader)
         : IShader(vertShader, fragShader)
     {
-        /*
-        std::vector<uint8_t> vertCode = vertShader->getBuffer();
-        std::vector<uint8_t> fragCode = fragShader->getBuffer();
-
-        GLuint vertShaderID = createShaderFromSPIRV(vertCode, GL_VERTEX_SHADER);
-        GLuint fragShaderID = createShaderFromSPIRV(fragCode, GL_FRAGMENT_SHADER);
-        */
-
         std::string vertCode = vertShader->getText();
         std::string fragCode = fragShader->getText();
         
@@ -95,7 +82,8 @@ namespace RenderModule::OpenGL
         {
             char log[512];
             glGetShaderInfoLog(shader, sizeof(log), NULL, log);
-            std::cerr << "GLSL Shader compile error: " << log << "\n";
+
+            LT_LOGE("OpenGLShader", std::format("GLSL Shader compile error: {}", log));
         }
 
         return shader; 
@@ -120,8 +108,7 @@ namespace RenderModule::OpenGL
                 glUniformBlockBinding(m_programID, blockIndex, bindingPoint);
 
                 m_uniformBlocks[blockName] = bindingPoint;
-                //LOG_INFO("Shader [" + std::to_string(m_programID) + "] found UBO: " + std::string(blockName) + " at binding " + std::to_string(bindingPoint));
-                std::cout << "Bound uniform: " << blockName << " -> bindingPoint " << bindingPoint << "\n";
+                LT_LOGI("OpenGLShader:", std::format("Bound uniform:{} -> bindingPoint {}", blockName , bindingPoint));
             }
         }
     }
@@ -151,7 +138,7 @@ namespace RenderModule::OpenGL
                 auto it = bindingMap.find(name);
                 if (it == bindingMap.end())
                 {
-                    std::cerr << "No binding found for sampler: " << name << "\n";
+                    LT_LOGE("OpenGLShader", std::format("No binding found for sampler:{}", name));
                     continue;
                 }
 
@@ -168,7 +155,7 @@ namespace RenderModule::OpenGL
                 glUniform1i(location, textureUnit);
                 glUseProgram(0);
 
-                std::cout << "Bound sampler: " << name << " -> unit " << textureUnit << "\n";
+                LT_LOGI("OpenGLShader:", std::format("Bound sampler:{} -> unit {}", name , textureUnit));
             }
         }
     }

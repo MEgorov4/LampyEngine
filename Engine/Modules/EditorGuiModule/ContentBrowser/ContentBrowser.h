@@ -1,11 +1,9 @@
 #pragma once
-#include <string>
-#include <memory>
-#include <vector>
-#include <filesystem>
+
+#include <EngineMinimal.h>
+
 #include "../../ImGuiModule/GUIObject.h"
 
-#include "../../FilesystemModule/DirectoryIterator.h"
 
 namespace ECSModule
 {
@@ -17,24 +15,18 @@ namespace ProjectModule
     class ProjectModule;
 }
 
-namespace FilesystemModule
-{
-    class FilesystemModule;
-}
-
 class GUIFolderActionPopup;
 
 class GUIContentBrowser : public ImGUIModule::GUIObject
 {
-    FilesystemModule::FilesystemModule* m_filesystemModule;
     ProjectModule::ProjectModule* m_projectModule;
 
-    FilesystemModule::DirectoryIterator m_dirIter;
     std::string m_rootPath;
     std::string m_currentPath;
     std::vector<std::string> m_files;
     std::vector<std::string> m_folders;
-
+    
+    DirectoryIterator m_dirIter;
     void renderFolderTree(const std::filesystem::path& directory);
     void renderInFolderFiles();
 

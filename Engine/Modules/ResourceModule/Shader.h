@@ -1,9 +1,5 @@
 #pragma once
-
-#include <memory>
-#include <string>
-#include <vector>
-
+#include <EngineMinimal.h>
 #include "BaseResource.h"
 
 namespace ShaderCompiler
@@ -28,8 +24,7 @@ namespace ResourceModule
 	class RShader : public BaseResource
 	{
 	public:
-		RShader(const std::string& path, FilesystemModule::FilesystemModule* filesystemModule,
-			ShaderCompiler::ShaderCompiler* shaderCompiler);
+		RShader(const std::string& path);
 
 		std::vector<uint8_t> getBuffer() const;
 		std::string getText() const;

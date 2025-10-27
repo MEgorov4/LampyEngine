@@ -10,7 +10,6 @@ target_link_libraries(
           ObjectCoreModule
           ImGuiModule
           RenderModule
-          FilesystemModule
           LuaScriptModule
           InputModule
           EventModule

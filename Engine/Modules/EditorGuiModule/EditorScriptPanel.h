@@ -1,6 +1,6 @@
 #pragma once
-#include <memory>
 
+#include <EngineMinimal.h>
 #include "../ImGuiModule/GUIObject.h"
 
 namespace FilesystemModule

@@ -1,21 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <unordered_map>
-
+#include <EngineMinimal.h>
 #include <SDL3/SDL.h>
-#include "../EventModule/Event.h"
 
 
 namespace InputModule
 {
 	class InputModule;
-}
-
-namespace Logger
-{
-	class Logger;
 }
 
 namespace WindowModule
@@ -30,7 +21,6 @@ namespace WindowModule
 		bool m_framebufferResized = false; ///< Flag indicating if the window was resized.
 
 		Uint64 m_performanceFrequency;
-		Logger::Logger* m_logger;
 		InputModule::InputModule* m_inputModule;
 		
 		bool m_shouldClose{false};

@@ -1,9 +1,9 @@
 #pragma once
-#include <string>
-#include <memory>
+
+#include <EngineMinimal.h>
+
 #include <sol/sol.hpp>
 
-#include "../../EngineContext/IModule.h"
 
 namespace ECSModule
 {
@@ -20,10 +20,6 @@ namespace InputModule
     class InputModule;
 }
 
-namespace Logger
-{
-    class Logger;
-}
 
 namespace sol
 {

@@ -1,8 +1,6 @@
 #include "OpenGLFramebuffer.h"
 #include <GL/glew.h>
 
-#include "../../../LoggerModule/Logger.h"
-
 namespace RenderModule::OpenGL
 {
 	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferData& data)
@@ -19,7 +17,7 @@ namespace RenderModule::OpenGL
 
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
-			//LOG_ERROR("OpenGLFramebuffer: Framebuffer is not complete!");
+            LT_LOGE("OpenGLFramebuffer", "Framebuffer is not complete!");
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

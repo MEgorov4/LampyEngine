@@ -11,11 +11,10 @@
 
 GUIContentBrowser::GUIContentBrowser()
 	: ImGUIModule::GUIObject()
-	, m_filesystemModule(GCM(FilesystemModule::FilesystemModule))
 	, m_projectModule(GCXM(ProjectModule::ProjectModule))
 	, m_rootPath(std::string(m_projectModule->getProjectConfig().getResourcesPath()))
-	, m_currentPath(m_rootPath)
-	, m_dirIter(m_filesystemModule->createDirectoryIterator())
+	, m_currentPath(m_rootPath),
+    m_dirIter()
 {
 	auto& factory = FileActionFactoryRegistry::getInstance();
 	factory.registerFactory(".lworld", [this]() { return std::make_unique<WorldFileActionFactory>(); });

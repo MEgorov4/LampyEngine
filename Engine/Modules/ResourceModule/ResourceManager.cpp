@@ -1,28 +1,21 @@
 #include "ResourceManager.h"
-#include "ResourceManager.h"
 
-#include "../FilesystemModule/FilesystemModule.h"
-#include "../ShaderCompilerModule/ShaderCompiler.h"
-#include "../LoggerModule/Logger.h"
+#include <Modules/ShaderCompilerModule/ShaderCompiler.h>
 
 #include "ResourceCache.h"
 #include "Shader.h"
 #include "Mesh.h"
 #include "Texture.h"
-#include "../../EngineContext/CoreGlobal.h"
 
 namespace ResourceModule
 {
     void ResourceManager::startup()
     {
-        m_logger = GCM(Logger::Logger);
-        m_filesystemModule = GCM(FilesystemModule::FilesystemModule);
             
         m_shaderCompiler = GCM(ShaderCompiler::ShaderCompiler);
-
-        m_logger->log(Logger::LogVerbosity::Info, "Startup", "ResourceManager");
         
-        m_logger->log(Logger::LogVerbosity::Info, "Create resource caches", "ResourceManager");
+        LT_LOGI("ResourceManager", "Startup");
+        LT_LOGI("ResourceManager", "Create resource caches");
         
         meshCache = ResourceCache<RMesh>();
         shaderCache = ResourceCache<RShader>();
@@ -31,13 +24,13 @@ namespace ResourceModule
 
     void ResourceManager::shutdown()
     {
-        m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "ResourceManager");
+        LT_LOGI("ResourceManager", "Shutdown");
         clearAllCache();
     }
 
     void ResourceManager::clearAllCache()
     {
-        m_logger->log(Logger::LogVerbosity::Info, "Clear resource caches", "ResourceManager");
+        LT_LOGI("ResourceManager", "Clear resource caches");
         meshCache.clear<RMesh>();
         shaderCache.clear<RShader>();
         textureCache.clear<RTexture>();

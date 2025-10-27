@@ -1,5 +1,6 @@
 #pragma once
 
+#include <EngineMinimal.h>
 
 #include "../../Abstract/IFramebuffer.h"
 #include "../../Abstract/ITexture.h"

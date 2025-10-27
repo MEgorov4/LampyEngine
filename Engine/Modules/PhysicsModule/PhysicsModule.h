@@ -1,6 +1,7 @@
 #pragma once
 
-#include <memory>
+#include <EngineMinimal.h>
+
 #include <BulletCollision/BroadphaseCollision/btBroadphaseInterface.h>
 #include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
 #include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
@@ -8,19 +9,11 @@
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
 #include "BulletDebugDrawer.h"
-#include "../../EngineContext/IModule.h"
 
 namespace ECSModule
 {
 	class ECSModule;
 }
-
-namespace Logger
-{
-	class Logger;
-}
-
-
 
 class btVector3;
 class btTransform;
@@ -29,7 +22,6 @@ namespace PhysicsModule
 {
 	class PhysicsModule : public IModule
 	{
-		Logger::Logger*  m_logger;
 		ECSModule::ECSModule* m_ecsModule;
 	public:
 

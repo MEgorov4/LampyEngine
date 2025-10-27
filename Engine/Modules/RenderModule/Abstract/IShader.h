@@ -1,7 +1,5 @@
 #pragma once
-#include <memory>
-#include <vector>
-#include <glm/glm.hpp>
+#include <EngineMinimal.h>
 
 #include "ITexture.h"
 #include "../../ResourceModule/Shader.h"
