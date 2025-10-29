@@ -123,8 +123,9 @@ namespace ImGUIModule
 
     void ImGUIModule::renderUI(float deltaTime) const
     {
-        int w = m_windowModule->getWindow()->getWindowSize().first;
-        int h = m_windowModule->getWindow()->getWindowSize().second;
+
+        int w = GCM(WindowModule::WindowModule)->getWindow()->getWindowSize().first;
+        int h = GCM(WindowModule::WindowModule)->getWindow()->getWindowSize().second;
     
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, w, h);

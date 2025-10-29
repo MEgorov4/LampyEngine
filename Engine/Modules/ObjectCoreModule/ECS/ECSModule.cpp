@@ -16,7 +16,7 @@ namespace ECSModule
 {
 	void ECSModule::startup()
 	{
-		m_projectModule = GCM(ProjectModule::ProjectModule);
+		m_projectModule = GCXM(ProjectModule::ProjectModule);
 		m_resourceManager = GCM(ResourceModule::ResourceManager);
 		m_luaScriptModule = GCM(ScriptModule::LuaScriptModule);
 		m_physicsModule = GCM(PhysicsModule::PhysicsModule);

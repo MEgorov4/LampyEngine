@@ -7,7 +7,6 @@
 #include <Modules/LuaScriptModule/LuaScriptModule.h>
 #include <Modules/RenderModule/RenderModule.h>
 #include <Modules/InputModule/InputModule.h>
-#include <Modules/FilesystemModule/FilesystemModule.h>
 
 #include "EditorConsole.h"
 #include "EditorToolPanel.h"

@@ -12,11 +12,6 @@ namespace ShaderCompiler
 	class ShaderCompiler;
 }
 
-namespace Logger
-{
-	class Logger;
-}
-
 namespace ResourceModule
 {
 	class RMesh;

@@ -1,8 +1,8 @@
 #include "Editor.h"
 
-#include <EditorGuiModule/EditorGUIModule.h>
-#include <ImGuiModule/ImGUiModule.h>
-#include <ProjectModule/ProjectModule.h>
+#include <Modules/EditorGuiModule/EditorGUIModule.h>
+#include <Modules/ImGuiModule/ImGUiModule.h>
+#include <Modules/ProjectModule/ProjectModule.h>
 
 void Editor::initMinor(ContextLocator& locator)
 {
@@ -16,15 +16,15 @@ void Editor::initMajor(ContextLocator& locator)
     LT_LOG(LogVerbosity::Debug, "Editor", "initMajor");
 
     locator.registerMajor(std::make_shared<ImGUIModule::ImGUIModule>(), 10);
-    locator.registerMinor(std::make_shared<EditorGUIModule>(), 20);
+    locator.registerMajor(std::make_shared<EditorGUIModule>(), 10);
     locator.startupMajor();
 }
 
 
 void Editor::tick(float deltaTime)
 {
-    auto& gui = Context::Get<EditorGUIModule>();
-    gui.render(deltaTime);
+    auto* gui = GCXM(EditorGUIModule);
+    gui->render(deltaTime);
 }
 
 void Editor::shutdown()

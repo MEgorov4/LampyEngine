@@ -7,11 +7,6 @@ namespace ShaderCompiler
 	class ShaderCompiler;
 }
 
-namespace FilesystemModule
-{
-	class FilesystemModule;
-}
-
 namespace ResourceModule
 {
 	struct ShaderInfo

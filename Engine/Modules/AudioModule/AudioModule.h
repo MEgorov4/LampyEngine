@@ -2,11 +2,6 @@
 
 #include <EngineMinimal.h>
 
-namespace Logger
-{
-	class Logger;
-}
-
 class ALCdevice;
 class ALCcontext;
 

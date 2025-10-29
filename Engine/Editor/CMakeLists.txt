@@ -14,4 +14,4 @@ target_link_libraries(
          ResourceModule
          EngineContext
          ShaderCompilerModule
-  PRIVATE EditorGuiModule EventModule ProjectModule)
+  PRIVATE EditorGuiModule ProjectModule)

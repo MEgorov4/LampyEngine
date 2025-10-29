@@ -1,33 +1,29 @@
 #include "EditorConsole.h"
-#include <imgui.h>
 
-#include "../LuaScriptModule/LuaScriptModule.h"
-#include "../../EngineContext/CoreGlobal.h"
+#include <Modules/LuaScriptModule/LuaScriptModule.h>
+#include <imgui.h>
 
 GUIEditorConsole::GUIEditorConsole() : GUIObject(), m_luaScriptModule(GCM(ScriptModule::LuaScriptModule))
 {
-
 }
 
 void GUIEditorConsole::render(float deltaTime)
 {
-	ImGui::Begin("Console");
+    ImGui::Begin("Console");
 
-	static char buffer[256] = "";
+    static char buffer[256] = "";
 
-	ImGui::SetNextItemWidth(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 2);
-	if (ImGui::InputText("##ConsoleInput", buffer, 256, ImGuiInputTextFlags_EnterReturnsTrue))
-	{
-		processCommand(buffer);
-		memset(buffer, 0, 256);
-	}
+    ImGui::SetNextItemWidth(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 2);
+    if (ImGui::InputText("##ConsoleInput", buffer, 256, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        processCommand(buffer);
+        memset(buffer, 0, 256);
+    }
 
-	ImGui::End();
+    ImGui::End();
 }
 
 void GUIEditorConsole::processCommand(const std::string& command) const
 {
-	m_luaScriptModule->processCommand(command);
+    m_luaScriptModule->processCommand(command);
 }
-
-

@@ -11,12 +11,10 @@ namespace EngineCore::Foundation {
 
 class Fs final {
 public:
-  // exists / kind
   static bool exists(const std::string &path) noexcept;
   static bool isFile(const std::string &path) noexcept;
   static bool isDirectory(const std::string &path) noexcept;
 
-  // basic path ops
   static std::string currentPath();
   static std::string absolutePath(const std::string &relative);
   static std::string fileName(const std::string &path);
@@ -24,7 +22,6 @@ public:
   static uint64_t fileSize(const std::string &path);
   static uint64_t folderModTime(const std::string &folderPath);
 
-  // relative to base (например, к ресурсам проекта)
   static std::string relativeTo(const std::string &path,
                                 const std::string &base);
 

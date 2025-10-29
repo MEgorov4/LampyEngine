@@ -16,7 +16,6 @@ namespace EngineCore::Foundation
 {
 namespace fs = std::filesystem;
 
-// --- exists / kind ---
 bool Fs::exists(const std::string& path) noexcept
 {
     std::error_code ec;
@@ -35,7 +34,6 @@ bool Fs::isDirectory(const std::string& path) noexcept
     return fs::is_directory(path, ec);
 }
 
-// --- basic path ops ---
 std::string Fs::currentPath()
 {
     std::error_code ec;
@@ -95,7 +93,6 @@ std::string Fs::relativeTo(const std::string& path, const std::string& base)
     return ec ? std::string() : rel.string();
 }
 
-// --- IO ---
 std::string Fs::readTextFile(const std::string& filePath)
 {
     std::ifstream f(filePath, std::ios::in);
@@ -178,7 +175,6 @@ FsResult Fs::appendBinaryFile(const std::string& filePath, const std::vector<uin
     return FsResult::Success;
 }
 
-// --- file ops ---
 FsResult Fs::deleteFile(const std::string& path)
 {
     if (!exists(path))

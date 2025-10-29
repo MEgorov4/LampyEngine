@@ -1,29 +1,27 @@
 #pragma once
-#include <imgui.h>
-#include <memory>
-#include <vector>
-#include <string>
-#include "../../ObjectCoreModule/ECS/ECSModule.h"
-#include <functional>
-#include "../../FilesystemModule/FilesystemModule.h"
-#include "../../../EngineContext/CoreGlobal.h"
 
+#include <EngineMinimal.h>
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
+#include <Modules/ProjectModule/ProjectModule.h>
+#include <imgui.h>
+
+namespace ECSModule
+{
+class ECSModule;
+};
 class IFileAction
 {
-protected:
+  protected:
     ProjectModule::ProjectModule* m_projectModule;
-    FilesystemModule::FilesystemModule* m_filesystemModule;
     ECSModule::ECSModule* m_ecsModule;
 
-public:
-    IFileAction() : m_projectModule(GCXM(ProjectModule::ProjectModule)),
-                                                                          m_filesystemModule(GCM(FilesystemModule::FilesystemModule)),
-                                                                          m_ecsModule(GCM(ECSModule::ECSModule))
+  public:
+    IFileAction() : m_projectModule(GCXM(ProjectModule::ProjectModule)), m_ecsModule(GCM(ECSModule::ECSModule))
     {
     }
 
     virtual void execute(const std::string& filePath) = 0;
-    virtual std::string getName() const = 0;
+    virtual std::string getName() const               = 0;
 
     virtual ~IFileAction()
     {
@@ -32,57 +30,62 @@ public:
 
 class DeleteFileAction : public IFileAction
 {
-public:
-    DeleteFileAction()
-        : IFileAction()
+  public:
+    DeleteFileAction() : IFileAction()
     {
     }
 
     void execute(const std::string& filePath) override
     {
-        m_filesystemModule->deleteFile(filePath);
+        Fs::deleteFile(filePath);
     }
 
-    std::string getName() const override { return "Delete"; }
+    std::string getName() const override
+    {
+        return "Delete";
+    }
 };
 
 class CopyPathAction : public IFileAction
 {
-public:
-    CopyPathAction()
-        : IFileAction()
+  public:
+    CopyPathAction() : IFileAction()
     {
     }
 
     void execute(const std::string& filePath) override
     {
-        m_filesystemModule->copyRelativePath(filePath);
+        Fs::copyRelativePathToClipboard(filePath, Fs::currentPath()); // TODO: Внутри нерабочая логика
     }
 
-    std::string getName() const override { return "Copy path"; }
+    std::string getName() const override
+    {
+        return "Copy path";
+    }
 };
 
 class CopyAbsolutePathAction : public IFileAction
 {
-public:
-    CopyAbsolutePathAction()
-        : IFileAction()
+  public:
+    CopyAbsolutePathAction() : IFileAction()
     {
     }
 
     void execute(const std::string& filePath) override
     {
-        m_filesystemModule->copyAbsolutePath(filePath);
+        Fs::copyAbsolutePathToClipboard(filePath);
     }
 
-    std::string getName() const override { return "Copy absolute path"; }
+    std::string getName() const override
+    {
+        return "Copy absolute path";
+    }
 };
 
 class RenameFileAction : public IFileAction
 {
-public:
-    RenameFileAction()
-        : IFileAction()
+  public:
+    RenameFileAction() : IFileAction()
     {
     }
 
@@ -90,47 +93,53 @@ public:
     {
     }
 
-    std::string getName() const override { return "Rename"; }
+    std::string getName() const override
+    {
+        return "Rename";
+    }
 };
 
 class DuplicateFileAction : public IFileAction
 {
-public:
-    DuplicateFileAction()
-        : IFileAction()
+  public:
+    DuplicateFileAction() : IFileAction()
     {
     }
 
     void execute(const std::string& filePath) override
     {
-        m_filesystemModule->duplicateFileInDirectory(filePath);
+        Fs::duplicateFileInDirectory(filePath);
     }
 
-    std::string getName() const override { return "Duplicate"; }
+    std::string getName() const override
+    {
+        return "Duplicate";
+    }
 };
 
 class OpenWorldFileAction : public IFileAction
 {
-public:
-    OpenWorldFileAction()
-        : IFileAction()
+  public:
+    OpenWorldFileAction() : IFileAction()
     {
     }
 
     void execute(const std::string& filePath) override
     {
-        std::string worldData = m_filesystemModule->readTextFile(filePath);
+        std::string worldData = Fs::readTextFile(filePath);
         m_ecsModule->openWorld(worldData);
     }
 
-    std::string getName() const override { return "Open world"; }
+    std::string getName() const override
+    {
+        return "Open world";
+    }
 };
 
 class SetWorldFileAsEditorDefaultAction : public IFileAction
 {
-public:
-    SetWorldFileAsEditorDefaultAction()
-        : IFileAction()
+  public:
+    SetWorldFileAsEditorDefaultAction() : IFileAction()
     {
     }
 
@@ -139,14 +148,16 @@ public:
         m_projectModule->getProjectConfig().setEditorStartWorld(filePath);
     }
 
-    std::string getName() const override { return "Set as editor default world"; }
+    std::string getName() const override
+    {
+        return "Set as editor default world";
+    }
 };
 
 class SetWorldFileAsGameDefaultAction : public IFileAction
 {
-public:
-    SetWorldFileAsGameDefaultAction()
-        : IFileAction()
+  public:
+    SetWorldFileAsGameDefaultAction() : IFileAction()
     {
     }
 
@@ -154,15 +165,19 @@ public:
     {
     }
 
-    std::string getName() const override { return "Set as game default world"; }
+    std::string getName() const override
+    {
+        return "Set as game default world";
+    }
 };
 
 class IFileActionFactory
 {
-protected:
- 
-public:
-    IFileActionFactory()     {
+  protected:
+
+  public:
+    IFileActionFactory()
+    {
     }
 
     virtual std::vector<std::unique_ptr<IFileAction>> createActions() = 0;
@@ -174,9 +189,8 @@ public:
 
 class DefaultFileActionFactory : public IFileActionFactory
 {
-public:
-    DefaultFileActionFactory()
-        : IFileActionFactory()
+  public:
+    DefaultFileActionFactory() : IFileActionFactory()
     {
     }
 
@@ -194,9 +208,8 @@ public:
 
 class WorldFileActionFactory : public IFileActionFactory
 {
-public:
-    WorldFileActionFactory()
-        : IFileActionFactory()
+  public:
+    WorldFileActionFactory() : IFileActionFactory()
     {
     }
 
@@ -215,11 +228,9 @@ public:
     }
 };
 
-
 class FileActionFactoryRegistry
 {
-
-public:
+  public:
     static FileActionFactoryRegistry& getInstance()
     {
         static FileActionFactoryRegistry instance;
@@ -242,7 +253,7 @@ public:
         return std::make_unique<DefaultFileActionFactory>();
     }
 
-private:
+  private:
     std::unordered_map<std::string, std::function<std::unique_ptr<IFileActionFactory>()>> factories;
 
     std::string getFileExtension(const std::string& filePath)

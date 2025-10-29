@@ -1,10 +1,11 @@
 ﻿#pragma once
 
-#include <memory>
+#include <EngineMinimal.h>
+
 #include <flecs.h>
-#include "../../ResourceModule/ResourceManager.h"
-#include "../../ObjectCoreModule/ECS/Components/ECSComponents.h"
-#include "../../ObjectCoreModule/ECS/ECSModule.h"
+#include <Modules/ResourceModule/ResourceManager.h>
+#include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 
 #include "IFramebuffer.h"
 #include "IMaterial.h"
@@ -14,7 +15,6 @@
 
 #include "RenderObject.h"
 #include "RenderPassStrategy.h"
-#include "../../../EngineContext/CoreGlobal.h"
 
 
 
@@ -114,7 +114,7 @@ namespace RenderModule
     public:
         RenderPipelineHandler()
         {
-            GCM(Logger::Logger)->log(Logger::LogVerbosity::Info, "Create strategy", "RenderModule_RenderPipelineHandler");
+            LT_LOGI("RenderModule_RenderPipelineHandler", "Create strategy");
             m_pipelineStrategy = std::make_unique<CleanRenderStrategy>();
         }
          

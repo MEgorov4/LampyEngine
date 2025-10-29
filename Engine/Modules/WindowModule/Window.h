@@ -17,7 +17,7 @@ namespace WindowModule
 	class Window
 	{
 		SDL_GLContext m_glContext;
-		SDL_Window* m_window; ///< Pointer to the GLFW window instance.
+		SDL_Window* m_window; ///< Pointer to the SDL window instance.
 		bool m_framebufferResized = false; ///< Flag indicating if the window was resized.
 
 		Uint64 m_performanceFrequency;
@@ -40,14 +40,6 @@ namespace WindowModule
 		/// </summary>
 		~Window();
 
-		void registerEventHandlers();
-		/*
-		/// <summary>
-		/// Retrieves the raw GLFW window handle.
-		/// </summary>
-		/// <returns>Pointer to the GLFW window.</returns>
-		GLFWwindow* getGLFWWindow() { return m_window; }
-		*/
 		void swapWindow();
 		
 		SDL_Window* getSDLWindow() {return m_window;}

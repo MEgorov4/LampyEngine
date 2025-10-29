@@ -3,8 +3,9 @@
 #include <memory>
 #include <flecs/addons/cpp/world.hpp>
 
-#include "../../ResourceModule/ResourceManager.h"
-#include "../../ImGuiModule/ImGuiModule.h"
+#include <Modules/ResourceModule/ResourceManager.h>
+#include <Modules/ImGuiModule/ImGuiModule.h>
+
 #include "IFramebuffer.h"
 #include "IMaterial.h"
 #include "IShader.h"
@@ -14,7 +15,6 @@
 #include "RenderObject.h"
 #include "RenderObjectParser.h"
 #include "../OpenGL/OpenGLObjects/OpenGLMesh2D.h"
-#include "../../../EngineContext/CoreGlobal.h"
 
 namespace RenderModule
 {

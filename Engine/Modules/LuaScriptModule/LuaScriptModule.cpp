@@ -10,7 +10,6 @@ namespace ScriptModule
 {
 void LuaScriptModule::startup()
 {
-    m_logger      = GCM(Logger::Logger);
     m_inputModule = GCM(InputModule::InputModule);
     m_audioModule = GCM(AudioModule::AudioModule);
     m_ecsModule   = GCM(ECSModule::ECSModule);

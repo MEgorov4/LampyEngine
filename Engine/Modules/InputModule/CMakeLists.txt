@@ -4,6 +4,4 @@ format_source_group(${INPUT_MODULE_SOURCE})
 
 add_library(InputModule STATIC ${INPUT_MODULE_SOURCE})
 
-target_link_libraries(InputModule PRIVATE sdl::sdl WindowModule EventModule
-                                          EngineContext)
-
+target_link_libraries(InputModule PRIVATE sdl::sdl WindowModule EngineContext)

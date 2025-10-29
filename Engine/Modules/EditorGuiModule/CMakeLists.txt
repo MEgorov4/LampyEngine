@@ -5,13 +5,11 @@ add_library(EditorGuiModule STATIC ${EDITOR_GUI_MODULE_SOURCE})
 
 target_link_libraries(
   EditorGuiModule
-  PRIVATE EventModule
-          ProjectModule
+  PRIVATE ProjectModule
           ObjectCoreModule
           ImGuiModule
           RenderModule
           LuaScriptModule
           InputModule
-          EventModule
           EngineContext
           imguizmo::imguizmo)

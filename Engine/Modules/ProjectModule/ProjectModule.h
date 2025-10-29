@@ -2,11 +2,6 @@
 
 #include <EngineMinimal.h>
 
-namespace FilesystemModule
-{
-	class FilesystemModule;
-}
-
 namespace Logger
 {
 	class Logger;
@@ -63,7 +58,6 @@ namespace ProjectModule
 	{
 		ProjectConfig m_projectConfig; ///< Stores the project configuration.
 		Logger::Logger* m_logger;
-		FilesystemModule::FilesystemModule* m_filesystemModule;
 	public:
 		/// <summary>
 		/// Initializes the project module and sets up the project environment.

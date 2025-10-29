@@ -3,6 +3,12 @@
 #include <chrono>
 #include <iomanip>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 using namespace EngineCore::Foundation;
 
 LTLogger& LTLogger::Instance()
@@ -39,7 +45,7 @@ void LTLogger::debug(const std::string& cat, const std::string& msg) { log(LogVe
 
 void ConsoleSink::write(LogVerbosity level, const std::string& category, const std::string& message)
 {
-    static const char* names[] = { "Verbose", "Debug", "Info", "Warning", "Error", "Fatal" };
+    static const char* names[] = {"Verbose", "Debug", "Info", "Warning", "Error", "Fatal"};
 
     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::tm tm{};
@@ -51,5 +57,60 @@ void ConsoleSink::write(LogVerbosity level, const std::string& category, const s
     char timeBuf[32];
     std::strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", &tm);
 
-    std::cout << std::format("[{}] [{}] [{}] {}\n", timeBuf, names[(int)level], category, message);
+    // ===== Цвет в зависимости от уровня =====
+#ifdef _WIN32
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    WORD color      = 7; // default grey
+
+    switch (level)
+    {
+    case LogVerbosity::Verbose:
+        color = 8;
+        break; // Dark Gray
+    case LogVerbosity::Debug:
+        color = 7;
+        break; // Light Gray
+    case LogVerbosity::Info:
+        color = 10;
+        break; // Green
+    case LogVerbosity::Warning:
+        color = 14;
+        break; // Yellow
+    case LogVerbosity::Error:
+        color = 12;
+        break; // Red
+    case LogVerbosity::Fatal:
+        color = 4 | 8;
+        break; // Intense Red
+    }
+
+    SetConsoleTextAttribute(hConsole, color);
+    std::cout << std::format("[{}] [{}] [{}] {}\n", timeBuf, names[(int) level], category, message);
+    SetConsoleTextAttribute(hConsole, 7); // reset
+#else
+    const char* colorCode = "\033[0m"; // reset
+    switch (level)
+    {
+    case LogVerbosity::Verbose:
+        colorCode = "\033[90m";
+        break; // Dark gray
+    case LogVerbosity::Debug:
+        colorCode = "\033[37m";
+        break; // White
+    case LogVerbosity::Info:
+        colorCode = "\033[32m";
+        break; // Green
+    case LogVerbosity::Warning:
+        colorCode = "\033[33m";
+        break; // Yellow
+    case LogVerbosity::Error:
+        colorCode = "\033[31m";
+        break; // Red
+    case LogVerbosity::Fatal:
+        colorCode = "\033[1;31m";
+        break; // Bold red
+    }
+
+    std::cout << std::format("{}[{}] [{}] [{}] {}\033[0m\n", colorCode, timeBuf, names[(int) level], category, message);
+#endif
 }

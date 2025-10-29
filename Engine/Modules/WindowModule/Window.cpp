@@ -59,10 +59,8 @@ Window::Window(int width, int height, const char* title) : m_inputModule(GCM(Inp
         const char* error = SDL_GetError();
         throw std::runtime_error("Failed to make current context: " + std::string(error ? error : "Unknown error"));
     }
-    
-    LT_LOGI("WindowModule_Window", "Window created");
 
-    registerEventHandlers();
+    LT_LOGI("WindowModule_Window", "Window created");
 }
 
 Window::~Window()
@@ -80,10 +78,6 @@ Window::~Window()
 
     LT_LOGI("WindowModule_Window", "SDL quit");
     SDL_Quit();
-}
-
-void Window::registerEventHandlers()
-{
 }
 
 void Window::swapWindow()

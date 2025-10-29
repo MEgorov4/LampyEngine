@@ -13,7 +13,6 @@ target_link_libraries(
           ResourceModule
           EditorModule
           EngineContext
-          EventModule
           ObjectCoreModule
           LuaScriptModule
           ShaderCompilerModule

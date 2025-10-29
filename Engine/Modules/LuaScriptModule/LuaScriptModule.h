@@ -30,7 +30,6 @@ namespace ScriptModule
 {
     class LuaScriptModule : public IModule
     {
-        Logger::Logger* m_logger;
         InputModule::InputModule* m_inputModule;
         AudioModule::AudioModule* m_audioModule;
         ECSModule::ECSModule* m_ecsModule;

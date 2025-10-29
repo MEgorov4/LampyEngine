@@ -11,7 +11,6 @@ namespace ResourceModule
 {
     void ResourceManager::startup()
     {
-            
         m_shaderCompiler = GCM(ShaderCompiler::ShaderCompiler);
         
         LT_LOGI("ResourceManager", "Startup");
