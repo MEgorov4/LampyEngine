@@ -2,17 +2,17 @@
 
 #include <btBulletDynamicsCommon.h>
 #include "BulletDebugDrawer.h"
-#include "../LoggerModule/Logger.h"
-#include "../ObjectCoreModule/ECS/ECSModule.h"
-#include "../ObjectCoreModule/ECS/ECSPhysicsSystem.h"
+
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
+#include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
+#include <Modules/ObjectCoreModule/ECS/Systems/ECSPhysicsSystem.h>
 
 
 namespace PhysicsModule
 {
-	void PhysicsModule::startup(const ModuleRegistry& registry)
+	void PhysicsModule::startup()
 	{
-		m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-		m_ecsModule = std::dynamic_pointer_cast<ECSModule::ECSModule>(registry.getModule("ECSModule"));
+		m_ecsModule = GCM(ECSModule::ECSModule);
 	
 		m_debugDrawer.reset(new BulletDebugDrawer());
 
@@ -24,11 +24,12 @@ namespace PhysicsModule
 
 		setupWorldProperties();
 		// registrateBodies();
+        LT_LOGI("PhysicsModule", "Startup");
 	}
 
 	void PhysicsModule::shutdown()
 	{
-	
+        LT_LOGI("PhysicsModule", "Shutdown");
 	}
 
 	void PhysicsModule::tick(float deltaTime)
@@ -51,7 +52,7 @@ namespace PhysicsModule
 
 	void PhysicsModule::registrateBodies()
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "Registration rigid bodies", "Physics Module");
+        LT_LOGI("PhysicsModule", "Registration rigid bodies");
 
 		auto& world = m_ecsModule->getCurrentWorld();
 

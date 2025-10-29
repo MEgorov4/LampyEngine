@@ -1,21 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <unordered_map>
-
+#include <EngineMinimal.h>
 #include <SDL3/SDL.h>
-#include "../EventModule/Event.h"
 
 
 namespace InputModule
 {
 	class InputModule;
-}
-
-namespace Logger
-{
-	class Logger;
 }
 
 namespace WindowModule
@@ -25,16 +16,12 @@ namespace WindowModule
 	/// </summary>
 	class Window
 	{
-		/*
-		GLFWwindow* m_window;
-		*/
 		SDL_GLContext m_glContext;
-		SDL_Window* m_window; ///< Pointer to the GLFW window instance.
+		SDL_Window* m_window; ///< Pointer to the SDL window instance.
 		bool m_framebufferResized = false; ///< Flag indicating if the window was resized.
 
 		Uint64 m_performanceFrequency;
-		std::shared_ptr<Logger::Logger> m_logger;
-		std::shared_ptr<InputModule::InputModule> m_inputModule;
+		InputModule::InputModule* m_inputModule;
 		
 		bool m_shouldClose{false};
 	public:
@@ -46,21 +33,13 @@ namespace WindowModule
 		/// <param name="height">Height of the window in pixels.</param>
 		/// <param name="title">Title of the window.</param>
 		/// <exception cref="std::runtime_error">Thrown if GLFW initialization fails.</exception>
-		Window(std::shared_ptr<Logger::Logger> m_logger, std::shared_ptr<InputModule::InputModule> inputModule, int width, int height, const char* title);
+		Window(int width, int height, const char* title);
 
 		/// <summary>
 		/// Destroys the GLFW window and terminates GLFW.
 		/// </summary>
 		~Window();
 
-		void registerEventHandlers();
-		/*
-		/// <summary>
-		/// Retrieves the raw GLFW window handle.
-		/// </summary>
-		/// <returns>Pointer to the GLFW window.</returns>
-		GLFWwindow* getGLFWWindow() { return m_window; }
-		*/
 		void swapWindow();
 		
 		SDL_Window* getSDLWindow() {return m_window;}

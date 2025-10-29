@@ -4,98 +4,86 @@
 #include <AL/alc.h>
 #include <stdexcept>
 
-#include "../LoggerModule/Logger.h"
 
 namespace AudioModule
 {
-    void AudioModule::startup(const ModuleRegistry& moduleRegistry)
-    {
-        m_logger = std::dynamic_pointer_cast<Logger::Logger>(moduleRegistry.getModule("Logger"));
+	void AudioModule::startup()
+	{
+		m_device = alcOpenDevice(nullptr);
+		if (!m_device)
+		{
+			throw std::runtime_error("Failed to open OpenAL device.");
+		}
 
+		LT_LOG(LogVerbosity::Info, "AudioModule", "Create OpenAL context" );
 
-        m_logger->log(Logger::LogVerbosity::Info, "Startup", "AudioModule");
+		m_context = alcCreateContext(m_device, nullptr);
+		if (!m_context)
+		{
+			alcCloseDevice(m_device);
+			throw std::runtime_error("Failed to create OpenAL context.");
+		}
 
-        m_logger->log(Logger::LogVerbosity::Info, "Open OpenAL device", "AudioModule");
+		alcMakeContextCurrent(m_context);
+	}
 
-        m_device = alcOpenDevice(nullptr);
-        if (!m_device)
-        {
-            throw std::runtime_error("Failed to open OpenAL device.");
-        }
+	void AudioModule::shutdown()
+	{
+		LT_LOG(LogVerbosity::Info, "AudioModule", "shutdown" );
 
-        m_logger->log(Logger::LogVerbosity::Info, "Create OpenAL context", "AudioModule");
+		if (m_context)
+		{
+			alcMakeContextCurrent(nullptr);
+			alcDestroyContext(m_context);
+			m_context = nullptr;
+		}
 
-        m_context = alcCreateContext(m_device, nullptr);
-        if (!m_context)
-        {
-            alcCloseDevice(m_device);
-            throw std::runtime_error("Failed to create OpenAL context.");
-        }
+		if (m_device)
+		{
+			alcCloseDevice(m_device);
+			m_device = nullptr;
+		}
+	}
 
-        alcMakeContextCurrent(m_context);
-    }
+	void AudioModule::playSoundAsync()
+	{
+		m_audioThread = std::thread([]()
+			{
+				int sampleRate = 44100;
+				float duration = 0.05f;
+				float frequency = 50.f;
+				int numSamples = static_cast<int>(sampleRate * duration);
+				short* samples = new short[numSamples];
 
-    void AudioModule::shutdown()
-    {
-        m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "AudioModule");
+				for (int i = 0; i < numSamples; ++i)
+				{
+					float time = i / static_cast<float>(sampleRate);
+					float value = sin(2 * 3.14 * frequency * time);
+					samples[i] = static_cast<short>(value * 32767);
+				}
 
-        m_logger->log(Logger::LogVerbosity::Info, "Destroy OpenAL context", "AudioModule");
+				ALuint buffer;
+				alGenBuffers(1, &buffer);
+				alBufferData(buffer, AL_FORMAT_MONO16, samples,
+					numSamples * sizeof(short), sampleRate);
 
-        if (m_context)
-        {
-            alcMakeContextCurrent(nullptr);
-            alcDestroyContext(m_context);
-            m_context = nullptr;
-        }
+				ALuint source;
+				alGenSources(1, &source);
+				alSourcei(source, AL_BUFFER, buffer);
+				alSourcePlay(source);
 
-        m_logger->log(Logger::LogVerbosity::Info, "Close OpenAL device", "AudioModule");
+				ALint state;
+				alGetSourcei(source, AL_SOURCE_STATE, &state);
+				while (state == AL_PLAYING)
+				{
+					alGetSourcei(source, AL_SOURCE_STATE, &state);
+				}
 
-        if (m_device)
-        {
-            alcCloseDevice(m_device);
-            m_device = nullptr;
-        }
-    }
+				delete[] samples;
+				alDeleteSources(1, &source);
+				alDeleteBuffers(1, &buffer);
+			});
 
-    void AudioModule::playSoundAsync()
-    {
-        m_audioThread = std::thread([]()
-        {
-            int sampleRate = 44100;
-            float duration = 0.05f;
-            float frequency = 50.f;
-            int numSamples = static_cast<int>(sampleRate * duration);
-            short* samples = new short[numSamples];
-
-            for (int i = 0; i < numSamples; ++i)
-            {
-                float time = i / static_cast<float>(sampleRate);
-                float value = sin(2 * 3.14 * frequency * time);
-                samples[i] = static_cast<short>(value * 32767);
-            }
-
-            ALuint buffer;
-            alGenBuffers(1, &buffer);
-            alBufferData(buffer, AL_FORMAT_MONO16, samples,
-                         numSamples * sizeof(short), sampleRate);
-
-            ALuint source;
-            alGenSources(1, &source);
-            alSourcei(source, AL_BUFFER, buffer);
-            alSourcePlay(source);
-
-            ALint state;
-            alGetSourcei(source, AL_SOURCE_STATE, &state);
-            while (state == AL_PLAYING)
-            {
-                alGetSourcei(source, AL_SOURCE_STATE, &state);
-            }
-
-            delete[] samples;
-            alDeleteSources(1, &source);
-            alDeleteBuffers(1, &buffer);
-        });
-
-        m_audioThread.detach();
-    }
+		m_audioThread.detach();
+	}
 }

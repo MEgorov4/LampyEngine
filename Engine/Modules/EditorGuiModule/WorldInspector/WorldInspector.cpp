@@ -3,48 +3,46 @@
 #include <filesystem>
 #include "../../ObjectCoreModule/ECS/ECSModule.h"
 #include "../../ProjectModule/ProjectModule.h"
-#include "../../ObjectCoreModule/ECS/ECSLuaScriptsSystem.h"
+#include "../../ObjectCoreModule/ECS/Systems/ECSLuaScriptsSystem.h"
 #include "ComponentsRenderFabric.h"
 
-
-GUIWorldInspector::GUIWorldInspector(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                                     const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                                     const std::shared_ptr<ECSModule::ECSModule>& ecsModule) :
-    GUIObject(), m_projectModule(projectModule), m_filesystemModule(filesystemModule), m_ecsModule(ecsModule),
-    m_world(ecsModule->getCurrentWorld())
+flecs::entity GUIWorldInspector::m_selectedEntity = {};
+GUIWorldInspector::GUIWorldInspector() :
+    GUIObject(),m_ecsModule(GCM(ECSModule::ECSModule)),
+    m_world(m_ecsModule->getCurrentWorld())
 {
     ComponentRendererFactory& factory = ComponentRendererFactory::getInstance();
     factory.registerRenderer("PositionComponent", [this]()
     {
-        return std::make_unique<PositionRenderer>(m_projectModule, m_filesystemModule);
+        return std::make_unique<PositionRenderer>();
     });
     factory.registerRenderer("RotationComponent", [this]()
     {
-        return std::make_unique<RotationRenderer>(m_projectModule, m_filesystemModule);
+        return std::make_unique<RotationRenderer>();
     });
     factory.registerRenderer("ScaleComponent", [this]()
     {
-        return std::make_unique<ScaleRenderer>(m_projectModule, m_filesystemModule);
+        return std::make_unique<ScaleRenderer>();
     });
     factory.registerRenderer("ScriptComponent", [this]()
     {
-        return std::make_unique<ScriptRenderer>(m_projectModule, m_filesystemModule);
+        return std::make_unique<ScriptRenderer>();
     });
     factory.registerRenderer("MeshComponent", [this]()
     {
-        return std::make_unique<MeshComponentRenderer>(m_projectModule, m_filesystemModule);
+        return std::make_unique<MeshComponentRenderer>();
     });
     factory.registerRenderer("CameraComponent", [this]()
     {
-        return std::make_unique<CameraRenderer>(m_projectModule, m_filesystemModule);
+        return std::make_unique<CameraRenderer>();
     });
     factory.registerRenderer("DirectionalLightComponent", [this]()
     {
-        return std::make_unique<DirectionalLightRenderer>(m_projectModule, m_filesystemModule);
+        return std::make_unique<DirectionalLightRenderer>();
     });
     factory.registerRenderer("RigidbodyComponent", [this]()
     {
-        return std::make_unique<RigidbodyRenderer>(m_projectModule, m_filesystemModule);
+        return std::make_unique<RigidbodyRenderer>();
     });
 }
 

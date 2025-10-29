@@ -1,30 +1,27 @@
 #pragma once
-#include <imgui.h>
-#include <memory>
-#include <vector>
-#include <string>
-#include "../../ObjectCoreModule/ECS/ECSModule.h"
-#include <functional>
-#include "../../FilesystemModule/FilesystemModule.h"
 
+#include <EngineMinimal.h>
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
+#include <Modules/ProjectModule/ProjectModule.h>
+#include <imgui.h>
+
+namespace ECSModule
+{
+class ECSModule;
+};
 class IFileAction
 {
-protected:
-    std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
-    std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
-    std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
+  protected:
+    ProjectModule::ProjectModule* m_projectModule;
+    ECSModule::ECSModule* m_ecsModule;
 
-public:
-    IFileAction(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                const std::shared_ptr<ECSModule::ECSModule>& ecsModule) : m_projectModule(projectModule),
-                                                                          m_filesystemModule(filesystemModule),
-                                                                          m_ecsModule(ecsModule)
+  public:
+    IFileAction() : m_projectModule(GCXM(ProjectModule::ProjectModule)), m_ecsModule(GCM(ECSModule::ECSModule))
     {
     }
 
     virtual void execute(const std::string& filePath) = 0;
-    virtual std::string getName() const = 0;
+    virtual std::string getName() const               = 0;
 
     virtual ~IFileAction()
     {
@@ -33,65 +30,62 @@ public:
 
 class DeleteFileAction : public IFileAction
 {
-public:
-    DeleteFileAction(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                     const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                     const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-        : IFileAction(projectModule, filesystemModule, ecsModule)
+  public:
+    DeleteFileAction() : IFileAction()
     {
     }
 
     void execute(const std::string& filePath) override
     {
-        m_filesystemModule->deleteFile(filePath);
+        Fs::deleteFile(filePath);
     }
 
-    std::string getName() const override { return "Delete"; }
+    std::string getName() const override
+    {
+        return "Delete";
+    }
 };
 
 class CopyPathAction : public IFileAction
 {
-public:
-    CopyPathAction(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                   const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                   const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-        : IFileAction(projectModule, filesystemModule, ecsModule)
+  public:
+    CopyPathAction() : IFileAction()
     {
     }
 
     void execute(const std::string& filePath) override
     {
-        m_filesystemModule->copyRelativePath(filePath);
+        Fs::copyRelativePathToClipboard(filePath, Fs::currentPath()); // TODO: Внутри нерабочая логика
     }
 
-    std::string getName() const override { return "Copy path"; }
+    std::string getName() const override
+    {
+        return "Copy path";
+    }
 };
 
 class CopyAbsolutePathAction : public IFileAction
 {
-public:
-    CopyAbsolutePathAction(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                           const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                           const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-        : IFileAction(projectModule, filesystemModule, ecsModule)
+  public:
+    CopyAbsolutePathAction() : IFileAction()
     {
     }
 
     void execute(const std::string& filePath) override
     {
-        m_filesystemModule->copyAbsolutePath(filePath);
+        Fs::copyAbsolutePathToClipboard(filePath);
     }
 
-    std::string getName() const override { return "Copy absolute path"; }
+    std::string getName() const override
+    {
+        return "Copy absolute path";
+    }
 };
 
 class RenameFileAction : public IFileAction
 {
-public:
-    RenameFileAction(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                     const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                     const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-        : IFileAction(projectModule, filesystemModule, ecsModule)
+  public:
+    RenameFileAction() : IFileAction()
     {
     }
 
@@ -99,52 +93,53 @@ public:
     {
     }
 
-    std::string getName() const override { return "Rename"; }
+    std::string getName() const override
+    {
+        return "Rename";
+    }
 };
 
 class DuplicateFileAction : public IFileAction
 {
-public:
-    DuplicateFileAction(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                        const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                        const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-        : IFileAction(projectModule, filesystemModule, ecsModule)
+  public:
+    DuplicateFileAction() : IFileAction()
     {
     }
 
     void execute(const std::string& filePath) override
     {
-        m_filesystemModule->duplicateFileInDirectory(filePath);
+        Fs::duplicateFileInDirectory(filePath);
     }
 
-    std::string getName() const override { return "Duplicate"; }
+    std::string getName() const override
+    {
+        return "Duplicate";
+    }
 };
 
 class OpenWorldFileAction : public IFileAction
 {
-public:
-    OpenWorldFileAction(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                        const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                        const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-        : IFileAction(projectModule, filesystemModule, ecsModule)
+  public:
+    OpenWorldFileAction() : IFileAction()
     {
     }
 
     void execute(const std::string& filePath) override
     {
-        m_ecsModule->loadWorldFromFile(filePath);
+        std::string worldData = Fs::readTextFile(filePath);
+        m_ecsModule->openWorld(worldData);
     }
 
-    std::string getName() const override { return "Open world"; }
+    std::string getName() const override
+    {
+        return "Open world";
+    }
 };
 
 class SetWorldFileAsEditorDefaultAction : public IFileAction
 {
-public:
-    SetWorldFileAsEditorDefaultAction(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                                      const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                                      const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-        : IFileAction(projectModule, filesystemModule, ecsModule)
+  public:
+    SetWorldFileAsEditorDefaultAction() : IFileAction()
     {
     }
 
@@ -153,16 +148,16 @@ public:
         m_projectModule->getProjectConfig().setEditorStartWorld(filePath);
     }
 
-    std::string getName() const override { return "Set as editor default world"; }
+    std::string getName() const override
+    {
+        return "Set as editor default world";
+    }
 };
 
 class SetWorldFileAsGameDefaultAction : public IFileAction
 {
-public:
-    SetWorldFileAsGameDefaultAction(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                                    const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                                    const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-        : IFileAction(projectModule, filesystemModule, ecsModule)
+  public:
+    SetWorldFileAsGameDefaultAction() : IFileAction()
     {
     }
 
@@ -170,21 +165,18 @@ public:
     {
     }
 
-    std::string getName() const override { return "Set as game default world"; }
+    std::string getName() const override
+    {
+        return "Set as game default world";
+    }
 };
 
 class IFileActionFactory
 {
-protected:
-    std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
-    std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
-    std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
+  protected:
 
-public:
-    IFileActionFactory(const std::shared_ptr<ProjectModule::ProjectModule> projectModule,
-                       const std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule,
-                       const std::shared_ptr<ECSModule::ECSModule> ecsModule) : m_projectModule(projectModule),
-        m_filesystemModule(filesystemModule), m_ecsModule(ecsModule)
+  public:
+    IFileActionFactory()
     {
     }
 
@@ -197,11 +189,8 @@ public:
 
 class DefaultFileActionFactory : public IFileActionFactory
 {
-public:
-    DefaultFileActionFactory(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-        const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-        const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-        : IFileActionFactory(projectModule, filesystemModule, ecsModule)
+  public:
+    DefaultFileActionFactory() : IFileActionFactory()
     {
     }
 
@@ -209,60 +198,43 @@ public:
     {
         std::vector<std::unique_ptr<IFileAction>> actions;
 
-        actions.push_back(std::make_unique<DeleteFileAction>(m_projectModule, m_filesystemModule, m_ecsModule));
-        actions.push_back(std::make_unique<DuplicateFileAction>(m_projectModule, m_filesystemModule, m_ecsModule));
-        actions.push_back(std::make_unique<CopyPathAction>(m_projectModule, m_filesystemModule, m_ecsModule));
-        actions.push_back(std::make_unique<CopyAbsolutePathAction>(m_projectModule, m_filesystemModule, m_ecsModule));
+        actions.push_back(std::make_unique<DeleteFileAction>());
+        actions.push_back(std::make_unique<DuplicateFileAction>());
+        actions.push_back(std::make_unique<CopyPathAction>());
+        actions.push_back(std::make_unique<CopyAbsolutePathAction>());
         return actions;
     }
 };
 
 class WorldFileActionFactory : public IFileActionFactory
 {
-public:
-    WorldFileActionFactory(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-        const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-        const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-        : IFileActionFactory(projectModule, filesystemModule, ecsModule)
+  public:
+    WorldFileActionFactory() : IFileActionFactory()
     {
     }
 
     std::vector<std::unique_ptr<IFileAction>> createActions() override
     {
         std::vector<std::unique_ptr<IFileAction>> actions;
-        actions.push_back(std::make_unique<DeleteFileAction>(m_projectModule, m_filesystemModule, m_ecsModule));
-        actions.push_back(std::make_unique<DuplicateFileAction>(m_projectModule, m_filesystemModule, m_ecsModule));
-        actions.push_back(std::make_unique<CopyPathAction>(m_projectModule, m_filesystemModule, m_ecsModule));
-        actions.push_back(std::make_unique<CopyAbsolutePathAction>(m_projectModule, m_filesystemModule, m_ecsModule));
+        actions.push_back(std::make_unique<DeleteFileAction>());
+        actions.push_back(std::make_unique<DuplicateFileAction>());
+        actions.push_back(std::make_unique<CopyPathAction>());
+        actions.push_back(std::make_unique<CopyAbsolutePathAction>());
 
-        actions.push_back(std::make_unique<OpenWorldFileAction>(m_projectModule, m_filesystemModule, m_ecsModule));
-        actions.push_back(std::make_unique<SetWorldFileAsEditorDefaultAction>(m_projectModule, m_filesystemModule, m_ecsModule));
-        actions.push_back(std::make_unique<SetWorldFileAsGameDefaultAction>(m_projectModule, m_filesystemModule, m_ecsModule));
+        actions.push_back(std::make_unique<OpenWorldFileAction>());
+        actions.push_back(std::make_unique<SetWorldFileAsEditorDefaultAction>());
+        actions.push_back(std::make_unique<SetWorldFileAsGameDefaultAction>());
         return actions;
     }
 };
 
-
 class FileActionFactoryRegistry
 {
-    std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
-    std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
-    std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
-
-public:
+  public:
     static FileActionFactoryRegistry& getInstance()
     {
         static FileActionFactoryRegistry instance;
         return instance;
-    }
-
-    void injectModules(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                       const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                       const std::shared_ptr<ECSModule::ECSModule>& ecsModule)
-    {
-        m_projectModule = projectModule;
-        m_filesystemModule = filesystemModule;
-        m_ecsModule = ecsModule;
     }
 
     void registerFactory(const std::string& fileExtenstion,
@@ -278,10 +250,10 @@ public:
         {
             return factories[extension]();
         }
-        return std::make_unique<DefaultFileActionFactory>(m_projectModule, m_filesystemModule, m_ecsModule);
+        return std::make_unique<DefaultFileActionFactory>();
     }
 
-private:
+  private:
     std::unordered_map<std::string, std::function<std::unique_ptr<IFileActionFactory>()>> factories;
 
     std::string getFileExtension(const std::string& filePath)

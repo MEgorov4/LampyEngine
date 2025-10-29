@@ -1,26 +1,33 @@
 #include "Editor.h"
 
-#include "../Modules/ImGuiModule/ImGuiModule.h"
-#include "../Modules/EditorGuiModule/EditorGUIModule.h"
-#include "../Modules/ProjectModule/ProjectModule.h"
+#include <Modules/EditorGuiModule/EditorGUIModule.h>
+#include <Modules/ImGuiModule/ImGUiModule.h>
+#include <Modules/ProjectModule/ProjectModule.h>
 
-void Editor::initMinor(ModuleManager* moduleManager)
+void Editor::initMinor(ContextLocator& locator)
 {
-	moduleManager->createModule<ProjectModule::ProjectModule>("ProjectModule");
+    LT_LOG(LogVerbosity::Debug, "Editor", "initMinor");
+    locator.registerMinor(std::make_shared<ProjectModule::ProjectModule>(), 0);
+    locator.startupMinor();
 }
 
-void Editor::initMajor(ModuleManager* moduleManager)
+void Editor::initMajor(ContextLocator& locator)
 {
-	m_imGUIModule = moduleManager->createModule<ImGUIModule::ImGUIModule>("ImGuiModule");
-	m_editorGUIModule = moduleManager->createModule<EditorGUIModule>("EditorGUIModule");
+    LT_LOG(LogVerbosity::Debug, "Editor", "initMajor");
+
+    locator.registerMajor(std::make_shared<ImGUIModule::ImGUIModule>(), 10);
+    locator.registerMajor(std::make_shared<EditorGUIModule>(), 10);
+    locator.startupMajor();
 }
+
 
 void Editor::tick(float deltaTime)
 {
-	m_editorGUIModule->render(deltaTime);	
+    auto* gui = GCXM(EditorGUIModule);
+    gui->render(deltaTime);
 }
 
 void Editor::shutdown()
 {
-
+    LT_LOG(LogVerbosity::Debug, "Editor", "shutdown");
 }

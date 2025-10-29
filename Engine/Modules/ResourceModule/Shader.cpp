@@ -1,25 +1,23 @@
 #include "Shader.h"
 
-#include <fstream>
-#include "../FilesystemModule/FilesystemModule.h"
-#include "../ShaderCompilerModule/ShaderCompiler.h"
+#include <Modules/ShaderCompilerModule/ShaderCompiler.h>
 
 #include "ResourceManager.h"
 
 namespace ResourceModule
 {
-	RShader::RShader(const std::string& path, std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule,
-			std::shared_ptr<ShaderCompiler::ShaderCompiler> shaderCompiler) : BaseResource(path)
+	RShader::RShader(const std::string& path) : BaseResource(path)
 	{
 		
-		std::string extension = filesystemModule->getFileExtensions(path);
+		std::string extension = Fs::extension(path);
 
 		std::string binaryResultPath;
 
 		if (extension == ".vert" || extension == ".frag")
 		{
-			m_shaderInfo.text = filesystemModule->readTextFile(path);
-			binaryResultPath = shaderCompiler->compileShader(path);
+			m_shaderInfo.text = Fs::readTextFile(path);
+
+            binaryResultPath  = GCM(ShaderCompiler::ShaderCompiler)->compileShader(path);
 		}
 
 		else if (extension == ".spv")
@@ -27,7 +25,7 @@ namespace ResourceModule
 			binaryResultPath = path;
 		}
 			
-		m_shaderInfo.buffer = filesystemModule->readBinaryFile(binaryResultPath);
+		m_shaderInfo.buffer = Fs::readBinaryFile(binaryResultPath);
 	}
 
 	std::vector<uint8_t> RShader::getBuffer() const

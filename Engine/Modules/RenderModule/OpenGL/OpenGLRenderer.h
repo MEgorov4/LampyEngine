@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include <EngineMinimal.h>
 
 #include "../IRenderer.h"
 
@@ -24,10 +24,7 @@ namespace RenderModule::OpenGL
     class OpenGLRenderer : public IRenderer
     {
     public:
-        OpenGLRenderer(std::shared_ptr<Logger::Logger> logger,
-                       std::shared_ptr<ResourceModule::ResourceManager> resourceManager,
-                       std::shared_ptr<ECSModule::ECSModule> ecsModule,
-                       std::shared_ptr<WindowModule::WindowModule> windowModule);
+        OpenGLRenderer();
 
         void waitIdle() override;
 

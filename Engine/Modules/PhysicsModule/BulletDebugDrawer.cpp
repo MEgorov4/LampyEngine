@@ -1,8 +1,7 @@
 #include "BulletDebugDrawer.h"
 
-#include "../RenderModule/RenderModule.h"
-#include <glm/glm.hpp>
-#include "../LoggerModule/Logger.h"
+#include <Modules/RenderModule/RenderModule.h>
+
 namespace PhysicsModule
 {
     void BulletDebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)

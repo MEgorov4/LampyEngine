@@ -1,15 +1,9 @@
 #include "ProjectModule.h"
-#include <fstream>
-#include <cstdlib>
-#include <cstdio>
+
 #include <portable-file-dialogs.h>
 #include <nlohmann/json.hpp>
 #include <boost/process.hpp>
 
-#include <chrono>
-#include "../LoggerModule/Logger.h"
-
-#include "../FilesystemModule/FilesystemModule.h"
 namespace ProjectModule
 {
 	ProjectConfig::ProjectConfig(std::string data)
@@ -78,19 +72,15 @@ namespace ProjectModule
 	ProjectConfig& ProjectModule::getProjectConfig()
 	{ return m_projectConfig; }
 	
-	void ProjectModule::startup(const ModuleRegistry& registry)
+	void ProjectModule::startup()
 	{
-		m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-		m_filesystemModule = std::dynamic_pointer_cast<FilesystemModule::FilesystemModule>(registry.getModule("FilesystemModule"));
-				
-		m_logger->log(Logger::LogVerbosity::Info, "Startup", "ProjectModule");
+		LT_LOG(LogVerbosity::Info, "ProjectModule", "Startup");
 		setupProjectEnvironment();
 	}
 
-
 	void ProjectModule::shutdown()
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "ProjectModule");
+		LT_LOG(LogVerbosity::Info, "ProjectModule", "Shutdown");
 		saveProjectConfig();
 	}
 
@@ -98,7 +88,7 @@ namespace ProjectModule
 	{
 		namespace bp = boost::process;
 
-		m_logger->log(Logger::LogVerbosity::Info, "Load project config", "ProjectModule");
+		LT_LOG(LogVerbosity::Info, "ProjectModule", "Load project config");
 
 		bp::ipstream out_stream;
 		bp::child projectBrowserProcess("Debug/ProjectBrowser.exe", bp::std_out > out_stream);
@@ -106,39 +96,46 @@ namespace ProjectModule
 		std::string line;
 		while (std::getline(out_stream, line))
 		{
-			m_logger->log(Logger::LogVerbosity::Info, "Loaded project info: " + line, "ProjectModule");
+			LT_LOG(LogVerbosity::Info, "ProjectModule", "Loaded project info: " + line);
 			m_projectConfig = ProjectConfig(line);
 		}
+
 		projectBrowserProcess.wait();
 
-		if (projectBrowserProcess.exit_code() != 0)		
+		if (projectBrowserProcess.exit_code() != 0)
 		{
+			LT_LOG(LogVerbosity::Error, "ProjectModule", "Project browser exited with error, shutting down.");
 			std::exit(0);
 		}
-
 	}
+
 	void ProjectModule::saveProjectConfig()
 	{
-		m_logger->log(Logger::LogVerbosity::Debug, "Save project config", "ProjectModule");
+		LT_LOG(LogVerbosity::Debug, "ProjectModule", "Save project config");
 
 		nlohmann::json jsonData;
-
 		jsonData["projectPath"] = m_projectConfig.getProjectPath();
 		jsonData["projectName"] = m_projectConfig.getProjectName();
-
 		jsonData["resourcesPath"] = m_projectConfig.getResourcesPath();
 		jsonData["buildPath"] = m_projectConfig.getBuildPath();
 		jsonData["configPath"] = m_projectConfig.getConfigPath();
 		jsonData["logsPath"] = m_projectConfig.getLogsPath();
-
 		jsonData["editorStartWorld"] = m_projectConfig.getEditorStartWorld();
 		jsonData["gameStartWorld"] = m_projectConfig.getGameStartWorld();
 
-		std::string projectFilePath = m_projectConfig.getProjectPath() + '/' + m_projectConfig.getProjectName() + ".lproj";
-		if (m_filesystemModule->writeTextFile(projectFilePath, jsonData.dump()) == FilesystemModule::FResult::SUCCESS)
+		std::string projectFilePath =
+			m_projectConfig.getProjectPath() + '/' + m_projectConfig.getProjectName() + ".lproj";
+		
+			
+		if (Fs::writeTextFile(projectFilePath, jsonData.dump()) ==
+			FsResult::Success)
 		{
+			LT_LOG(LogVerbosity::Info, "ProjectModule", "Project config saved successfully.");
 		}
-
+		else
+		{
+			LT_LOG(LogVerbosity::Error, "ProjectModule", "Failed to save project config.");
+		}
 	}
 
 }

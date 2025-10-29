@@ -1,50 +1,48 @@
 #include "IRenderer.h"
-#include "IRenderer.h"
 
-#include "../ObjectCoreModule/ECS/ECSModule.h"
-#include "../ObjectCoreModule/ECS/ECSComponents.h"
-#include "../LoggerModule/Logger.h"
-
-#include "Abstract/RenderResourcesFactory.h"
-#include "../ResourceModule/ResourceManager.h"
-#include "../WindowModule/Window.h"
-#include "../WindowModule/WindowModule.h"
 #include "Abstract/RenderPipelineStrategy.h"
+#include "Abstract/RenderResourcesFactory.h"
+
+#include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
+#include <Modules/ResourceModule/ResourceManager.h>
+#include <Modules/WindowModule/Window.h>
+#include <Modules/WindowModule/WindowModule.h>
 
 namespace RenderModule
 {
-    IRenderer::IRenderer(std::shared_ptr<Logger::Logger> logger,
-                         std::shared_ptr<ResourceModule::ResourceManager> resourceManager,
-                         std::shared_ptr<ECSModule::ECSModule> ecsModule,
-                         std::shared_ptr<WindowModule::WindowModule> windowModule) : m_logger(logger),
-        m_resourceManager(resourceManager),
-        m_ecsModule(ecsModule),
-        m_windowModule(windowModule)
-    {
-    }
 
-    IRenderer::~IRenderer()
-    {
-        m_renderPipelineHandler->cleanup();
-        m_ecsModule->OnComponentsChanged.unsubscribe(m_onECSChanged);
-    }
-
-    void IRenderer::render()
-    {
-        m_activeTextureHandle = m_renderPipelineHandler->execute();
-        m_windowModule->getWindow()->swapWindow();
-    }
-
-    void IRenderer::updateRenderList() const
-    {
-        m_renderPipelineHandler->parseWorld(m_ecsModule->getCurrentWorld());
-    }
-
-    void IRenderer::postInit()
-    {
-        m_renderPipelineHandler = std::make_unique<RenderPipelineHandler>(m_resourceManager, m_logger);
-
-        m_onECSChanged = m_ecsModule->OnComponentsChanged.
-                                      subscribe(std::bind_front(&IRenderer::updateRenderList, this));
-    }
+IRenderer::IRenderer() : m_ecsModule(GCM(ECSModule::ECSModule))
+{
 }
+
+IRenderer::~IRenderer()
+{
+    m_renderPipelineHandler->cleanup();
+    m_ecsModule->OnComponentsChanged.unsubscribe(m_onECSChanged);
+}
+
+void IRenderer::render()
+{
+    m_activeTextureHandle = m_renderPipelineHandler->execute();
+}
+
+TextureHandle IRenderer::getOutputRenderHandle(int w, int h)
+{
+    m_renderPipelineHandler->resize(w, h);
+    return m_activeTextureHandle;
+}
+
+void IRenderer::updateRenderList() const
+{
+    m_renderPipelineHandler->cleanup();
+    m_renderPipelineHandler->parseWorld(m_ecsModule->getCurrentWorld());
+}
+
+void IRenderer::postInit()
+{
+    m_renderPipelineHandler = std::make_unique<RenderPipelineHandler>();
+
+    m_onECSChanged = m_ecsModule->OnComponentsChanged.subscribe(std::bind_front(&IRenderer::updateRenderList, this));
+}
+} // namespace RenderModule

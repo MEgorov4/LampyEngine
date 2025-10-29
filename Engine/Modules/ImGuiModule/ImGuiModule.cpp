@@ -2,34 +2,32 @@
 
 #include <imgui.h>
 
-#include "../LoggerModule/Logger.h"
-#include "../InputModule/InputModule.h"
-#include "../WindowModule/WindowModule.h"
-#include "../WindowModule/Window.h"
+#include <Modules/InputModule/InputModule.h>
+#include <Modules/WindowModule/WindowModule.h>
+#include <Modules/WindowModule/Window.h>
 
 #include <SDL3/SDL.h>
-
+#include <GL/glew.h>
 #include "OpenGLBackends/imgui_impl_opengl3.h"
 #include "SDLBackends/imgui_impl_sdl3.h"
-
 #include "GUIObject.h"
 
 namespace ImGUIModule
 {
-    void ImGUIModule::startup(const ModuleRegistry& registry)
+    void ImGUIModule::startup()
     {
-        m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-        m_inputModule = std::dynamic_pointer_cast<InputModule::InputModule>(registry.getModule("InputModule"));
-        m_windowModule = std::dynamic_pointer_cast<WindowModule::WindowModule>(registry.getModule("WindowModule"));
+        m_inputModule = GCM(InputModule::InputModule);
+        m_windowModule = GCM(WindowModule::WindowModule);
         
         m_inputModule->OnEvent.subscribe(std::bind(&ImGUIModule::onEvent, this, std::placeholders::_1));
         
-        m_logger->log(Logger::LogVerbosity::Info, "Startup", "ImGuiModule");
+        LT_LOGI("ImGuiModule", "Startup");
 
         ImGui::CreateContext();
         auto window = m_windowModule->getWindow();
-        m_logger->log(Logger::LogVerbosity::Info, "Init dear ImGui", "ImGUIModule");
-        
+
+        LT_LOGI("ImGuiModule", "Init dear ImGui");
+
         ImGui_ImplSDL3_InitForOpenGL(window->getSDLWindow(), window->getGLContext());
 
         ImGui_ImplOpenGL3_Init("#version 450");
@@ -40,12 +38,12 @@ namespace ImGUIModule
 
     void ImGUIModule::shutdown()
     {
-        m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "ImGuiModule");
+        LT_LOGI("ImGuiModule", "Shutdown");
     }
 
     void ImGUIModule::setImGuiStyle() const
     {
-        m_logger->log(Logger::LogVerbosity::Info, "Set ImGui style", "ImGuiModule");
+        LT_LOGI("ImGuiModule", "Set imgui style");
         
         ImGuiStyle &style = ImGui::GetStyle();
         ImVec4 *colors = style.Colors;
@@ -125,11 +123,21 @@ namespace ImGUIModule
 
     void ImGUIModule::renderUI(float deltaTime) const
     {
+
+        int w = GCM(WindowModule::WindowModule)->getWindow()->getWindowSize().first;
+        int h = GCM(WindowModule::WindowModule)->getWindow()->getWindowSize().second;
+    
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, w, h);
+        glDisable(GL_DEPTH_TEST);
+        glClearColor(0.07f, 0.07f, 0.09f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
-
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+
         for (auto& object : m_guiObjects)
         {
             if (object)
@@ -137,7 +145,7 @@ namespace ImGUIModule
                 object->render(deltaTime);
             }
         }
-
+        ImGui::ShowMetricsWindow();
         ImGui::Render();
         ImGui::EndFrame();
         
@@ -151,7 +159,8 @@ namespace ImGUIModule
             std::shared_ptr<GUIObject> shared_ptr(object);
             m_guiObjects.push_back(shared_ptr);
             
-            m_logger->log(Logger::LogVerbosity::Info, "Add GUI object, id:" + std::to_string(shared_ptr->getID()), "ImGuiModule");
+
+            LT_LOGI("ImGuiModule", "Add Gui object, id:" + std::to_string(shared_ptr->getID()));
             
             return  {shared_ptr};
         }
@@ -163,7 +172,7 @@ namespace ImGUIModule
         if (const std::shared_ptr<GUIObject>& shared_ptr = object.lock())
         {
             uint32_t objectID = shared_ptr->getID();
-            m_logger->log(Logger::LogVerbosity::Info, "Remove GUI object by id: " + std::to_string(objectID), "ImGuiModule");
+            LT_LOGI("ImGuiModule", "Remove Gui object, id:" + std::to_string(objectID));
             std::erase_if(m_guiObjects, [objectID](const std::shared_ptr<GUIObject>& object)
             {
                 return object->getID() == objectID;

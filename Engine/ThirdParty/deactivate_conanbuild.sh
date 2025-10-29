@@ -1,1 +1,0 @@
-. "/home/mikhail/github/LampyEngine/Engine/ThirdParty/deactivate_conanbuildenv-debug-x86_64.sh"

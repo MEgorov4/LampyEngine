@@ -1,11 +1,9 @@
 #pragma once
-#include <string>
-#include <memory>
-#include <vector>
-#include <filesystem>
+
+#include <EngineMinimal.h>
+
 #include "../../ImGuiModule/GUIObject.h"
 
-#include "../../FilesystemModule/DirectoryIterator.h"
 
 namespace ECSModule
 {
@@ -17,32 +15,24 @@ namespace ProjectModule
     class ProjectModule;
 }
 
-namespace FilesystemModule
-{
-    class FilesystemModule;
-}
-
 class GUIFolderActionPopup;
 
 class GUIContentBrowser : public ImGUIModule::GUIObject
 {
-    std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
-    std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
-    std::shared_ptr<ECSModule::ECSModule>   m_ecsModule;
-    FilesystemModule::DirectoryIterator m_dirIter;
+    ProjectModule::ProjectModule* m_projectModule;
+
     std::string m_rootPath;
     std::string m_currentPath;
     std::vector<std::string> m_files;
     std::vector<std::string> m_folders;
-
+    
+    DirectoryIterator m_dirIter;
     void renderFolderTree(const std::filesystem::path& directory);
     void renderInFolderFiles();
 
     void updateContent();
 public:
-    GUIContentBrowser(std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule,
-                      std::shared_ptr<ProjectModule::ProjectModule> projectModule,
-                      std::shared_ptr<ECSModule::ECSModule> ecsModule);
+    GUIContentBrowser();
     ~GUIContentBrowser() override = default;
 
     void render(float deltaTime) override;

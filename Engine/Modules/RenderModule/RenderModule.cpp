@@ -1,27 +1,18 @@
 #include "RenderModule.h"
 
-#include "../LoggerModule/Logger.h"
-#include "../WindowModule/WindowModule.h"
-#include "../ResourceModule/ResourceManager.h"
-#include "../ObjectCoreModule/ECS/ECSModule.h"
+#include <Modules/WindowModule/WindowModule.h>
+#include <Modules/ResourceModule/ResourceManager.h>
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 
 #include "OpenGL/OpenGLRenderer.h"
 
 namespace RenderModule
 {
-    void RenderModule::startup(const ModuleRegistry& registry)
+    void RenderModule::startup()
     {
-        m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-        std::shared_ptr<WindowModule::WindowModule> windowModule = std::dynamic_pointer_cast<
-            WindowModule::WindowModule>(registry.getModule("WindowModule"));
-        std::shared_ptr<ResourceModule::ResourceManager> resourceManager = std::dynamic_pointer_cast<
-            ResourceModule::ResourceManager>(registry.getModule("ResourceManager"));
-        std::shared_ptr<ECSModule::ECSModule> ecsModule = std::dynamic_pointer_cast<ECSModule::ECSModule>(
-            registry.getModule("ECSModule"));
-
-        m_logger->log(Logger::LogVerbosity::Info, "Startup", "RenderModule");
-        m_logger->log(Logger::LogVerbosity::Info, "Create renderer", "RenderModule");
-        m_renderer = std::make_unique<OpenGL::OpenGLRenderer>(m_logger, resourceManager, ecsModule, windowModule);
+        LT_LOGI("RenderModule", "Startup");
+        LT_LOGI("RenderModule", "Create renderer");
+        m_renderer = std::make_unique<OpenGL::OpenGLRenderer>();
 
         m_renderer->postInit();
     }
@@ -33,13 +24,10 @@ namespace RenderModule
         return renderer;
     }
 
-    /// <summary>
-    /// Shuts down the rendering module and releases all resources.
-    /// </summary>
     void RenderModule::shutdown()
     {
-        m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "RenderModule");
-        m_logger->log(Logger::LogVerbosity::Info, "Destroy renderer", "RenderModule");
+        LT_LOGI("RenderModule", "Shutdown");
+        LT_LOGI("RenderModule", "Destroy renderer");
         m_renderer.reset();
     }
 }

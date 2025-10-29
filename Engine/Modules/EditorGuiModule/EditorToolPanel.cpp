@@ -1,16 +1,14 @@
 #include "EditorToolPanel.h"
+
+#include <EngineMinimal.h>
+#include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
+#include <Modules/ProjectModule/ProjectModule.h>
 #include <imgui.h>
-#include "../ObjectCoreModule/ECS/ECSModule.h"
 
-#include "../ObjectCoreModule/ECS/ECSComponents.h"
-
-#include "../ProjectModule/ProjectModule.h"
-#include <filesystem>
-#include <format>
-
-GUIEditorToolPanel::GUIEditorToolPanel(std::shared_ptr<ECSModule::ECSModule> ecsModule,
-                                       std::shared_ptr<ProjectModule::ProjectModule> projectModule) :
-    ImGUIModule::GUIObject(), m_ecsModule(ecsModule), m_projectModule(projectModule)
+GUIEditorToolPanel::GUIEditorToolPanel() :
+    ImGUIModule::GUIObject(), m_ecsModule(GCM(ECSModule::ECSModule)),
+    m_projectModule(GCXM(ProjectModule::ProjectModule))
 {
 }
 
@@ -18,21 +16,21 @@ void GUIEditorToolPanel::render(float deltaTime)
 {
     if (ImGui::Begin("Tool panel", nullptr, 0))
     {
-        if (!m_ecsModule->getTickEnabled())
+        if (!m_ecsModule->isSimulate())
         {
             if (ImGui::Button("Start"))
             {
-                m_ecsModule->startSystems();
+                m_ecsModule->simulate(true);
             }
         }
 
         ImGui::SameLine();
 
-        if (m_ecsModule->getTickEnabled())
+        if (m_ecsModule->isSimulate())
         {
             if (ImGui::Button("Stop"))
             {
-                m_ecsModule->stopSystems();
+                m_ecsModule->simulate(false);
             }
         }
 
@@ -40,13 +38,14 @@ void GUIEditorToolPanel::render(float deltaTime)
 
         if (ImGui::Button("Save world"))
         {
-            if (!m_ecsModule->isWorldSetted())
+            std::string editorWorldPath = m_projectModule->getProjectConfig().getEditorStartWorld();
+            if (editorWorldPath == "default")
             {
                 ImGui::OpenPopup("SelectFolder");
             }
             else
             {
-                m_ecsModule->saveCurrentWorld();
+                Fs::writeTextFile(editorWorldPath, m_ecsModule->getCurrentWorldData());
             }
         }
 
@@ -67,9 +66,7 @@ void GUIEditorToolPanel::renderSaveWorldPopup()
     ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 3));
     ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 2), 0,
                             ImVec2(0.5f, 0.5f));
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse
-        | ImGuiWindowFlags_NoResize
-        | ImGuiWindowFlags_NoMove;
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 
     if (ImGui::BeginPopupModal("SelectFolder", 0, flags))
     {
@@ -115,7 +112,11 @@ void GUIEditorToolPanel::renderSaveWorldPopup()
 
         if (ImGui::Button("Save"))
         {
-            m_ecsModule->setCurrentWorldPath((currentPath.string() + "\\" + buffer));
+            std::string worldPath = currentPath.string() + "\\" + buffer;
+            std::string worldData = Fs::readTextFile(worldPath);
+
+            m_ecsModule->openWorld(worldData);
+
             memset(buffer, 0, sizeof(buffer));
             ImGui::CloseCurrentPopup();
         }

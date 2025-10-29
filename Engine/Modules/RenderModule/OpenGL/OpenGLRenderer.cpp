@@ -1,13 +1,8 @@
 #include "OpenGLRenderer.h"
 
-#include <format>
-#include <glm/gtx/string_cast.hpp>
-
-#include "../../LoggerModule/Logger.h"
-#include "../../WindowModule/WindowModule.h"
-
-#include "../../WindowModule/Window.h"
-#include "../../ResourceModule/ResourceManager.h"
+#include <Modules/WindowModule/WindowModule.h>
+#include <Modules/WindowModule/Window.h>
+#include <Modules/ResourceModule/ResourceManager.h>
 
 #include "OpenGLObjects/OpenGLFramebuffer.h"
 #include "OpenGLObjects/OpenGLShader.h"
@@ -17,25 +12,20 @@
 
 namespace RenderModule::OpenGL
 {
-    OpenGLRenderer::OpenGLRenderer(std::shared_ptr<Logger::Logger> logger,
-                                   std::shared_ptr<ResourceModule::ResourceManager> resourceManager,
-                                   std::shared_ptr<ECSModule::ECSModule> ecsModule,
-                                   std::shared_ptr<WindowModule::WindowModule> windowModule) : IRenderer(logger, resourceManager, ecsModule, windowModule)
+    OpenGLRenderer::OpenGLRenderer() : IRenderer()
     {
         init();
     }
 
     void OpenGLRenderer::init()
     {
-        m_logger->log(Logger::LogVerbosity::Info, "Start initialize OpenGL", "RenderModule_OpenGLRenderer");
+        LT_LOGI("RenderModule_OpenGLRenderer", "Start initialize OpenGL");
         glewExperimental = GL_TRUE;
         
         GLenum err = glewInit();
         if (err != GLEW_OK) 
         {
-            m_logger->log(Logger::LogVerbosity::Error,
-                          std::format("Failed to initialize GLEW: {}", reinterpret_cast<const char*>(glewGetErrorString(err))),
-                          "RenderModule_OpenGLRenderer");
+            LT_LOGE("RenderModule_OpenGLRenderer", std::format("Failed to initialize GLEW: {}", reinterpret_cast<const char*>(glewGetErrorString(err))));
             throw std::runtime_error("Failed to initialize GLEW");
         }
 
@@ -45,9 +35,9 @@ namespace RenderModule::OpenGL
         }
 
         SDL_GL_SetSwapInterval(1);
-        m_logger->log(Logger::LogVerbosity::Info, "Enable depth test", "RenderModule_OpenGLRenderer");
+        LT_LOGI("RenderModule_OpenGLRenderer", "Enable depth test");
         glEnable(GL_DEPTH_TEST);
-        m_logger->log(Logger::LogVerbosity::Info, "Enable cull face", "RenderModule_OpenGLRenderer");
+        LT_LOGI("RenderModule_OpenGLRenderer", "Enable cull face");
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         glFrontFace(GL_CCW);
@@ -60,6 +50,6 @@ namespace RenderModule::OpenGL
     
     void OpenGLRenderer::debugMessageHandle(const std::string& message) const
     {
-        m_logger->log(Logger::LogVerbosity::Info, "OpenGL debug message: " + message, "RenderModule_OpenGLRenderer");
+        LT_LOGI("RenderModule_OpenGLRenderer", "OpenGL debug message: " + message);
     }
 }

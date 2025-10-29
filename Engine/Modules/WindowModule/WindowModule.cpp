@@ -1,20 +1,16 @@
 #include "WindowModule.h"
 
-
-#include "../LoggerModule/Logger.h"
-#include "../InputModule/InputModule.h"
-
 #include "Window.h"
+
+#include <Modules/InputModule/InputModule.h>
 
 namespace WindowModule
 {
-	void WindowModule::startup(const ModuleRegistry& registry)
+	void WindowModule::startup()
 	{
-		m_logger = std::dynamic_pointer_cast<Logger::Logger>(registry.getModule("Logger"));
-		m_inputModule = std::dynamic_pointer_cast<InputModule::InputModule>(registry.getModule("InputModule"));
-		m_window = std::make_unique<Window>(m_logger, m_inputModule, 800, 600, "Lampy Engine");
+		m_window = std::make_unique<Window>(800, 600, "Lampy Engine");
 		
-		m_logger->log(Logger::LogVerbosity::Info, "Startup", "WindowModule");
+		LT_LOGI("WindowModule", "Startup");
 	}
 
 	/// <summary>
@@ -22,7 +18,7 @@ namespace WindowModule
 	/// </summary>
 	void WindowModule::shutdown()
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "Shutdown", "WindowModule");
+		LT_LOGI("WindowModule", "Shutdown");
 		m_window.reset();
 	}
 

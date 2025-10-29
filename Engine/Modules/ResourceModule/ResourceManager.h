@@ -1,28 +1,15 @@
 #pragma once
 
-#include <string>
-#include <memory>
+#include <EngineMinimal.h>
 
-#include "../../EngineContext/IModule.h"
-#include "../../EngineContext/ModuleRegistry.h"
-
-#include "../FilesystemModule/FilesystemModule.h"
 #include "ResourceCache.h"
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
-#include "../LoggerModule/Logger.h"
 
 namespace ShaderCompiler
 {
 	class ShaderCompiler;
-}
-
-
-
-namespace Logger
-{
-	class Logger;
 }
 
 namespace ResourceModule
@@ -33,15 +20,13 @@ namespace ResourceModule
 
 	class ResourceManager : public IModule
 	{
-		std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
-		std::shared_ptr<ShaderCompiler::ShaderCompiler> m_shaderCompiler;
-		std::shared_ptr<Logger::Logger> m_logger;
+		ShaderCompiler::ShaderCompiler* m_shaderCompiler;
 
 		ResourceCache<RMesh> meshCache;
 		ResourceCache<RShader> shaderCache;
 		ResourceCache<RTexture> textureCache;
 	public:
-		void startup(const ModuleRegistry& registry) override;
+		void startup() override;
 		void shutdown() override;
 
 		template<class T>
@@ -56,57 +41,56 @@ namespace ResourceModule
 	template <>
 	inline std::shared_ptr<RMesh> ResourceManager::load<RMesh>(const std::string& path)
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "Try load mesh: " + path, "ResourceManager");
+        LT_LOGI("ResourceManager", "Try load mesh: " + path);
 		if (path.empty())
 		{
 			return nullptr;
 		}
-
-		return meshCache.load(m_filesystemModule->getEngineAbsolutePath(path));
+		return meshCache.load(Fs::absolutePath(path));
 	}
 
 	template <>
 	inline std::shared_ptr<RShader> ResourceManager::load<RShader>(const std::string& path)
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "Try load shader: " + path, "ResourceManager");
+        LT_LOGI("ResourceManager", "Try load shader: " + path);
 		if (path.empty())
 		{
 			return nullptr;
 		}
 
-		return shaderCache.load(m_filesystemModule->getEngineAbsolutePath(path), m_filesystemModule, m_shaderCompiler);
+		return shaderCache.load(Fs::absolutePath(path));
 	}
 
 	template <>
 	inline std::shared_ptr<RTexture> ResourceManager::load<RTexture>(const std::string& path)
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "Try load texture: " + path, "ResourceManager");
+        LT_LOGI("ResourceManager", "Try load texture: " + path);
 		if (path.empty())
 		{
 			return nullptr;
 		}
 
-		return textureCache.load(m_filesystemModule->getEngineAbsolutePath(path));
+		return textureCache.load(Fs::absolutePath(path));
 	}
 
 	template <>
 	inline void ResourceManager::unload<RMesh>(const std::string& path)
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "Try unload mesh: " + path, "ResourceManager");
-		meshCache.unload<RMesh>(m_filesystemModule->getEngineAbsolutePath(path));
+        LT_LOGI("ResourceManager", "Try unload mesh: " + path);
+		meshCache.unload<RMesh>(Fs::absolutePath(path));
 	}
 
 	template <>
 	inline void ResourceManager::unload<RShader>(const std::string& path)
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "Try unload shader: " + path, "ResourceManager");
-		shaderCache.unload<RShader>(m_filesystemModule->getEngineAbsolutePath(path));
+        LT_LOGI("ResourceManager", "Try unload shader: " + path);
+		shaderCache.unload<RShader>(Fs::absolutePath(path));
 	}
 
 	template <>
 	inline void ResourceManager::unload<RTexture>(const std::string& path)
 	{
-		m_logger->log(Logger::LogVerbosity::Info, "Try unload texture: " + path, "ResourceManager");
-		textureCache.unload<RTexture>(m_filesystemModule->getEngineAbsolutePath(path));
+        LT_LOGI("ResourceManager", "Try unload texture: " + path);
+		textureCache.unload<RTexture>(Fs::absolutePath(path));
 	}
 }

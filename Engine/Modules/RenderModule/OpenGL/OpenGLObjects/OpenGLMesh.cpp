@@ -1,7 +1,6 @@
 #include "OpenGLMesh.h"
 #include <GL/glew.h>
 
-#include "../../../LoggerModule/Logger.h"
 namespace RenderModule::OpenGL
 {
 	OpenGLMesh::OpenGLMesh(const std::shared_ptr<ResourceModule::RMesh>& mesh) : IMesh(mesh), m_indexCount(mesh->getIndicesData().size())

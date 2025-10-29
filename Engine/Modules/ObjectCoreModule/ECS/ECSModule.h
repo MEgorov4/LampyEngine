@@ -1,13 +1,8 @@
 #pragma once
-#include <memory>
-#include <optional>
-#include <string>
+
+#include <EngineMinimal.h>
+
 #include <flecs.h>
-
-#include "../../EventModule/Event.h"
-
-#include "../../../EngineContext/IModule.h"
-#include "../../../EngineContext/ModuleRegistry.h"
 
 
 namespace PhysicsModule
@@ -20,11 +15,6 @@ namespace ScriptModule
     class LuaScriptModule;
 }
 
-namespace FilesystemModule
-{
-    class FilesystemModule;
-}
-
 namespace ProjectModule
 {
     class ProjectModule;
@@ -35,56 +25,71 @@ namespace ResourceModule
     class ResourceManager;
 }
 
-namespace Logger
-{
-    class Logger;
-}
-
 namespace ECSModule
 {
     class ECSModule : public IModule
     {
-        std::shared_ptr<Logger::Logger> m_logger;
-        std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
-        std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
-        std::shared_ptr<ResourceModule::ResourceManager> m_resourceManager;
-        std::shared_ptr<ScriptModule::LuaScriptModule> m_luaScriptModule;
-        std::shared_ptr<PhysicsModule::PhysicsModule> m_physicsModule;
+        ProjectModule::ProjectModule* m_projectModule;
+        ResourceModule::ResourceManager* m_resourceManager;
+        ScriptModule::LuaScriptModule* m_luaScriptModule;
+        PhysicsModule::PhysicsModule* m_physicsModule;
 
-        bool m_tickEnabled = false;
-        std::string m_currentWorldFile;
-        std::string m_currentWorldData;
+        bool m_inSimulate = false;
+
         flecs::world m_world;
+        std::string m_worldTemp;
         std::vector<std::pair<flecs::id_t, std::string>> m_registeredComponents;
 
     public:
-        void startup(const ModuleRegistry& registry) override;
+        void startup() override;
         void shutdown() override;
 
-        void fillDefaultWorld();
-        void loadWorldFromFile(const std::string& path);
-        void setCurrentWorldPath(const std::string& path);
-        void saveCurrentWorld();
-        bool isWorldSetted();
-        void clearWorld();
+    public:
+        /// <summary>
+        /// Basic interface to process world
+        /// </summary>
+        /// <param name="deltaTime">diff last and curr frame</param>
+        void ecsTick(float deltaTime);
+        /// <summary>
+        /// Reset current world 
+        /// and open world from json data
+        /// </summary>
+        /// <param name="worldData"> - Json data</param>
+        void openWorld(const std::string& worldData);
 
-        void startSystems();
-        void stopSystems();
+        /// <summary>
+        /// Open basic world template
+        /// </summary>
+        void openBasicWorld();
 
-        bool getTickEnabled() { return m_tickEnabled; }
+        /// <summary>
+        /// Toogle world simulation and systems tick
+        /// </summary>
+        /// <param name="state"></param>
+        void simulate(bool state);
+        
+        /// <summary>
+        /// Check current world and systems simulation state
+        /// </summary>
+        /// <returns>Simulation state on/off(true/false)</returns>
+        bool isSimulate() const  { return m_inSimulate; }
+        std::string getCurrentWorldData() { return m_world.to_json().c_str(); };
         flecs::world& getCurrentWorld() { return m_world; };
         std::vector<std::pair<flecs::id_t, std::string>>& getRegisteredComponents() { return m_registeredComponents; };
-
-        void ecsTick(float deltaTime);
-
 
         Event<> OnLoadInitialWorldState;
         Event<> OnComponentsChanged;
 
     private:
+        /// <summary>
+        /// Clear world and rebind systems
+        /// </summary>
+        void resetWorld();
+
         template <typename T>
         void registerComponent(const std::string& name);
         void registerComponents();
+        void registerTypes();
         void registerObservers();
     };
 }

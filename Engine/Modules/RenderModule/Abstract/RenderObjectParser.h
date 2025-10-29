@@ -3,7 +3,7 @@
 #include <flecs.h>
 #include <sol/object.hpp>
 
-#include "../../ObjectCoreModule/ECS/ECSComponents.h"
+#include "../../ObjectCoreModule/ECS/Components/ECSComponents.h"
 
 #include  "RenderObject.h"
 
@@ -35,17 +35,12 @@ namespace RenderModule
             {
                 RenderObject renderObject;
 
-                glm::mat4 model{1.f};
+                glm::mat4 model(1.f);
 
                 model = glm::translate(model, pos.toGLMVec());
-
-                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-                glm::vec3 radiansRotation = glm::radians(rot.toEuler());
-
-                model = glm::rotate(model, radiansRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-                model = glm::rotate(model, radiansRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-                model = glm::rotate(model, radiansRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+                
+                glm::quat q = rot.toQuat();
+                model *= glm::mat4_cast(q);
 
                 model = glm::scale(model, scale.toGLMVec());
 
@@ -82,13 +77,8 @@ namespace RenderModule
 
                 model = glm::translate(model, pos.toGLMVec());
 
-                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-                glm::vec3 radiansRotation = glm::radians(rot.toEuler());
-
-                model = glm::rotate(model, radiansRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-                model = glm::rotate(model, radiansRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-                model = glm::rotate(model, radiansRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+                glm::quat q = rot.toQuat();
+                model *= glm::mat4_cast(q);
 
                 model = glm::scale(model, scale.toGLMVec());
 

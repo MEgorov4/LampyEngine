@@ -22,17 +22,13 @@ namespace ECSModule
 
 class GUIWorldInspector : public ImGUIModule::GUIObject
 {
-    std::shared_ptr<ProjectModule::ProjectModule> m_projectModule;
-    std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
-    std::shared_ptr<ECSModule::ECSModule> m_ecsModule;
+   ECSModule::ECSModule* m_ecsModule;
     
-    flecs::world& m_world;
-    flecs::entity m_selectedEntity;
+   flecs::world& m_world;
 
 public:
-    GUIWorldInspector(const std::shared_ptr<ProjectModule::ProjectModule>& projectModule,
-                      const std::shared_ptr<FilesystemModule::FilesystemModule>& filesystemModule,
-                      const std::shared_ptr<ECSModule::ECSModule>& ecsModule);
+    static flecs::entity m_selectedEntity;
+    GUIWorldInspector();
     virtual ~GUIWorldInspector() override = default;
 
     virtual void render(float deltaTime) override;

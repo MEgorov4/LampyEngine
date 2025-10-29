@@ -1,10 +1,7 @@
 #pragma once
 
-#include <string>
-#include <unordered_map>
-#include <vector>
-#include <glm/glm.hpp>
-#include "../../../ResourceModule/Shader.h"
+#include <EngineMinimal.h>
+
 #include "../../Abstract/IShader.h"
 
 namespace ResourceModule

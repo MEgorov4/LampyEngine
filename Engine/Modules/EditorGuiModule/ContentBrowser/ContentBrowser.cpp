@@ -1,39 +1,31 @@
 #include "ContentBrowser.h"
 
-#include <imgui.h>
-
-#include "../../ProjectModule/ProjectModule.h"
-#include "../../FilesystemModule/DirectoryIterator.h"
-#include "../../ObjectCoreModule/ECS/ECSModule.h"
-
 #include "FileActionFactory.h"
 
-GUIContentBrowser::GUIContentBrowser(std::shared_ptr<FilesystemModule::FilesystemModule> filesystemModule,
-                                     std::shared_ptr<ProjectModule::ProjectModule> projectModule,
-                                     std::shared_ptr<ECSModule::ECSModule> ecsModule)
-    : ImGUIModule::GUIObject()
-      , m_filesystemModule(filesystemModule)
-      , m_projectModule(projectModule)
-      , m_ecsModule(ecsModule)
-      , m_rootPath(std::string(m_projectModule->getProjectConfig().getResourcesPath()))
-      , m_currentPath(m_rootPath)
-    ,  m_dirIter(m_filesystemModule->createDirectoryIterator())
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
+#include <Modules/ProjectModule/ProjectModule.h>
+#include <imgui.h>
+
+GUIContentBrowser::GUIContentBrowser() :
+    ImGUIModule::GUIObject(), m_projectModule(GCXM(ProjectModule::ProjectModule)),
+    m_rootPath(std::string(m_projectModule->getProjectConfig().getResourcesPath())), m_currentPath(m_rootPath),
+    m_dirIter(m_rootPath, m_currentPath)
 {
     auto& factory = FileActionFactoryRegistry::getInstance();
-    factory.injectModules(m_projectModule, m_filesystemModule, m_ecsModule);
-    factory.registerFactory(".lworld", [this]() { return std::make_unique<WorldFileActionFactory>(m_projectModule, m_filesystemModule, m_ecsModule); });
+    factory.registerFactory(".lworld", [this]() { return std::make_unique<WorldFileActionFactory>(); });
 }
 
 void GUIContentBrowser::updateContent()
 {
-    std::thread thread([&]()
-    {
-        m_files.clear();
-        m_folders.clear();
+    std::thread thread(
+        [this]()
+        {
+            m_files.clear();
+            m_folders.clear();
 
-        m_folders = m_dirIter.getCurrentDirContents({.contentType = FilesystemModule::DirContentType::FOLDERS});
-        m_files = m_dirIter.getCurrentDirContents({.contentType = FilesystemModule::DirContentType::FILES});
-    });
+            m_folders = Fs::getDirectoryContents(m_dirIter.currentDir(), {.contentType = DirContentType::Folders});
+            m_files   = Fs::getDirectoryContents(m_dirIter.currentDir(), {.contentType = DirContentType::Folders});
+        });
 
     thread.detach();
 }
@@ -59,7 +51,6 @@ void GUIContentBrowser::render(float deltaTime)
 
         ImGui::BeginChild("FilesPane", ImVec2(0, 0), true);
 
-
         ImGui::SetWindowFontScale(1.2f);
         ImGui::Text("Files in");
         ImGui::SetWindowFontScale(1.f);
@@ -83,7 +74,7 @@ void GUIContentBrowser::renderInFolderFiles()
             selectedFile = m_files[i];
         }
 
-        std::string fullFilePath = m_dirIter.getCurrentDirWithAppend(m_files[i]);
+        std::string fullFilePath = m_dirIter.currentDirAppend(m_files[i]);
 
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
         {
@@ -94,11 +85,10 @@ void GUIContentBrowser::renderInFolderFiles()
     }
     if (!selectedFile.empty())
     {
-        renderFilePopup(m_dirIter.getCurrentDirWithAppend(selectedFile));
+        renderFilePopup(m_dirIter.currentDirAppend(selectedFile));
     }
     renderFolderPopup();
 }
-
 
 void GUIContentBrowser::renderFilePopup(const std::string& filePath)
 {
@@ -143,7 +133,7 @@ void GUIContentBrowser::renderFoldersSectionPopup()
             {
                 if (strBuffer.size() > 0)
                 {
-                    m_filesystemModule->createDirectory(m_currentPath, strBuffer);
+                    Fs::createDirectory(m_dirIter.currentDirAppend(strBuffer));
                     memset(buffer, 0, sizeof(buffer));
                 }
             }
@@ -153,7 +143,6 @@ void GUIContentBrowser::renderFoldersSectionPopup()
         ImGui::EndPopup();
     }
 }
-
 
 void GUIContentBrowser::renderFolderPopup()
 {
@@ -167,7 +156,6 @@ void GUIContentBrowser::renderFolderPopup()
         {
             static char buffer[128] = "";
 
-
             ImGui::InputText("##CreateFile", buffer, sizeof(buffer));
 
             ImGui::SameLine();
@@ -176,7 +164,7 @@ void GUIContentBrowser::renderFolderPopup()
             {
                 if (strBuffer.size() > 0)
                 {
-                    m_filesystemModule->createFile(m_dirIter.getCurrentDir(), strBuffer);
+                    Fs::createEmptyFile(m_dirIter.currentDir(), strBuffer);
                     memset(buffer, 0, sizeof(buffer));
                 }
             }
@@ -196,7 +184,7 @@ void GUIContentBrowser::renderFolderTree(const std::filesystem::path& directory)
         }
     }
 
-    if (!m_dirIter.isRootPath())
+    if (!m_dirIter.isRoot())
     {
         ImGui::Separator();
         if (ImGui::Button("back"))

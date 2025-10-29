@@ -1,16 +1,6 @@
 #pragma once 
 
-#include <string>
-#include <memory>
-
-#include "../../EngineContext/IModule.h"
-#include "../../EngineContext/ModuleRegistry.h"
-
-
-namespace FilesystemModule
-{
-	class FilesystemModule;
-}
+#include <EngineMinimal.h>
 
 namespace Logger
 {
@@ -67,13 +57,12 @@ namespace ProjectModule
 	class ProjectModule : public IModule
 	{
 		ProjectConfig m_projectConfig; ///< Stores the project configuration.
-		std::shared_ptr<Logger::Logger> m_logger;
-		std::shared_ptr<FilesystemModule::FilesystemModule> m_filesystemModule;
+		Logger::Logger* m_logger;
 	public:
 		/// <summary>
 		/// Initializes the project module and sets up the project environment.
 		/// </summary>
-		void startup(const ModuleRegistry& registry) override;
+		void startup() override;
 
 		/// <summary>
 		/// Retrieves the project configuration.

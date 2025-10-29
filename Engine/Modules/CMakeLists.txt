@@ -1,6 +1,4 @@
-add_subdirectory(EventModule)
-add_subdirectory(FilesystemModule)
-add_subdirectory(LoggerModule)
+include_directories(PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(MemoryModule)
 add_subdirectory(ResourceModule)
@@ -19,4 +17,3 @@ add_subdirectory(ImGuiModule)
 add_subdirectory(EditorGuiModule)
 
 add_subdirectory(ShaderCompilerModule)
-
