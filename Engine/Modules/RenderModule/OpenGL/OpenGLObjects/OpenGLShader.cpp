@@ -10,8 +10,8 @@ namespace RenderModule::OpenGL
                                const std::shared_ptr<ResourceModule::RShader>& fragShader)
         : IShader(vertShader, fragShader)
     {
-        std::string vertCode = vertShader->getText();
-        std::string fragCode = fragShader->getText();
+        std::string vertCode = vertShader->getShaderInfo().vertexText;
+        std::string fragCode = fragShader->getShaderInfo().fragmentText;
         
         GLuint vertShaderID = createShaderFromGLSL(vertCode, GL_VERTEX_SHADER);
         GLuint fragShaderID = createShaderFromGLSL(fragCode, GL_FRAGMENT_SHADER);

@@ -1,124 +1,129 @@
 #include "PhysicsModule.h"
 
-#include <btBulletDynamicsCommon.h>
 #include "BulletDebugDrawer.h"
+#include <btBulletDynamicsCommon.h>
 
-#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/ObjectCoreModule/ECS/Systems/ECSPhysicsSystem.h>
-
 
 namespace PhysicsModule
 {
-	void PhysicsModule::startup()
-	{
-		m_ecsModule = GCM(ECSModule::ECSModule);
-	
-		m_debugDrawer.reset(new BulletDebugDrawer());
+void PhysicsModule::startup()
+{
+    LT_PROFILE_ZONE("PhysicsModule::startup");
+    m_ecsModule = GCM(ECSModule::ECSModule);
 
-		m_collisionConfig.reset(new btDefaultCollisionConfiguration());
-		m_dispatcher.reset(new btCollisionDispatcher(m_collisionConfig.get()));
-		m_broadphase.reset(new btDbvtBroadphase());
-		m_solver.reset(new btSequentialImpulseConstraintSolver());
-		m_physicsWorld.reset(new btDiscreteDynamicsWorld(m_dispatcher.get(), m_broadphase.get(), m_solver.get(), m_collisionConfig.get()));
+    m_debugDrawer.reset(new BulletDebugDrawer());
 
-		setupWorldProperties();
-		// registrateBodies();
-        LT_LOGI("PhysicsModule", "Startup");
-	}
+    m_collisionConfig.reset(new btDefaultCollisionConfiguration());
+    m_dispatcher.reset(new btCollisionDispatcher(m_collisionConfig.get()));
+    m_broadphase.reset(new btDbvtBroadphase());
+    m_solver.reset(new btSequentialImpulseConstraintSolver());
+    m_physicsWorld.reset(
+        new btDiscreteDynamicsWorld(m_dispatcher.get(), m_broadphase.get(), m_solver.get(), m_collisionConfig.get()));
 
-	void PhysicsModule::shutdown()
-	{
-        LT_LOGI("PhysicsModule", "Shutdown");
-	}
-
-	void PhysicsModule::tick(float deltaTime)
-	{
-		if (m_tickEnabled)
-		{
-			m_physicsWorld->stepSimulation(deltaTime, 10, 1.0f / 60.0f);
-		}
-		if (m_shouldDebugDraw)
-		{
-			m_physicsWorld->debugDrawWorld();
-		}
-	}
-
-	void PhysicsModule::setupWorldProperties()
-	{
-		m_physicsWorld->setGravity(btVector3(0, -9.81f, 0));
-		m_physicsWorld->setDebugDrawer(m_debugDrawer.get());
-	}
-
-	void PhysicsModule::registrateBodies()
-	{
-        LT_LOGI("PhysicsModule", "Registration rigid bodies");
-
-		auto& world = m_ecsModule->getCurrentWorld();
-
-		auto query = world.query<RigidbodyComponent, PositionComponent, RotationComponent, MeshComponent>();
-
-		query.each([&](const flecs::entity& e, RigidbodyComponent& rigidbody, PositionComponent& transform, RotationComponent& rotation, MeshComponent& mesh)
-			{
-				if (!rigidbody.body.has_value())
-				{
-					const glm::vec3& AABB = mesh.meshResource.value()->getAABBSize();
-					btCollisionShape* shape = new btBoxShape(btVector3(AABB.x, AABB.z, AABB.y) * 0.5f);
-
-					btTransform startTransform;
-					startTransform.setIdentity();
-					startTransform.setOrigin(btVector3({ transform.x, transform.y, transform.z }));
-
-					btQuaternion rotationQuat;
-					rotationQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);  // ������� �� ���� Z, Y, X
-					startTransform.setRotation(rotationQuat);
-
-					btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-
-					btScalar mass = rigidbody.isStatic ? 0.f : rigidbody.mass;
-					btVector3 inertia(0, 0, 0);
-					shape->calculateLocalInertia(mass, inertia);
-
-					btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, inertia);
-					btRigidBody* body = new btRigidBody(rbInfo);
-
-					rigidbody.body.emplace(body);
-
-					// ��������� ���� � ���
-					m_physicsWorld->addRigidBody(body);
-				}
-			});
-	}
-
-	void PhysicsModule::setTickEnabled(bool tickEnabled)
-	{
-		m_tickEnabled = tickEnabled;
-	}
-
-	void PhysicsModule::clearPhysicsWorld()
-	{
-		int numBodies = m_physicsWorld->getNumCollisionObjects();
-		for (int i = numBodies - 1; i >= 0; --i)
-		{
-			btCollisionObject* obj = m_physicsWorld->getCollisionObjectArray()[i];
-			btRigidBody* body = btRigidBody::upcast(obj);
-
-			if (body)
-			{
-				if (body->getMotionState())
-				{
-					delete body->getMotionState(); // ������� motion state
-				}
-				delete body->getCollisionShape(); // ������� ������������ �����
-			}
-
-			m_physicsWorld->removeCollisionObject(obj);
-			// delete obj; // ������� ��� ������
-		}
-	}
-
-	void PhysicsModule::enableDebugDraw(bool newFlag)
-	{
-		m_shouldDebugDraw = newFlag;
-	}
+    setupWorldProperties();
+    // registrateBodies();
+    LT_LOGI("PhysicsModule", "Startup");
 }
+
+void PhysicsModule::shutdown()
+{
+    LT_PROFILE_ZONE("PhysicsModule::shutdown");
+    LT_LOGI("PhysicsModule", "Shutdown");
+}
+
+void PhysicsModule::tick(float deltaTime)
+{
+    LT_PROFILE_ZONE("PhysicsModule::tick");
+    if (m_tickEnabled)
+    {
+        m_physicsWorld->stepSimulation(deltaTime, 10, 1.0f / 60.0f);
+    }
+    if (m_shouldDebugDraw)
+    {
+        m_physicsWorld->debugDrawWorld();
+    }
+}
+
+void PhysicsModule::setupWorldProperties()
+{
+    LT_PROFILE_ZONE("PhysicsModule::setupWorldProperties");
+    m_physicsWorld->setGravity(btVector3(0, -9.81f, 0));
+    m_physicsWorld->setDebugDrawer(m_debugDrawer.get());
+}
+
+void PhysicsModule::registrateBodies()
+{
+    LT_LOGI("PhysicsModule", "Registration rigid bodies");
+
+    // auto& world = m_ecsModule->getCurrentWorld();
+
+    // auto query = world.query<RigidbodyComponent, PositionComponent, RotationComponent, MeshComponent>();
+
+    // query.each([&](const flecs::entity& e, RigidbodyComponent& rigidbody, PositionComponent& transform,
+    // RotationComponent& rotation, MeshComponent& mesh)
+    //	{
+    //		if (!rigidbody.body.has_value())
+    //		{
+    //			const glm::vec3& AABB = mesh.meshResource.value()->getMeshData().aabbMax; // TODO: должнен быть aabbSize
+    //			btCollisionShape* shape = new btBoxShape(btVector3(AABB.x, AABB.z, AABB.y) * 0.5f);
+
+    //			btTransform startTransform;
+    //			startTransform.setIdentity();
+    //			startTransform.setOrigin(btVector3({ transform.x, transform.y, transform.z }));
+
+    //			btQuaternion rotationQuat;
+    //			rotationQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);  // ������� �� ���� Z, Y, X
+    //			startTransform.setRotation(rotationQuat);
+
+    //			btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
+
+    //			btScalar mass = rigidbody.isStatic ? 0.f : rigidbody.mass;
+    //			btVector3 inertia(0, 0, 0);
+    //			shape->calculateLocalInertia(mass, inertia);
+
+    //			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, inertia);
+    //			btRigidBody* body = new btRigidBody(rbInfo);
+
+    //			rigidbody.body.emplace(body);
+
+    //			// ��������� ���� � ���
+    //			m_physicsWorld->addRigidBody(body);
+    //		}
+    //	});
+}
+
+void PhysicsModule::setTickEnabled(bool tickEnabled)
+{
+    m_tickEnabled = tickEnabled;
+}
+
+void PhysicsModule::clearPhysicsWorld()
+{
+    int numBodies = m_physicsWorld->getNumCollisionObjects();
+    for (int i = numBodies - 1; i >= 0; --i)
+    {
+        btCollisionObject *obj = m_physicsWorld->getCollisionObjectArray()[i];
+        btRigidBody *body = btRigidBody::upcast(obj);
+
+        if (body)
+        {
+            if (body->getMotionState())
+            {
+                delete body->getMotionState(); // ������� motion state
+            }
+            delete body->getCollisionShape(); // ������� ������������ �����
+        }
+
+        m_physicsWorld->removeCollisionObject(obj);
+        // delete obj; // ������� ��� ������
+    }
+}
+
+void PhysicsModule::enableDebugDraw(bool newFlag)
+{
+    m_shouldDebugDraw = newFlag;
+}
+} // namespace PhysicsModule

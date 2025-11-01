@@ -1,30 +1,30 @@
 #include "Texture.h"
 
+#include "fstream"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <stdexcept>
 
 namespace ResourceModule
 {
-	RTexture::RTexture(const std::string& path) : BaseResource(path)
-	{
-		int width, height, channels;
-		stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-		if (!data)
-		{
-			throw std::runtime_error("Failed to load texture: " + path);
-		}
+RTexture::RTexture(const std::string& path) : BaseResource(path)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open())
+        throw std::runtime_error("Failed to open texture file: " + path);
 
-		textureInfo.texWidth = width;
-		textureInfo.texHeight = height;
-		textureInfo.texChannels = channels;
-		textureInfo.pixels.assign(data, data + (width * height * 4));
+    file.read(reinterpret_cast<char*>(&m_info.width), sizeof(int));
+    file.read(reinterpret_cast<char*>(&m_info.height), sizeof(int));
+    file.read(reinterpret_cast<char*>(&m_info.channels), sizeof(int));
 
-		stbi_image_free(data);
-	}
+    const size_t pixelCount = static_cast<size_t>(m_info.width * m_info.height * 4);
+    m_info.pixels.resize(pixelCount);
+    file.read(reinterpret_cast<char*>(m_info.pixels.data()), pixelCount);
 
-	RTexture::~RTexture()
-	{
+    if (file.fail())
+        throw std::runtime_error("Corrupted .texbin file: " + path);
 
-	}
+    LT_LOGI("RTexture",
+            "Loaded texbin " + path + " (" + std::to_string(m_info.width) + "x" + std::to_string(m_info.height) + ")");
+}
 }

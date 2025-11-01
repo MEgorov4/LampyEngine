@@ -5,3 +5,4 @@ add_subdirectory(Editor)
 add_subdirectory(Test)
 
 add_subdirectory(ProjectBrowser)
+

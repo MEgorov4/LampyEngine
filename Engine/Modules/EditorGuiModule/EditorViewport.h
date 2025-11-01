@@ -5,6 +5,7 @@
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/RenderModule/Abstract/ITexture.h>
 #include <SDL3/SDL_events.h>
+#include <Foundation/Event/Event.h>
 
 namespace InputModule
 {
@@ -17,6 +18,13 @@ class RenderModule;
 struct TextureHandle;
 } // namespace RenderModule
 
+namespace EngineCore
+{
+    namespace Foundation
+    {
+    }
+}
+
 class GUIEditorViewport : public ImGUIModule::GUIObject
 {
     RenderModule::RenderModule* m_renderModule;
@@ -24,11 +32,11 @@ class GUIEditorViewport : public ImGUIModule::GUIObject
     ECSModule::ECSModule* m_ecsModule;
 
     RenderModule::TextureHandle m_offscreenImageDescriptor;
+    
+    Event<SDL_KeyboardEvent>::Subscription m_keySub;
+    Event<SDL_MouseMotionEvent>::Subscription m_mouseSub;
 
     flecs::entity m_viewportEntity;
-    int m_keyActionHandlerID;
-    int m_mouseActionHandlerID;
-
     glm::vec3 m_cameraPos   = glm::vec3(0.0f, 0.0f, 5.0f);
     glm::vec3 m_cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 m_cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -53,4 +61,6 @@ class GUIEditorViewport : public ImGUIModule::GUIObject
 
     void drawGuizmo(int x, int y);
     void drawGrid();
+
+    flecs::entity getViewportEntity();
 };

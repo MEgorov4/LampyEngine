@@ -3,7 +3,7 @@
 #include <Modules/WindowModule/WindowModule.h>
 #include <Modules/ResourceModule/ResourceManager.h>
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
-
+#include "RenderLocator.h"
 #include "OpenGL/OpenGLRenderer.h"
 
 namespace RenderModule
@@ -11,9 +11,14 @@ namespace RenderModule
     void RenderModule::startup()
     {
         LT_LOGI("RenderModule", "Startup");
+        
+        LT_LOGI("RenderModule", "Create RenderLocator");
+        m_context = std::make_unique<RenderContext>();
+        RenderLocator::Provide(m_context.get());
+
+
         LT_LOGI("RenderModule", "Create renderer");
         m_renderer = std::make_unique<OpenGL::OpenGLRenderer>();
-
         m_renderer->postInit();
     }
 

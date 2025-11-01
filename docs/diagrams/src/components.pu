@@ -1,0 +1,32 @@
+@startuml
+title LampyEngine — Initialization Order
+
+start
+:Startup Core (Logger, Assert, Memory);
+:Create EngineContext;
+:InitMinor Modules;
+note right
+Filesystem
+Project (editor)
+Window
+Input
+Resource
+ShaderCompiler
+LuaScript
+ObjectCore
+end note
+
+:InitMajor Modules;
+note right
+Render
+Physics
+Audio
+ImGui (editor)
+EditorGui (editor)
+end note
+
+:Finalize Engine;
+:Run Main Loop;
+:Shutdown (reverse order);
+stop
+@enduml

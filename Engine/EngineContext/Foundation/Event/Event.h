@@ -1,82 +1,123 @@
-#pragma once 
-
-#include <vector>
-#include <functional>
-#include <mutex>
+#pragma once
 #include <algorithm>
+#include <atomic>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <vector>
 
 namespace EngineCore::Foundation
 {
-/// <summary>
-/// A thread-safe, generic event system that allows subscribing, unsubscribing, and invoking event handlers.
-/// </summary>
-/// <typeparam name="Args">Variadic template parameters representing the event's argument types.</typeparam>
-template <typename... Args>
-class Event
+template <typename... Args> class Event
 {
-public:
-    Event(const Event&) = delete;
-    Event& operator=(const Event&) = delete;
-    Event(Event&&) = delete;
-    Event& operator=(Event&&) = delete;
-    Event() = default;
-    ~Event() = default;
+  public:
+    using Handler   = std::function<void(Args...)>;
+    using HandlerID = uint64_t;
 
-public:
-    /// <summary>
-    /// Defines a function type for event handlers.
-    /// </summary>
-    using Handler = std::function<void(Args...)>;
-
-    /// <summary>
-    /// Subscribes a handler to the event.
-    /// </summary>
-    /// <param name="handler">The function to be called when the event is triggered.</param>
-    /// <returns>A unique subscription ID for the handler.</returns>
-    int subscribe(const Handler& handler)
+    class Subscription
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        int id = nextId_++;
-        m_handlers.push_back({ id, handler });
-        return id;
+        Event* m_event = nullptr;
+        HandlerID m_id = 0;
+
+      public:
+        Subscription() = default;
+        Subscription(Event* ev, HandlerID id) noexcept : m_event(ev), m_id(id)
+        {
+        }
+        Subscription(const Subscription&)            = delete;
+        Subscription& operator=(const Subscription&) = delete;
+        Subscription(Subscription&& other) noexcept :
+            m_event(std::exchange(other.m_event, nullptr)), m_id(std::exchange(other.m_id, 0))
+        {
+        }
+        Subscription& operator=(Subscription&& other) noexcept
+        {
+            if (this != &other)
+            {
+                unsubscribe();
+                m_event = std::exchange(other.m_event, nullptr);
+                m_id    = std::exchange(other.m_id, 0);
+            }
+            return *this;
+        }
+        ~Subscription()
+        {
+            unsubscribe();
+        }
+        void unsubscribe()
+        {
+            if (m_event && m_id)
+                m_event->unsubscribe(m_id);
+            m_event = nullptr;
+            m_id    = 0;
+        }
+    };
+
+  public:
+    Event()                        = default;
+    ~Event()                       = default;
+    Event(const Event&)            = delete;
+    Event& operator=(const Event&) = delete;
+
+    /// Подписка (возвращает RAII-объект)
+    [[nodiscard]]
+    Subscription subscribe(const Handler& handler)
+    {
+        std::scoped_lock lock(m_mutex);
+        HandlerID id = ++m_nextId;
+        m_handlers.emplace_back(id, handler);
+        return Subscription(this, id);
     }
 
-    /// <summary>
-    /// Unsubscribes a handler using its subscription ID.
-    /// </summary>
-    /// <param name="id">The unique subscription ID of the handler to remove.</param>
-    void unsubscribe(int id)
+    /// Отписка по id
+    void unsubscribe(HandlerID id)
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = std::remove_if(m_handlers.begin(), m_handlers.end(),
-            [id](const auto& pair) {
-                return pair.first == id;
-            });
+        std::scoped_lock lock(m_mutex);
+        auto it = std::remove_if(m_handlers.begin(), m_handlers.end(), [id](const auto& h) { return h.first == id; });
         m_handlers.erase(it, m_handlers.end());
     }
 
-    /// <summary>
-    /// Invokes all subscribed handlers with the provided arguments.
-    /// </summary>
-    /// <param name="args">Arguments to pass to the subscribed handlers.</param>
+    /// Вызов события
     void operator()(Args... args)
     {
-        std::vector<Handler> safeCopy;
+        std::vector<Handler> snapshot;
         {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            for (auto& pair : m_handlers) {
-                safeCopy.push_back(pair.second);
-            }
+            std::scoped_lock lock(m_mutex);
+            snapshot.reserve(m_handlers.size());
+            for (auto& [_, fn] : m_handlers)
+                snapshot.push_back(fn);
         }
 
-        for (auto& handler : safeCopy) {
-            handler(args...);
+        for (auto& fn : snapshot)
+        {
+            try
+            {
+                fn(args...);
+            }
+            catch (const std::exception& e)
+            {
+                // можно добавить глобальный логгер здесь
+            }
         }
     }
 
-private:
-    std::mutex m_mutex; ///< Mutex for ensuring thread safety.
-    int nextId_{ 0 }; ///< Counter for generating unique handler IDs.
-    std::vector<std::pair<int, Handler>> m_handlers; ///< List of registered handlers with unique IDs.
+    /// Очистить всех слушателей
+    void clear()
+    {
+        std::scoped_lock lock(m_mutex);
+        m_handlers.clear();
+    }
+
+    /// Проверка, есть ли активные подписчики
+    bool empty() const noexcept
+    {
+        std::scoped_lock lock(m_mutex);
+        return m_handlers.empty();
+    }
+
+  private:
+    mutable std::mutex m_mutex;
+    std::vector<std::pair<HandlerID, Handler>> m_handlers;
+    std::atomic_uint64_t m_nextId{0};
 };
-}
+} // namespace EngineCore::Foundation

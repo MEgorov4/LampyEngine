@@ -9,6 +9,7 @@
 #include "../../../ResourceModule/Mesh.h"
 #include "../../../ResourceModule/Shader.h"
 #include "../../../ResourceModule/Texture.h"
+#include <Modules/ResourceModule/Asset/AssetID.h>
 
 struct PositionComponent {
 	float x = 0.0f, y = 0.0f, z = 0.0f;
@@ -89,17 +90,10 @@ struct CameraComponent
 
 struct MeshComponent
 {
-	std::string meshResourcePath;
-	std::string vertShaderPath;
-	std::string fragShaderPath;
-	std::string texturePath;
-
-	std::optional<std::shared_ptr<ResourceModule::RMesh>> meshResource;
-
-	std::optional<std::shared_ptr<ResourceModule::RShader>> vertShaderResource;
-	std::optional<std::shared_ptr<ResourceModule::RShader>> fragShaderResource;
-
-	std::optional <std::shared_ptr<ResourceModule::RTexture>> textureResource;
+    ResourceModule::AssetID meshID;
+    ResourceModule::AssetID textureID;
+    ResourceModule::AssetID vertShaderID;
+    ResourceModule::AssetID fragShaderID;
 };
 
 struct PointLightComponent

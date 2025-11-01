@@ -7,14 +7,16 @@
 namespace WindowModule
 {
 
-Window::Window(int width, int height, const char* title) : m_inputModule(GCM(InputModule::InputModule))
+Window::Window(int width, int height, const char *title) : m_inputModule(GCM(InputModule::InputModule))
 {
+    LT_PROFILE_ZONE("Window::Window");
+
     LT_LOGI("WindowModule_Window", "Window: Start create window: width = " + std::format("{}", width) + ", height = " +
                                        std::format("{}", height) + ", title = " + std::format("{}", title));
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS))
     {
-        const char* sdlError     = SDL_GetError();
+        const char *sdlError = SDL_GetError();
         std::string errorMessage = "Failed to initialise SDL: ";
         if (sdlError)
         {
@@ -49,14 +51,14 @@ Window::Window(int width, int height, const char* title) : m_inputModule(GCM(Inp
     m_glContext = SDL_GL_CreateContext(m_window);
     if (!m_glContext)
     {
-        const char* error = SDL_GetError();
+        const char *error = SDL_GetError();
         throw std::runtime_error("Failed to create OpenGL context: " + std::string(error ? error : "Unknown error"));
     }
 
     // Установка текущего контекста
     if (!SDL_GL_MakeCurrent(m_window, m_glContext))
     {
-        const char* error = SDL_GetError();
+        const char *error = SDL_GetError();
         throw std::runtime_error("Failed to make current context: " + std::string(error ? error : "Unknown error"));
     }
 
@@ -82,11 +84,15 @@ Window::~Window()
 
 void Window::swapWindow()
 {
+    LT_PROFILE_ZONE("Window::swapWindow");
+
     SDL_GL_SwapWindow(m_window);
 }
 
 std::pair<int, int> Window::getWindowSize() const
 {
+    LT_PROFILE_ZONE("Window::getWindowSize");
+
     std::pair result{0, 0};
     SDL_GetWindowSize(m_window, &result.first, &result.second);
     return result;
@@ -94,6 +100,8 @@ std::pair<int, int> Window::getWindowSize() const
 
 void Window::pollEvents()
 {
+    LT_PROFILE_ZONE("Window::pollEvents");
+
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {

@@ -1,103 +1,107 @@
-#pragma once 
-#include <memory>
-#include <unordered_map>
-
-#include "../RenderConfig.h"
-#include "ITexture.h"
-#include "IMesh.h"
-#include "IShader.h"
-#include "IFramebuffer.h"
-
-#include "../OpenGL/OpenGLObjects/OpenGLTexture.h"
+#pragma once
 #include "../OpenGL/OpenGLObjects/OpenGLMesh.h"
 #include "../OpenGL/OpenGLObjects/OpenGLShader.h"
+#include "../OpenGL/OpenGLObjects/OpenGLTexture.h"
 #include "../OpengL/OpenGLObjects/OpenGLFramebuffer.h"
+#include "../RenderConfig.h"
+#include "IFramebuffer.h"
+#include "IMesh.h"
+#include "IShader.h"
+#include "ITexture.h"
 
+#include <Modules/ResourceModule/Asset/AssetID.h>
+#include <Modules/ResourceModule/ResourceManager.h>
 
 namespace RenderModule
 {
-	class TextureFactory
-	{
-		static std::unordered_map<std::string, std::weak_ptr<ITexture>> textureCache;
-	public:
-		static std::shared_ptr<ITexture> createOrGetTexture(const std::shared_ptr<ResourceModule::RTexture>& texture)
-		{
-			if (!textureCache[texture->getGUID()].expired())
-				return textureCache[texture->getGUID()].lock();
+class TextureFactory
+{
+    static std::unordered_map<std::string, std::weak_ptr<ITexture>> textureCache;
 
-			if (RC.getGraphicsAPI() == GraphicsAPI::OpenGL)
-			{
-				auto glTexture = std::make_shared<OpenGL::OpenGLTexture>(texture);
-				textureCache[texture->getGUID()] = glTexture;
-				return glTexture;
-			}
+  public:
+    static std::shared_ptr<ITexture> createOrGetTexture(const ResourceModule::AssetID& textureID)
+    {
+        if (!textureCache[textureID.str()].expired())
+            return textureCache[textureID.str()].lock();
 
-			return nullptr;
-		}
-	};
+        if (RC.getGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            auto glTexture = std::make_shared<OpenGL::OpenGLTexture>(
+                GCM(ResourceModule::ResourceManager)->load<ResourceModule::RTexture>(textureID));
+            textureCache[textureID.str()] = glTexture;
+            return glTexture;
+        }
 
+        return nullptr;
+    }
+};
 
-	class MeshFactory
-	{
-		static std::unordered_map<std::string, std::weak_ptr<IMesh>> meshCache;
-	public:
-		static std::shared_ptr<IMesh> createOrGetMesh(const std::shared_ptr<ResourceModule::RMesh>& mesh)
-		{
-			if (!meshCache[mesh->getGUID()].expired())
-				return meshCache[mesh->getGUID()].lock();
+class MeshFactory
+{
+    static std::unordered_map<std::string, std::weak_ptr<IMesh>> meshCache;
 
-			if (RC.getGraphicsAPI() == GraphicsAPI::OpenGL)
-			{
-				auto glMesh = std::make_shared<OpenGL::OpenGLMesh>(mesh);
-				meshCache[mesh->getGUID()] = glMesh;
-				return glMesh;
-			}
+  public:
+    static std::shared_ptr<IMesh> createOrGetMesh(const ResourceModule::AssetID& id)
+    {
+        if (!meshCache[id.str()].expired())
+            return meshCache[id.str()].lock();
 
-			return nullptr;
-		}
-	};
+        if (RC.getGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            auto glMesh = std::make_shared<OpenGL::OpenGLMesh>(
+                GCM(ResourceModule::ResourceManager)->load<ResourceModule::RMesh>(id));
+            meshCache[id.str()] = glMesh;
+            return glMesh;
+        }
 
+        return nullptr;
+    }
+};
 
+class ShaderFactory
+{
+    static std::unordered_map<std::string, std::weak_ptr<IShader>> shaderCache;
 
-	class ShaderFactory
-	{
-		static std::unordered_map<std::string, std::weak_ptr<IShader>> shaderCache;
-	public:
-		static std::shared_ptr<IShader> createOrGetShader(const std::shared_ptr<ResourceModule::RShader>& vertShader, const std::shared_ptr<ResourceModule::RShader>& fragShader)
-		{
-			std::string hash = vertShader->getGUID() + fragShader->getGUID();
-			if (!shaderCache[hash].expired())
-				return shaderCache[hash].lock();
+  public:
+    static std::shared_ptr<IShader> createOrGetShader(const ResourceModule::AssetID& vShaderID,
+                                                      const ResourceModule::AssetID& fShaderID)
+    {
+        std::string hash = vShaderID.str() + fShaderID.str();
+        if (!shaderCache[hash].expired())
+            return shaderCache[hash].lock();
 
-			if (RC.getGraphicsAPI() == GraphicsAPI::OpenGL)
-			{
-				auto glShader = std::make_shared<OpenGL::OpenGLShader>(vertShader, fragShader);
-				shaderCache[hash] = glShader;
-				return glShader;
-			}
-			return nullptr;
-		}
-	};
+        if (RC.getGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            auto vertShader = GCM(ResourceModule::ResourceManager)->load<ResourceModule::RShader>(vShaderID);
+            auto fragShader = GCM(ResourceModule::ResourceManager)->load<ResourceModule::RShader>(fShaderID);
 
+            auto glShader     = std::make_shared<OpenGL::OpenGLShader>(vertShader, fragShader);
+            shaderCache[hash] = glShader;
+            return glShader;
+        }
+        return nullptr;
+    }
+};
 
-	class FramebufferFactory
-	{
-		static std::unordered_map<std::string, std::weak_ptr<IFramebuffer>> framebufferCache;
-	public:
-		static std::shared_ptr<IFramebuffer> createOrGetFramebuffer(const FramebufferData& data)
-		{
-			std::string hash = data.name;
-			if (!framebufferCache[hash].expired())
-				return framebufferCache[hash].lock();
+class FramebufferFactory
+{
+    static std::unordered_map<std::string, std::weak_ptr<IFramebuffer>> framebufferCache;
 
-			if (RC.getGraphicsAPI() == GraphicsAPI::OpenGL)
-			{
-				auto glFramebuffer = std::make_shared<OpenGL::OpenGLFramebuffer>(data);
-				framebufferCache[hash] = glFramebuffer;
-				return glFramebuffer;
-			}
-			return nullptr;
-		}
-	};
+  public:
+    static std::shared_ptr<IFramebuffer> createOrGetFramebuffer(const FramebufferData& data)
+    {
+        std::string hash = data.name;
+        if (!framebufferCache[hash].expired())
+            return framebufferCache[hash].lock();
 
-}
+        if (RC.getGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            auto glFramebuffer     = std::make_shared<OpenGL::OpenGLFramebuffer>(data);
+            framebufferCache[hash] = glFramebuffer;
+            return glFramebuffer;
+        }
+        return nullptr;
+    }
+};
+
+} // namespace RenderModule

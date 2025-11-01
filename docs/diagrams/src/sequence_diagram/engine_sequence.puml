@@ -1,8 +1,0 @@
-@startuml
-main.cpp -> Engine: run(args)
-Engine -> Engine: create_engine_context()
-Engine -> EngineContext: minor_initialisation()
-Engine -> CoreModules: startup_engine_modules()
-Engine -> EngineContext: major_initialisation()
-Engine -> Engine: start_main_loop()
-@enduml

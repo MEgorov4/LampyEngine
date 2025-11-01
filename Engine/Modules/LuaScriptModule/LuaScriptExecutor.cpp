@@ -1,5 +1,11 @@
 #include "LuaScriptExecutor.h"
-#include "algorithm"
+
+#include <sol/base_traits.hpp>
+#include <sol/protected_function.hpp>
+#include <sol/table_core.hpp>
+#include <sol/table_proxy.hpp>
+#include <tuple>
+#include <xutility>
 
 void LuaScriptExecutor::addScript(const sol::table& table)
 {

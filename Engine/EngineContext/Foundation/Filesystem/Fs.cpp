@@ -41,6 +41,14 @@ std::string Fs::currentPath()
     return ec ? std::string() : p.string();
 }
 
+std::string Fs::currentEnginePath()
+{
+    auto exePath = std::filesystem::current_path();
+    if (exePath.filename() == "Debug" || exePath.filename() == "Release")
+        exePath = exePath.parent_path();
+    return exePath.parent_path().string();
+}
+
 std::string Fs::absolutePath(const std::string& relative)
 {
     std::error_code ec;

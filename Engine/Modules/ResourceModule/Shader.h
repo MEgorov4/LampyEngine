@@ -2,32 +2,24 @@
 #include <EngineMinimal.h>
 #include "BaseResource.h"
 
-namespace ShaderCompiler
-{
-	class ShaderCompiler;
-}
-
 namespace ResourceModule
 {
-	struct ShaderInfo
-	{
-		std::vector<uint8_t> buffer;
-		std::string text;
-		size_t fileSize;
-	};
+    struct ShaderInfo
+    {
+        std::string vertexText;
+        std::string fragmentText;
+        size_t totalSize = 0;
+    };
 
-	class RShader : public BaseResource
-	{
-	public:
-		RShader(const std::string& path);
+    class RShader : public BaseResource
+    {
+    public:
+        explicit RShader(const std::string& path);
+        ~RShader() noexcept = default;
 
-		std::vector<uint8_t> getBuffer() const;
-		std::string getText() const;
-		const ShaderInfo& getShaderInfo() const
-		{
-			return m_shaderInfo;
-		}
-	private:
-		ShaderInfo m_shaderInfo;
-	};
+        const ShaderInfo& getShaderInfo() const noexcept { return m_info; }
+
+    private:
+        ShaderInfo m_info;
+    };
 }

@@ -1,39 +1,37 @@
 #include "ResourceManager.h"
+#include "Pak/PakReader.h"
+#include <filesystem>
+#include <fstream>
 
-#include <Modules/ShaderCompilerModule/ShaderCompiler.h>
+using namespace ResourceModule;
 
-#include "ResourceCache.h"
-#include "Shader.h"
-#include "Mesh.h"
-#include "Texture.h"
-
-namespace ResourceModule
+void ResourceManager::startup()
 {
-    void ResourceManager::startup()
-    {
-        m_shaderCompiler = GCM(ShaderCompiler::ShaderCompiler);
-        
-        LT_LOGI("ResourceManager", "Startup");
-        LT_LOGI("ResourceManager", "Create resource caches");
-        
-        meshCache = ResourceCache<RMesh>();
-        shaderCache = ResourceCache<RShader>();
-        textureCache = ResourceCache<RTexture>();
-    }
+    LT_LOGI("ResourceManager", "Startup");
+}
 
-    void ResourceManager::shutdown()
-    {
-        LT_LOGI("ResourceManager", "Shutdown");
-        clearAllCache();
-    }
+void ResourceManager::shutdown()
+{
+    LT_LOGI("ResourceManager", "Shutdown");
+    clearAll();
+}
 
-    void ResourceManager::clearAllCache()
-    {
-        LT_LOGI("ResourceManager", "Clear resource caches");
-        meshCache.clear<RMesh>();
-        shaderCache.clear<RShader>();
-        textureCache.clear<RTexture>();
-    }
+void ResourceManager::mountPak(const std::string &pakPath)
+{
+    m_pakReader = std::make_unique<PakReader>(pakPath);
+    m_usePak = m_pakReader->isOpen();
+    if (m_usePak)
+        LT_LOGI("ResourceManager", "Mounted PAK: " + pakPath);
+    else
+        LT_LOGW("ResourceManager", "Failed to mount PAK: " + pakPath);
+}
 
+void ResourceManager::unload(const AssetID &guid)
+{
+    m_registry.unregister(guid);
+}
 
+void ResourceManager::clearAll()
+{
+    m_registry.clear();
 }

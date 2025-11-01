@@ -2,22 +2,31 @@
 
 #include "WorldInspector/WorldInspector.h"
 
-#include <imgui.h>
-#include <Modules/ImGuiModule/ImGuizmo.h>
 #include <Modules/InputModule/InputModule.h>
 #include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
 #include <Modules/RenderModule/IRenderer.h>
 #include <Modules/RenderModule/RenderModule.h>
+//clang-format off
+#include <imgui.h>
+#include <Modules/ImGuiModule/ImGuizmo.h>
+//clang-format on
+
+flecs::entity GUIEditorViewport::getViewportEntity()
+{
+    auto& world = m_ecsModule->getCurrentWorld()->get();
+
+    m_viewportEntity = world.lookup("ViewportCamera");
+
+    return m_viewportEntity;
+}
 
 GUIEditorViewport::GUIEditorViewport() :
     ImGUIModule::GUIObject(), m_renderModule(GCM(RenderModule::RenderModule)),
     m_inputModule(GCM(InputModule::InputModule)), m_ecsModule(GCM(ECSModule::ECSModule)),
-    m_viewportEntity(m_ecsModule->getCurrentWorld().entity("ViewportCamera"))
+    m_viewportEntity(m_ecsModule->getCurrentWorld()->get().entity("ViewportCamera"))
 {
-    m_keyActionHandlerID =
-        m_inputModule->OnKeyboardEvent.subscribe(std::bind_front(&GUIEditorViewport::onKeyAction, this));
-    m_mouseActionHandlerID =
-        m_inputModule->OnMouseMotionEvent.subscribe(std::bind_front(&GUIEditorViewport::onMouseAction, this));
+    m_keySub   = m_inputModule->OnKeyboardEvent.subscribe(std::bind_front(&GUIEditorViewport::onKeyAction, this));
+    m_mouseSub = m_inputModule->OnMouseMotionEvent.subscribe(std::bind_front(&GUIEditorViewport::onMouseAction, this));
 
     m_cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     m_cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -25,12 +34,11 @@ GUIEditorViewport::GUIEditorViewport() :
 
 GUIEditorViewport::~GUIEditorViewport()
 {
-    m_inputModule->OnKeyboardEvent.unsubscribe(m_keyActionHandlerID);
-    m_inputModule->OnMouseMotionEvent.unsubscribe(m_mouseActionHandlerID);
 }
 
 void GUIEditorViewport::render(float deltaTime)
 {
+    getViewportEntity();
     m_deltaTime = deltaTime;
     if (ImGui::Begin("Viewport", 0, ImGuiWindowFlags_NoScrollbar))
     {
@@ -51,7 +59,7 @@ void GUIEditorViewport::render(float deltaTime)
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
         ImGuizmo::SetRect(imgMin.x, imgMin.y, avail.x, avail.y);
 
-        auto& world = m_ecsModule->getCurrentWorld();
+        auto& world = m_ecsModule->getCurrentWorld()->get();
         if (auto ent = GUIWorldInspector::m_selectedEntity)
         {
             glm::vec3 pos{0.f};
@@ -126,6 +134,9 @@ void GUIEditorViewport::render(float deltaTime)
 
 void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
 {
+    if (!m_viewportEntity.is_valid())
+        return;
+
     if (!m_processInput)
         return;
     m_cameraPos              = m_viewportEntity.get<PositionComponent>()->toGLMVec();
@@ -164,20 +175,18 @@ void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
     velocity *= 1.0f / (1.0f + damping * m_deltaTime);
 
     m_cameraPos += velocity * m_deltaTime;
-    if (m_viewportEntity.is_alive())
-    {
-        m_viewportEntity.set<PositionComponent>({.x = m_cameraPos.x, .y = m_cameraPos.y, .z = m_cameraPos.z});
-    }
+    m_viewportEntity.set<PositionComponent>({.x = m_cameraPos.x, .y = m_cameraPos.y, .z = m_cameraPos.z});
 }
 
 void GUIEditorViewport::onMouseAction(SDL_MouseMotionEvent mouseMotion)
 {
+    if (!m_viewportEntity.is_valid())
+        return;
     if (!m_processInput)
     {
         m_firstMouse = true;
         return;
     }
-
     const RotationComponent* rotation = m_viewportEntity.get<RotationComponent>();
 
     float pitch = rotation->x;

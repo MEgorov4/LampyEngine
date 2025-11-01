@@ -1,60 +1,28 @@
 #pragma once
+
 #include <EngineMinimal.h>
+#include "RenderGraph/RenderGraph.h"
+#include "Abstract/ITexture.h"
 
-#include "Abstract/RenderObject.h"
+namespace ECSModule { class ECSModule; }
 
-namespace WindowModule
-{
-    class WindowModule;
-}
+namespace RenderModule {
+class IRenderer {
+    TextureHandle m_activeTextureHandle{};
+    Event<>::Subscription m_updEcsSub{};
+    ECSModule::ECSModule* m_ecsModule{};
+    RenderGraph m_renderGraph;
+public:
+    IRenderer();
+    virtual ~IRenderer();
 
-namespace ECSModule
-{
-    class ECSModule;
-}
+    void render();
+    virtual void waitIdle() = 0;
 
-namespace ResourceModule
-{
-    class ResourceManager;
-}
+    void updateRenderList();    // больше не const: будет триггерить перепарс сцены/данных
+    void postInit();
 
-namespace RenderModule
-{
-    class RenderPipelineHandler;
+    TextureHandle getOutputRenderHandle(int w, int h);
+};
 
-    class IRenderer
-    {
-        int m_onECSChanged{};
-
-        TextureHandle m_activeTextureHandle;
-        std::unique_ptr<RenderPipelineHandler> m_renderPipelineHandler;
-
-        ECSModule::ECSModule* m_ecsModule;
-    public:
-        /// <summary>
-        /// Constructs an IRenderer with no assigned scene.
-        /// </summary>
-        IRenderer();
-
-        /// <summary>
-        /// Virtual destructor to ensure proper cleanup of derived renderers.
-        /// </summary>
-        virtual ~IRenderer();
-
-        /// <summary>
-        /// Renders a single frame.
-        /// </summary>
-        void render();
-
-        /// <summary>
-        /// Waits for the renderer to complete all rendering operations before proceeding.
-        /// </summary>
-        virtual void waitIdle() = 0;
-
-
-        void updateRenderList() const;
-        void postInit();
-
-        TextureHandle getOutputRenderHandle(int w, int h);
-    };
-}
+} // namespace RenderModule

@@ -165,59 +165,59 @@ class MeshComponentRenderer : public IComponentRenderer
                 ImGui::Text("Mesh path:");
                 ImGui::SameLine();
 
-                std::string resPath = m_projectModule->getProjectConfig().getResourcesPath();
-                if (!Fs::fileName(meshComponent->meshResourcePath).empty())
-                    ImGui::Text(Fs::fileName(meshComponent->meshResourcePath).c_str());
-                else
-                    ImGui::Text("empty");
+                //std::string resPath = m_projectModule->getProjectConfig().getResourcesPath();
+                //if (!Fs::fileName(meshComponent->).empty())
+                //    ImGui::Text(Fs::fileName(meshComponent->meshResourcePath).c_str());
+                //else
+                //    ImGui::Text("empty");
 
-                if (ImGui::BeginDragDropTarget())
-                {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
-                    {
-                        std::string droppedPath = static_cast<const char*>(payload->Data);
+                //if (ImGui::BeginDragDropTarget())
+                //{
+                //    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
+                //    {
+                //        std::string droppedPath = static_cast<const char*>(payload->Data);
 
-                        if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".obj")
-                        {
-                            MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-                            if (meshComponentMut)
-                            {
-                                meshComponentMut->meshResourcePath = droppedPath;
-                            }
-                            entity.modified<MeshComponent>();
+                //        if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".obj")
+                //        {
+                //            MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
+                //            if (meshComponentMut)
+                //            {
+                //                meshComponentMut->meshResourcePath = droppedPath;
+                //            }
+                //            entity.modified<MeshComponent>();
 
-                            /*
-                            LOG_INFO(std::format("Dropped file: {}", droppedPath));
-                        */
-                        }
-                    }
-                    ImGui::EndDragDropTarget();
-                }
+                //            /*
+                //            LOG_INFO(std::format("Dropped file: {}", droppedPath));
+                //        */
+                //        }
+                //    }
+                //    ImGui::EndDragDropTarget();
+                //}
 
                 ImGui::Text("Texture path:");
                 ImGui::SameLine();
-                ImGui::Text(Fs::fileName(meshComponent->texturePath).size() > 0
-                                ? Fs::fileName(meshComponent->texturePath).c_str()
-                                : "empty");
-                if (ImGui::BeginDragDropTarget())
-                {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
-                    {
-                        std::string droppedPath = static_cast<const char*>(payload->Data);
+                //ImGui::Text(Fs::fileName(meshComponent->texturePath).size() > 0
+                //                ? Fs::fileName(meshComponent->texturePath).c_str()
+                //                : "empty");
+                //if (ImGui::BeginDragDropTarget())
+                //{
+                //    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
+                //    {
+                //        std::string droppedPath = static_cast<const char*>(payload->Data);
 
-                        if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".png")
-                        {
-                            MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-                            if (meshComponentMut)
-                            {
-                                meshComponentMut->texturePath = droppedPath;
+                //        if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".png")
+                //        {
+                //            MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
+                //            if (meshComponentMut)
+                //            {
+                //                meshComponentMut->texturePath = droppedPath;
 
-                                entity.modified<MeshComponent>();
-                            }
-                        }
-                    }
-                    ImGui::EndDragDropTarget();
-                }
+                //                entity.modified<MeshComponent>();
+                //            }
+                //        }
+                //    }
+                //    ImGui::EndDragDropTarget();
+                //}
             }
         }
         ImGui::EndChildFrame();

@@ -1,40 +1,45 @@
 #include "Shader.h"
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+#include <stdexcept>
 
-#include <Modules/ShaderCompilerModule/ShaderCompiler.h>
+using namespace ResourceModule;
 
-#include "ResourceManager.h"
-
-namespace ResourceModule
+static std::string readText(const std::filesystem::path& path)
 {
-	RShader::RShader(const std::string& path) : BaseResource(path)
-	{
-		
-		std::string extension = Fs::extension(path);
+    std::ifstream file(path);
+    if (!file.is_open())
+        throw std::runtime_error("Failed to open shader: " + path.string());
+    std::stringstream buf;
+    buf << file.rdbuf();
+    return buf.str();
+}
 
-		std::string binaryResultPath;
+RShader::RShader(const std::string& path)
+    : BaseResource(path)
+{
+    std::filesystem::path basePath(path);
+    std::string stem = basePath.stem().string();
+    std::filesystem::path dir = basePath.parent_path();
 
-		if (extension == ".vert" || extension == ".frag")
-		{
-			m_shaderInfo.text = Fs::readTextFile(path);
+    std::filesystem::path vertPath = dir / (stem + ".vert");
+    std::filesystem::path fragPath = dir / (stem + ".frag");
 
-            binaryResultPath  = GCM(ShaderCompiler::ShaderCompiler)->compileShader(path);
-		}
+    if (std::filesystem::exists(vertPath))
+    {
+        m_info.vertexText = readText(vertPath);
+        m_info.totalSize += m_info.vertexText.size();
+    }
 
-		else if (extension == ".spv")
-		{
-			binaryResultPath = path;
-		}
-			
-		m_shaderInfo.buffer = Fs::readBinaryFile(binaryResultPath);
-	}
+    if (std::filesystem::exists(fragPath))
+    {
+        m_info.fragmentText = readText(fragPath);
+        m_info.totalSize += m_info.fragmentText.size();
+    }
 
-	std::vector<uint8_t> RShader::getBuffer() const
-	{
-		return std::vector<uint8_t>(m_shaderInfo.buffer.begin(), m_shaderInfo.buffer.end());
-	}
+    if (m_info.vertexText.empty() && m_info.fragmentText.empty())
+        throw std::runtime_error("Shader source pair not found for: " + path);
 
-	std::string RShader::getText() const
-	{
-		return m_shaderInfo.text;	
-	}
+    LT_LOGI("RShader", "Loaded GLSL shader pair for: " + stem);
 }

@@ -22,5 +22,6 @@ class EngineDeps(ConanFile):
         self.requires("dacap-clip/1.9")
         self.requires("bullet3/3.25")
         self.requires("gtest/1.15.0")
-
+        self.requires("efsw/1.4.1")
         self.requires("imgui/1.92.0-docking")
+        self.requires("tracy/0.12.2")

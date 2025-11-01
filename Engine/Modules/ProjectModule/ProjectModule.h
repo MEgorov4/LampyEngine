@@ -2,11 +2,6 @@
 
 #include <EngineMinimal.h>
 
-namespace Logger
-{
-	class Logger;
-}
-
 namespace ProjectModule
 {
 	/// <summary>
@@ -57,7 +52,6 @@ namespace ProjectModule
 	class ProjectModule : public IModule
 	{
 		ProjectConfig m_projectConfig; ///< Stores the project configuration.
-		Logger::Logger* m_logger;
 	public:
 		/// <summary>
 		/// Initializes the project module and sets up the project environment.

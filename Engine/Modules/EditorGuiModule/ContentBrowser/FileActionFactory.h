@@ -126,8 +126,8 @@ class OpenWorldFileAction : public IFileAction
 
     void execute(const std::string& filePath) override
     {
-        std::string worldData = Fs::readTextFile(filePath);
-        m_ecsModule->openWorld(worldData);
+        //std::string worldData = Fs::readTextFile(filePath);
+        //m_ecsModule->openWorld(worldData);
     }
 
     std::string getName() const override

@@ -3,10 +3,10 @@
 
 namespace RenderModule::OpenGL
 {
-	OpenGLMesh::OpenGLMesh(const std::shared_ptr<ResourceModule::RMesh>& mesh) : IMesh(mesh), m_indexCount(mesh->getIndicesData().size())
+	OpenGLMesh::OpenGLMesh(const std::shared_ptr<ResourceModule::RMesh>& mesh) : IMesh(mesh), m_indexCount(mesh->getMeshData().indices.size())
 	{
-		std::vector<uint32_t> indices = mesh->getIndicesData();
-		std::vector<ResourceModule::MeshVertex> vertices = mesh->getVertexData();
+		std::vector<uint32_t> indices = mesh->getMeshData().indices;
+		std::vector<ResourceModule::MeshVertex> vertices = mesh->getMeshData().vertices;
 
 		glGenVertexArrays(1, &m_VAO);
 		glBindVertexArray(m_VAO);

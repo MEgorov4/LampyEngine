@@ -16,6 +16,7 @@ public:
   static bool isDirectory(const std::string &path) noexcept;
 
   static std::string currentPath();
+  static std::string currentEnginePath();
   static std::string absolutePath(const std::string &relative);
   static std::string fileName(const std::string &path);
   static std::string extension(const std::string &path);

@@ -1,67 +1,41 @@
 #pragma once
-
-#include <string>
-#include <memory>
-#include <unordered_map>
+#include <EngineMinimal.h>
+#include <Modules/ResourceModule/Asset/AssetID.h>
 
 namespace ResourceModule
 {
-    template <typename T>
-    class ResourceCache
+template <typename T> class ResourceCache
+{
+  public:
+    std::shared_ptr<T> find(const AssetID &guid) const noexcept
     {
-    public:
-        ResourceCache() = default;
+        if (auto it = m_cache.find(guid); it != m_cache.end())
+            return it->second.lock();
+        return nullptr;
+    }
 
-        template <typename... Args>
-        std::shared_ptr<T> load(const std::string& path, Args&&... args)
+    void put(const AssetID &guid, std::shared_ptr<T> resource)
+    {
+        m_cache[guid] = resource;
+    }
+
+    void removeUnused()
+    {
+        for (auto it = m_cache.begin(); it != m_cache.end();)
         {
-            auto it = cache.find(path);
-            if (it != cache.end() && it->second)
-            {
-                return it->second;
-            }
-
-            auto resource = std::make_shared<T>(path, std::forward<Args>(args)...);
-            cache[path] = resource;
-
-            return resource;
+            if (it->second.expired())
+                it = m_cache.erase(it);
+            else
+                ++it;
         }
+    }
 
-        template <typename T>
-        void unload(const std::string& path)
-        {
-            auto it = cache.find(path);
-            if (it != cache.end())
-            {
-                cache.erase(it);
-            }
-        }
+    void clear()
+    {
+        m_cache.clear();
+    }
 
-
-        template <typename T>
-        void clear()
-        {
-            cache.clear();
-        }
-
-
-        template <typename T>
-        void removeUnused()
-        {
-            for (auto it = cache.begin(); it != cache.end();)
-            {
-                if (it->second.use_count() == 1)
-                {
-                    it = cache.erase(it);
-                }
-                else
-                {
-                    ++it;
-                }
-            }
-        }
-
-    private:
-        std::unordered_map<std::string, std::shared_ptr<T>> cache;
-    };
-}
+  private:
+    std::unordered_map<AssetID, std::weak_ptr<T>, AssetID::Hasher> m_cache;
+};
+} // namespace ResourceModule

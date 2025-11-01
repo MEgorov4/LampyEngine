@@ -2,6 +2,8 @@
 
 
 #include <sol/sol.hpp>
+#include <sol/forward.hpp>
+#include <sol/reference.hpp>
 #include <vector>
 
 class LuaScriptExecutor

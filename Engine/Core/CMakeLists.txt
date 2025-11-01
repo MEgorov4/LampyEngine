@@ -22,8 +22,10 @@ set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Resources")
 
 set(OUTPUT_DIR "${CMAKE_SOURCE_DIR}/build/Engine/Resources")
 
-add_custom_command(
-  TARGET Engine
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory "${RESOURCE_DIR}" "${OUTPUT_DIR}"
-  COMMENT "Copying Resources folder to output directory")
+option(LAMPY_ENABLE_TRACY "Enable Tracy profiler" ON)
+
+if(LAMPY_ENABLE_TRACY)
+    find_package(tracy CONFIG REQUIRED) 
+    target_link_libraries(Engine PRIVATE Tracy::TracyClient)
+    target_compile_definitions(Engine PRIVATE TRACY_ENABLE)
+endif()

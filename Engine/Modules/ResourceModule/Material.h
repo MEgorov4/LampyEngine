@@ -1,6 +1,9 @@
 #pragma once
 
+#include <xstring>
+
 #include "BaseResource.h"
+
 namespace ResourceModule
 {
 	class RMaterial : public BaseResource

@@ -45,7 +45,7 @@ void GUIEditorToolPanel::render(float deltaTime)
             }
             else
             {
-                Fs::writeTextFile(editorWorldPath, m_ecsModule->getCurrentWorldData());
+                //Fs::writeTextFile(editorWorldPath, m_ecsModule->getCurrentWorldData());
             }
         }
 
@@ -112,13 +112,13 @@ void GUIEditorToolPanel::renderSaveWorldPopup()
 
         if (ImGui::Button("Save"))
         {
-            std::string worldPath = currentPath.string() + "\\" + buffer;
-            std::string worldData = Fs::readTextFile(worldPath);
+            //std::string worldPath = currentPath.string() + "\\" + buffer;
+            //std::string worldData = Fs::readTextFile(worldPath);
 
-            m_ecsModule->openWorld(worldData);
+            //m_ecsModule->openWorld(worldData);
 
-            memset(buffer, 0, sizeof(buffer));
-            ImGui::CloseCurrentPopup();
+            //memset(buffer, 0, sizeof(buffer));
+            //ImGui::CloseCurrentPopup();
         }
 
         if (ImGui::Button("Cancel"))

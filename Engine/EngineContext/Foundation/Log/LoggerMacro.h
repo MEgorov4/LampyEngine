@@ -17,6 +17,11 @@ namespace EngineCore::Foundation
         ::EngineCore::Foundation::GetLogger().log((LogVerbosity::Info), (category), (message));\
     } while (0)
 
+#define LT_LOGW(category, message)                                          \
+    do {                                                                          \
+        ::EngineCore::Foundation::GetLogger().log((LogVerbosity::Warning), (category), (message));\
+    } while (0)
+
 #define LT_LOGE(category, message)                                          \
     do {                                                                          \
         ::EngineCore::Foundation::GetLogger().log((LogVerbosity::Error), (category), (message));\

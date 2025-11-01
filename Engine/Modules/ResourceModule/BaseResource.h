@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <xstring>
+
 namespace ResourceModule
 {
 	class BaseResource

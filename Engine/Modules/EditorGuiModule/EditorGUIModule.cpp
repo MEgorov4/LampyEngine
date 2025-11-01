@@ -1,24 +1,23 @@
 #include "EditorGUIModule.h"
 
-
-#include <Modules/ImGuiModule/GUIObject.h>
-#include <Modules/ImGuiModule/ImGuiModule.h>
-#include <Modules/ProjectModule/ProjectModule.h>
-#include <Modules/LuaScriptModule/LuaScriptModule.h>
-#include <Modules/RenderModule/RenderModule.h>
-#include <Modules/InputModule/InputModule.h>
-
+#include "ContentBrowser/ContentBrowser.h"
 #include "EditorConsole.h"
 #include "EditorToolPanel.h"
 #include "EditorViewport.h"
 #include "MainMenuBar.h"
 #include "OutputLog.h"
-
-#include "ContentBrowser/ContentBrowser.h"
 #include "WorldInspector/WorldInspector.h"
+
+#include <Modules/ImGuiModule/GUIObject.h>
+#include <Modules/ImGuiModule/ImGuiModule.h>
+#include <Modules/InputModule/InputModule.h>
+#include <Modules/LuaScriptModule/LuaScriptModule.h>
+#include <Modules/ProjectModule/ProjectModule.h>
+#include <Modules/RenderModule/RenderModule.h>
 
 void EditorGUIModule::startup()
 {
+    LT_PROFILE_SCOPE("EditorGUIModule::startup");
     m_imGuiModule = GCXM(ImGUIModule::ImGUIModule);
 
     LT_LOG(LogVerbosity::Info, "EditorGUIModule", "Startup");
@@ -35,10 +34,12 @@ void EditorGUIModule::startup()
 
 void EditorGUIModule::shutdown()
 {
+    LT_PROFILE_SCOPE("EditorGUIModule::shutdown");
     LT_LOG(LogVerbosity::Info, "EditorGUIModule", "Shutdown");
 }
 
 void EditorGUIModule::render(float deltaTime) const
 {
+    LT_PROFILE_SCOPE("EditorGUIModule::render");
     m_imGuiModule->renderUI(deltaTime);
 }

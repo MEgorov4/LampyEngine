@@ -32,22 +32,22 @@ class WindowModule;
 /// </summary>
 class Engine
 {
-    InputModule::InputModule* m_inputModule;
-    WindowModule::WindowModule* m_windowModule;
-    RenderModule::RenderModule* m_renderModule;
-    PhysicsModule::PhysicsModule* m_physicsModule;
-    ECSModule::ECSModule* m_ecsModule;
+    InputModule::InputModule *m_inputModule;
+    WindowModule::WindowModule *m_windowModule;
+    RenderModule::RenderModule *m_renderModule;
+    PhysicsModule::PhysicsModule *m_physicsModule;
+    ECSModule::ECSModule *m_ecsModule;
 
     std::unique_ptr<IEngineContext> m_engineContext; ///< Unique pointer to the engine context.
     std::unique_ptr<ContextLocator> m_contextLocator;
 
   public:
-    Engine()                             = default;
-    ~Engine()                            = default;
-    Engine(const Engine& app)            = delete;
-    Engine(Engine&& app)                 = delete;
-    Engine& operator=(const Engine& rhs) = delete;
-    Engine& operator=(Engine&& rhs)      = delete;
+    Engine() = default;
+    ~Engine() = default;
+    Engine(const Engine &app) = delete;
+    Engine(Engine &&app) = delete;
+    Engine &operator=(const Engine &rhs) = delete;
+    Engine &operator=(Engine &&rhs) = delete;
 
     /// <summary>
     /// Runs the engine, handling startup, execution, and shutdown processes.

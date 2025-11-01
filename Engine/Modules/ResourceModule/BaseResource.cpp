@@ -2,13 +2,13 @@
 
 namespace ResourceModule
 {
-	std::string BaseResource::getGUID() const
-	{
-		return GUID;
-	}
-
-	void BaseResource::setGUID(const std::string& newGUID)
-	{
-		GUID = newGUID;
-	}
+std::string BaseResource::getGUID() const
+{
+    return GUID;
 }
+
+void BaseResource::setGUID(const std::string& newGUID)
+{
+    GUID = newGUID;
+}
+} // namespace ResourceModule

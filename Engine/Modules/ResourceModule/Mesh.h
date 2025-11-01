@@ -1,47 +1,33 @@
 #pragma once
-
-#include <glm/glm.hpp>
-#include <vector>
-#include <string>
+#include <EngineMinimal.h>
 #include "BaseResource.h"
 
 namespace ResourceModule
 {
-	class RMaterial;
+    struct MeshVertex
+    {
+        glm::vec3 pos;
+        glm::vec3 normal;
+        glm::vec2 uv;
+    };
 
-	struct MeshVertex
-	{
-		glm::vec3 pos;
-		glm::vec2 uv;
-		glm::vec3 normal;
+    struct MeshData
+    {
+        std::vector<MeshVertex> vertices;
+        std::vector<uint32_t> indices;
+        glm::vec3 aabbMin;
+        glm::vec3 aabbMax;
+    };
 
-		bool operator==(const MeshVertex& other) const
-		{
-			return pos == other.pos && uv == other.uv && normal == other.normal;
-		}
-	};
+    class RMesh : public BaseResource
+    {
+    public:
+        explicit RMesh(const std::string& path);
+        ~RMesh() noexcept = default;
 
+        const MeshData& getMeshData() const noexcept { return m_mesh; }
 
-	class RMesh : public BaseResource
-	{
-	public:
-		RMesh(const std::string& path);
-
-		const std::vector<MeshVertex> getVertexData();
-		const std::vector<uint32_t> getIndicesData();
-
-		glm::vec3 getAABBCenter() const;
-		glm::vec3 getAABBSize() const;
-	private:
-		std::vector<MeshVertex> m_vertexData;
-		std::vector<uint32_t> m_indicesData;
-
-		std::vector<RMaterial*> m_materials;
-
-		glm::vec3 aabbMin;
-		glm::vec3 aabbMax;
-	public:
-		std::string vertPath;
-		std::string fragPath;
-	};
+    private:
+        MeshData m_mesh;
+    };
 }

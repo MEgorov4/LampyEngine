@@ -1,5 +1,12 @@
 #include "ShaderLoader.h"
-#include "string"
+
+#include <stddef.h>
+#include <iosfwd>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <utility>
+
 #include "fstream"
 
 std::vector<char> ShaderLoader::readShaderFile(const std::string& filename)

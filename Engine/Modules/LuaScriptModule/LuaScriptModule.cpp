@@ -206,30 +206,30 @@ void LuaScriptModule::registerECSModule()
     m_luaState.new_usertype<PositionComponent>("PositionComponent", "x", &PositionComponent::x, "y",
                                                &PositionComponent::y, "z", &PositionComponent::z);
 
-    m_luaState.new_usertype<flecs::entity>(
-        "Entity", "id", &flecs::entity::id, "destruct", &flecs::entity::destruct, "is_valid", &flecs::entity::is_valid,
+    //m_luaState.new_usertype<flecs::entity>(
+    //    "Entity", "id", &flecs::entity::id, "destruct", &flecs::entity::destruct, "is_valid", &flecs::entity::is_valid,
 
-        "get_name", [](flecs::entity& e) -> const char* { return e.name().c_str(); },
+    //    "get_name", [](flecs::entity& e) -> const char* { return e.name().c_str(); },
 
-        "get_position",
-        [this](flecs::entity& e) -> glm::vec3
-        {
-            if (auto* position = e.get<PositionComponent>())
-            {
-                return position->toGLMVec();
-            }
-            return glm::vec3();
-        },
+    //    "get_position",
+    //    [this](flecs::entity& e) -> glm::vec3
+    //    {
+    //        if (auto* position = e.get<PositionComponent>())
+    //        {
+    //            return position->toGLMVec();
+    //        }
+    //        return glm::vec3();
+    //    },
 
-        "set_position",
-        [](flecs::entity& e, glm::vec3 pos)
-        {
-            if (e.has<PositionComponent>())
-            {
-                e.set<PositionComponent>({pos.x, pos.y, pos.z});
-            }
-        });
+    //    "set_position",
+    //    [](flecs::entity& e, glm::vec3 pos)
+    //    {
+    //        if (e.has<PositionComponent>())
+    //        {
+    //            e.set<PositionComponent>({pos.x, pos.y, pos.z});
+    //        }
+    //    });
 
-    m_luaState.set_function("GetWorld", [this]() -> flecs::world& { return m_ecsModule->getCurrentWorld(); });
+    //m_luaState.set_function("GetWorld", [this]() -> flecs::world& { return m_ecsModule->getCurrentWorld(); });
 }
 } // namespace ScriptModule

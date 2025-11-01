@@ -12,13 +12,11 @@ namespace RenderModule::OpenGL
 
 		glTexImage2D(GL_TEXTURE_2D
 			, 0
-			, GL_RGBA
-			, texture->getTextureInfo().texWidth
-			, texture->getTextureInfo().texHeight
+			, GL_RGBA, texture->getInfo().width, texture->getInfo().height
 			, 0
 			, GL_RGBA
 			, GL_UNSIGNED_BYTE
-			, texture->getTextureInfo().pixels.data());
+			, texture->getInfo().pixels.data());
 
 		glGenerateMipmap(GL_TEXTURE_2D);
 

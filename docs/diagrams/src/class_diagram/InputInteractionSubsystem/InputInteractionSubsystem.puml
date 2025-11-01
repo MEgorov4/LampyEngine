@@ -1,9 +1,0 @@
-@startuml
-package InputInteractionSubsystem
-{
-    !include WindowModule.puml
-    !include InputModule.puml
-    !include AudioModule.puml
-    InputModule <.up. WindowModule
-}
-@enduml

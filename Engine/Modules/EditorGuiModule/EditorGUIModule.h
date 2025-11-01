@@ -4,57 +4,57 @@
 
 namespace ScriptModule
 {
-	class LuaScriptModule;
+class LuaScriptModule;
 }
 
 namespace RenderModule
 {
-	class RenderModule;
+class RenderModule;
 }
 
 namespace InputModule
 {
-	class InputModule;
+class InputModule;
 }
 
 namespace FilesystemModule
 {
-	class FilesystemModule;
+class FilesystemModule;
 }
 
 namespace ECSModule
 {
-	class ECSModule;
+class ECSModule;
 }
 
 namespace ProjectModule
 {
-	class ProjectModule;
+class ProjectModule;
 }
 
 namespace Logger
 {
-	class Logger;
+class Logger;
 }
 
 namespace ImGUIModule
 {
-	class ImGUIModule;
+class ImGUIModule;
 }
-
 
 class EditorGUIModule : public IModule
 {
-	ImGUIModule::ImGUIModule* m_imGuiModule;
-	ProjectModule::ProjectModule* m_projectModule;
-	FilesystemModule::FilesystemModule* m_filesystemModule;
-	ECSModule::ECSModule* m_ecsModule;
-	RenderModule::RenderModule* m_renderModule;
-	InputModule::InputModule* m_inputModule;
-	ScriptModule::LuaScriptModule* m_luaScriptModule;
-public:
-	void startup() override;
-	void shutdown() override;
+    ImGUIModule::ImGUIModule* m_imGuiModule;
+    ProjectModule::ProjectModule* m_projectModule;
+    FilesystemModule::FilesystemModule* m_filesystemModule;
+    ECSModule::ECSModule* m_ecsModule;
+    RenderModule::RenderModule* m_renderModule;
+    InputModule::InputModule* m_inputModule;
+    ScriptModule::LuaScriptModule* m_luaScriptModule;
 
-	void render(float deltaTime) const;
+  public:
+    void startup() override;
+    void shutdown() override;
+
+    void render(float deltaTime) const;
 };

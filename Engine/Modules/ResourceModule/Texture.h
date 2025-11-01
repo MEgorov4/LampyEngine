@@ -1,32 +1,30 @@
 #pragma once
-
-#include <string>
-#include <vector>
-
+#include <EngineMinimal.h>
 #include "BaseResource.h"
-#include "../MemoryModule/GarbageAllocator.h"
+
 
 namespace ResourceModule
 {
-	struct TextureInfo
-	{
-		std::vector<uint8_t> pixels;
-		int texWidth;
-		int texHeight;
-		int texChannels;
-	};
+struct TextureInfo
+{
+    std::vector<uint8_t> pixels;
+    int width    = 0;
+    int height   = 0;
+    int channels = 0;
+};
 
-	class RTexture : public BaseResource
-	{
-	public:
-		RTexture(const std::string& path);
-		~RTexture();
+class RTexture : public BaseResource
+{
+  public:
+    explicit RTexture(const std::string& path);
+    ~RTexture() noexcept = default;
 
-		const TextureInfo& getTextureInfo() const
-		{
-			return textureInfo;
-		}
-	private:
-		TextureInfo textureInfo;
-	};
-}
+    const TextureInfo& getInfo() const noexcept
+    {
+        return m_info;
+    }
+
+  private:
+    TextureInfo m_info;
+};
+} // namespace ResourceModule

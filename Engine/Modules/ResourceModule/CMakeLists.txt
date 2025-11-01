@@ -7,5 +7,5 @@ add_library(ResourceModule STATIC ${RESOURCE_MODULE_SOURCE})
 
 target_link_libraries(
   ResourceModule
-  PUBLIC RenderModule stb::stb tinyobjloader::tinyobjloader
-  PRIVATE MemoryModule EngineContext)
+  PUBLIC RenderModule stb::stb tinyobjloader::tinyobjloader boost::boost nlohmann_json::nlohmann_json efsw::efsw
+  PRIVATE MemoryModule EngineContext) 

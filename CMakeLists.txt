@@ -14,10 +14,36 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(LT_DEBUG)
+elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    add_compile_definitions(LT_DEV)
+elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_definitions(LT_RELEASE)
+endif()
+
+add_compile_definitions(
+    $<$<CONFIG:Debug>:LT_DEBUG>
+    $<$<CONFIG:RelWithDebInfo>:LT_DEV>
+    $<$<CONFIG:Release>:LT_RELEASE>
+)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+foreach(OUTPUTCONFIG IN LISTS CMAKE_CONFIGURATION_TYPES)
+    string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/bin)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/bin)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/bin)
+endforeach()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Engine/Core)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Engine/Core)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Engine/Core)
 
+find_package(efsw REQUIRED)
 find_package(glew REQUIRED)
 find_package(SDL3 REQUIRED)
 find_package(OpenAL REQUIRED)
@@ -35,6 +61,7 @@ find_package(fltk REQUIRED)
 find_package(stb REQUIRED)
 find_package(clip REQUIRED)
 find_package(Bullet REQUIRED)
+find_package(Tracy REQUIRED)
 
 function(format_source_group)
   foreach(_source IN ITEMS ${ARGN})

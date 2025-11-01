@@ -9,7 +9,7 @@
 flecs::entity GUIWorldInspector::m_selectedEntity = {};
 GUIWorldInspector::GUIWorldInspector() :
     GUIObject(),m_ecsModule(GCM(ECSModule::ECSModule)),
-    m_world(m_ecsModule->getCurrentWorld())
+    m_world(m_ecsModule->getCurrentWorld()->get())
 {
     ComponentRendererFactory& factory = ComponentRendererFactory::getInstance();
     factory.registerRenderer("PositionComponent", [this]()
@@ -218,20 +218,20 @@ void GUIWorldInspector::renderAddComponentPopup()
     {
         if (ImGui::BeginCombo("Select component", "zero comp"))
         {
-            auto& registeredComponents = m_ecsModule->getRegisteredComponents();
-            for (size_t i = 0; i < registeredComponents.size(); ++i)
-            {
-                if (ImGui::Selectable(registeredComponents[i].second.c_str()))
-                {
-                    if (!m_selectedEntity.has(registeredComponents[i].first))
-                    {
-                        m_selectedEntity.add(registeredComponents[i].first);
-                        ImGui::CloseCurrentPopup();
-                        break;
-                    }
-                }
-            }
-            ImGui::EndCombo();
+            //auto& registeredComponents = m_ecsModule->getRegisteredComponents();
+            //for (size_t i = 0; i < registeredComponents.size(); ++i)
+            //{
+            //    if (ImGui::Selectable(registeredComponents[i].second.c_str()))
+            //    {
+            //        if (!m_selectedEntity.has(registeredComponents[i].first))
+            //        {
+            //            m_selectedEntity.add(registeredComponents[i].first);
+            //            ImGui::CloseCurrentPopup();
+            //            break;
+            //        }
+            //    }
+            //}
+            //ImGui::EndCombo();
         }
         if (ImGui::Button("Close"))
         {
