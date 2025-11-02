@@ -106,6 +106,7 @@ _group(PhysicsModule "Core/Modules")
 _group(ResourceModule "Core/Modules")
 _group(ShaderCompilerModule "Core/Modules")
 _group(WindowModule "Core/Modules")
+_group(TimeModule "Core/Modules")
 
 _group(EditorModule "Editor")
 _group(ImGuiModule "Editor/Modules")

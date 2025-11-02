@@ -11,7 +11,7 @@ namespace PhysicsModule
 {
 void PhysicsModule::startup()
 {
-    LT_PROFILE_ZONE("PhysicsModule::startup");
+    ZoneScopedN("PhysicsModule::startup");
     m_ecsModule = GCM(ECSModule::ECSModule);
 
     m_debugDrawer.reset(new BulletDebugDrawer());
@@ -30,13 +30,13 @@ void PhysicsModule::startup()
 
 void PhysicsModule::shutdown()
 {
-    LT_PROFILE_ZONE("PhysicsModule::shutdown");
+    ZoneScopedN("PhysicsModule::shutdown");
     LT_LOGI("PhysicsModule", "Shutdown");
 }
 
 void PhysicsModule::tick(float deltaTime)
 {
-    LT_PROFILE_ZONE("PhysicsModule::tick");
+    ZoneScopedN("PhysicsModule::tick");
     if (m_tickEnabled)
     {
         m_physicsWorld->stepSimulation(deltaTime, 10, 1.0f / 60.0f);
@@ -49,7 +49,7 @@ void PhysicsModule::tick(float deltaTime)
 
 void PhysicsModule::setupWorldProperties()
 {
-    LT_PROFILE_ZONE("PhysicsModule::setupWorldProperties");
+    ZoneScopedN("PhysicsModule::setupWorldProperties");
     m_physicsWorld->setGravity(btVector3(0, -9.81f, 0));
     m_physicsWorld->setDebugDrawer(m_debugDrawer.get());
 }

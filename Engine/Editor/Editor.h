@@ -16,10 +16,11 @@ class Editor : public IEngineContext
   public:
     ~Editor() override = default;
 
-    void startupMinor(ContextLocator& locator) override;
+    void startupMinor(ContextLocator &locator) override;
 
-    void startupMajor(ContextLocator& locator) override;
+    void startupMajor(ContextLocator &locator) override;
 
+    void render() override;
     void tick(float deltaTime) override;
 
     void shutdown() override;

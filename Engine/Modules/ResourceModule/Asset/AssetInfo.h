@@ -45,6 +45,7 @@ struct AssetInfo
 
 inline void to_json(nlohmann::json& j, const AssetInfo& a)
 {
+    // При сериализации в JSON GUID и sourcePath должны быть валидными для записей в базе
     LT_ASSERT_MSG(!a.guid.empty(), "AssetInfo GUID is empty");
     LT_ASSERT_MSG(!a.sourcePath.empty(), "AssetInfo source path is empty");
     
@@ -67,10 +68,10 @@ inline void from_json(const nlohmann::json& j, AssetInfo& a)
     
     std::string guidStr;
     j.at("guid").get_to(guidStr);
-    LT_ASSERT_MSG(!guidStr.empty(), "GUID string from JSON is empty");
     
+    // Пустая строка GUID допустима при десериализации (для опциональных ресурсов)
+    // но для записей в базе GUID должен быть валидным
     a.guid = AssetID(guidStr);
-    LT_ASSERT_MSG(!a.guid.empty(), "Parsed AssetID is empty");
 
     int typeInt = 0;
     j.at("type").get_to(typeInt);

@@ -41,6 +41,7 @@ void EntityWorld::reset()
 
 void EntityWorld::tick(float dt)
 {
+    ZoneScopedN("EntityWorld::tick");
     m_world.progress(dt);
 }
 

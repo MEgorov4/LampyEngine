@@ -5,7 +5,7 @@ format_source_group(${ENGINE_CONTEXT_SOURCE})
 add_library(EngineContext STATIC ${ENGINE_CONTEXT_SOURCE})
 
 target_link_libraries(EngineContext PUBLIC glm::glm
-PRIVATE Tracy::TracyClient)
+Tracy::TracyClient)
 
 # Подключаем precompiled header
 target_precompile_headers(EngineContext PRIVATE EnginePCH.h)

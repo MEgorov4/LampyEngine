@@ -14,4 +14,6 @@
 #include "Profiler/ProfileAllocator.h"
 #include "Profiler/ProfilerMacros.h"
 
+#include "JobSystem/JobSystem.h"
+
 using namespace EngineCore::Foundation;

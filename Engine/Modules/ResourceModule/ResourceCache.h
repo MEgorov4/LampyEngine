@@ -10,7 +10,9 @@ template <typename T> class ResourceCache
   public:
     std::shared_ptr<T> find(const AssetID &guid) const noexcept
     {
-        LT_ASSERT_MSG(!guid.str().empty(), "Cannot find resource with empty GUID");
+        // Пустой AssetID допустим для опциональных ресурсов - возвращаем nullptr
+        if (guid.empty())
+            return nullptr;
         
         if (auto it = m_cache.find(guid); it != m_cache.end())
             return it->second.lock();
@@ -19,7 +21,8 @@ template <typename T> class ResourceCache
 
     void put(const AssetID &guid, std::shared_ptr<T> resource)
     {
-        LT_ASSERT_MSG(!guid.str().empty(), "Cannot put resource with empty GUID");
+        // Пустой GUID недопустим при регистрации ресурса в кэше
+        LT_ASSERT_MSG(!guid.empty(), "Cannot put resource with empty GUID");
         LT_ASSERT_MSG(resource, "Cannot put null resource into cache");
         
         m_cache[guid] = resource;

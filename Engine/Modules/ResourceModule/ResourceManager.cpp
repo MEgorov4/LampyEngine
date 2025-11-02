@@ -33,11 +33,16 @@ void ResourceManager::mountPak(const std::string &pakPath)
 
 void ResourceManager::unload(const AssetID &guid)
 {
-    LT_ASSERT_MSG(!guid.str().empty(), "Cannot unload resource with empty GUID");
+    // Пустой AssetID допустим - просто ничего не делаем
+    if (guid.empty())
+        return;
+    
+    LT_LOGI("ResourceManager", "Unloading resource: " + guid.str());
     m_registry.unregister(guid);
 }
 
 void ResourceManager::clearAll()
 {
+    LT_LOGI("ResourceManager", "Clearing all resources");
     m_registry.clear();
 }

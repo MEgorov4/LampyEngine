@@ -205,19 +205,38 @@ bool OpenGLShader::hasUniformBlock(const std::string &blockName)
 
 GLuint OpenGLShader::getOrCreateUBO(const std::string &blockName, size_t dataSize)
 {
-    if (m_ubos.find(blockName) == m_ubos.end())
+    // Проверяем, существует ли UBO и правильного ли он размера
+    if (m_ubos.find(blockName) != m_ubos.end())
     {
-        GLuint ubo;
-        glGenBuffers(1, &ubo);
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        glBufferData(GL_UNIFORM_BUFFER, dataSize, nullptr, GL_DYNAMIC_DRAW);
+        GLuint existingUbo = m_ubos[blockName];
+        glBindBuffer(GL_UNIFORM_BUFFER, existingUbo);
+        GLint bufferSize = 0;
+        glGetBufferParameteriv(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE, &bufferSize);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-        GLuint bindingPoint = m_uniformBlocks[blockName];
-        glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, ubo);
-        m_ubos[blockName] = ubo;
+        
+        // Если размер совпадает, возвращаем существующий буфер
+        if (static_cast<size_t>(bufferSize) == dataSize)
+        {
+            return existingUbo;
+        }
+        
+        // Размер не совпадает - удаляем старый буфер и создадим новый
+        glDeleteBuffers(1, &existingUbo);
+        m_ubos.erase(blockName);
     }
-    return m_ubos[blockName];
+    
+    // Создаем новый UBO
+    GLuint ubo;
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, dataSize, nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    GLuint bindingPoint = m_uniformBlocks[blockName];
+    glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, ubo);
+    m_ubos[blockName] = ubo;
+    
+    return ubo;
 }
 
 void OpenGLShader::debugPrintUBO(const std::string &blockName, size_t dataSize)
@@ -258,5 +277,75 @@ void OpenGLShader::unbind()
 
 void OpenGLShader::setUniformBlock(const ShaderUniformBlock &data)
 {
+}
+
+void OpenGLShader::setUniformMatrix4(const std::string& name, const glm::mat4& matrix)
+{
+    use();
+    GLint location = glGetUniformLocation(m_programID, name.c_str());
+    if (location >= 0)
+    {
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+}
+
+void OpenGLShader::setUniformMatrix3(const std::string& name, const glm::mat3& matrix)
+{
+    use();
+    GLint location = glGetUniformLocation(m_programID, name.c_str());
+    if (location >= 0)
+    {
+        glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+}
+
+void OpenGLShader::setUniformVec4(const std::string& name, const glm::vec4& vec)
+{
+    use();
+    GLint location = glGetUniformLocation(m_programID, name.c_str());
+    if (location >= 0)
+    {
+        glUniform4fv(location, 1, glm::value_ptr(vec));
+    }
+}
+
+void OpenGLShader::setUniformFloat(const std::string& name, float value)
+{
+    use();
+    GLint location = glGetUniformLocation(m_programID, name.c_str());
+    if (location >= 0)
+    {
+        glUniform1f(location, value);
+    }
+}
+
+void OpenGLShader::setUniformInt(const std::string& name, int value)
+{
+    use();
+    GLint location = glGetUniformLocation(m_programID, name.c_str());
+    if (location >= 0)
+    {
+        glUniform1i(location, value);
+    }
+}
+
+void OpenGLShader::setUniformVec4Array(const std::string& name, const glm::vec4* values, int count)
+{
+    use();
+    GLint location = glGetUniformLocation(m_programID, name.c_str());
+    if (location >= 0)
+    {
+        glUniform4fv(location, count, glm::value_ptr(values[0]));
+    }
+}
+
+void OpenGLShader::setUniformFloatArray(const std::string& name, const float* values, int count)
+{
+    use();
+    GLint location = glGetUniformLocation(m_programID, name.c_str());
+    if (location >= 0)
+    {
+        glUniform1fv(location, count, values);
+    }
 }
 } // namespace RenderModule::OpenGL

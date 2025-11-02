@@ -35,8 +35,13 @@ class RenderGraph
 
     TextureHandle execute()
     {
+        ZoneScopedN("RenderGraph::execute");
+        
         for (auto& pass : m_passes)
         {
+            ZoneScoped;
+            ZoneText(pass.name.c_str(), pass.name.size());
+            
             std::vector<RenderGraphResource, ProfileAllocator<RenderGraphResource>> inputs;
             for (auto& name : pass.reads)
                 inputs.push_back(m_resources.at(name));

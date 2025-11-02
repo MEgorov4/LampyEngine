@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "../../ResourceModule/ResourceManager.h"
+#include "../../ResourceModule/Material.h"
 #include "IFramebuffer.h"
 #include "IMesh.h"
 #include "IShader.h"
@@ -31,6 +32,7 @@ struct RenderObject
     std::shared_ptr<IMesh> mesh;
     std::shared_ptr<ITexture> texture;
     std::shared_ptr<IShader> shader;
+    std::shared_ptr<ResourceModule::RMaterial> material; // Material для PBR рендеринга
 };
 
 enum RenderPassType

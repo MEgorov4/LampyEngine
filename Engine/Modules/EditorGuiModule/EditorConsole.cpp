@@ -9,17 +9,28 @@ GUIEditorConsole::GUIEditorConsole() : GUIObject(), m_luaScriptModule(GCM(Script
 
 void GUIEditorConsole::render(float deltaTime)
 {
-    ImGui::Begin("Console");
+    if (!isVisible())
+        return;
 
-    static char buffer[256] = "";
-
-    ImGui::SetNextItemWidth(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 2);
-    if (ImGui::InputText("##ConsoleInput", buffer, 256, ImGuiInputTextFlags_EnterReturnsTrue))
+    bool windowOpen = true;
+    if (ImGui::Begin("Console", &windowOpen))
     {
-        processCommand(buffer);
-        memset(buffer, 0, 256);
-    }
+        static char buffer[256] = "";
 
+        ImGui::SetNextItemWidth(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 2);
+        if (ImGui::InputText("##ConsoleInput", buffer, 256, ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            processCommand(buffer);
+            memset(buffer, 0, 256);
+        }
+    }
+    
+    // Handle window close button
+    if (!windowOpen)
+    {
+        hide();
+    }
+    
     ImGui::End();
 }
 

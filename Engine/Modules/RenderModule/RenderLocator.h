@@ -1,5 +1,7 @@
 #pragma once
 #include "RenderContext.h"
+#include <glm/glm.hpp>
+
 namespace RenderModule
 {
     class RenderLocator
@@ -18,4 +20,45 @@ namespace RenderModule
             return *s_context; 
         }
     };
+    
+    // Глобальные функции для отладочного рендеринга
+    // Можно вызывать из любого места в коде
+    inline void DebugDrawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color = glm::vec3(1.0f, 0.0f, 0.0f))
+    {
+        auto* ctx = RenderLocator::Get();
+        if (ctx)
+        {
+            DebugLine line;
+            line.from = from;
+            line.to = to;
+            line.color = color;
+            ctx->addDebugLine(line);
+        }
+    }
+    
+    inline void DebugDrawBox(const glm::vec3& center, const glm::vec3& size, const glm::vec3& color = glm::vec3(0.0f, 1.0f, 0.0f))
+    {
+        auto* ctx = RenderLocator::Get();
+        if (ctx)
+        {
+            DebugBox box;
+            box.center = center;
+            box.size = size;
+            box.color = color;
+            ctx->addDebugBox(box);
+        }
+    }
+    
+    inline void DebugDrawSphere(const glm::vec3& center, float radius, const glm::vec3& color = glm::vec3(0.0f, 0.0f, 1.0f))
+    {
+        auto* ctx = RenderLocator::Get();
+        if (ctx)
+        {
+            DebugSphere sphere;
+            sphere.center = center;
+            sphere.radius = radius;
+            sphere.color = color;
+            ctx->addDebugSphere(sphere);
+        }
+    }
 }

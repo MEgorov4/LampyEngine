@@ -1,5 +1,6 @@
 include_directories(PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # CoreModules
+add_subdirectory(TimeModule)
 add_subdirectory(MemoryModule)
 add_subdirectory(ResourceModule)
 add_subdirectory(WindowModule)

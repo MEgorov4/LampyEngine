@@ -98,13 +98,20 @@ struct MeshComponent
 
 struct PointLightComponent
 {
-	float radius;
-	float intencity;
+	float innerRadius = 0.0f;  // Внутренний радиус (полная интенсивность до этого расстояния)
+	float outerRadius = 10.0f; // Внешний радиус (свет затухает до 0 на этом расстоянии)
+	float intencity = 1.0f;    // Интенсивность света
+	glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f); // Цвет освещения (RGB)
 };
 
 struct DirectionalLightComponent
 {
 	float intencity;
+};
+
+struct MaterialComponent
+{
+	ResourceModule::AssetID materialID;
 };
 
 // Tags

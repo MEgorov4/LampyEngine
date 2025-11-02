@@ -16,12 +16,13 @@
 #include <Modules/ResourceModule/Asset/AssetManager.h>
 #include <Modules/ResourceModule/ResourceManager.h>
 #include <Modules/ShaderCompilerModule/ShaderCompiler.h>
+#include <Modules/TimeModule/TimeModule.h>
 #include <Modules/WindowModule/Window.h>
 #include <Modules/WindowModule/WindowModule.h>
 
 void Engine::run()
 {
-    LT_PROFILE_ZONE("Engine::run");
+    ZoneScopedN("Engine::run");
 
     LT_LOG(LogVerbosity::Info, "Engine", "Run");
     startupMinor();
@@ -34,7 +35,7 @@ void Engine::run()
 
 void Engine::startupMinor()
 {
-    LT_PROFILE_ZONE("Engine::startupMinor");
+    ZoneScopedN("Engine::startupMinor");
 
     LT_LOG(LogVerbosity::Info, "Engine", "StartupMinor");
     Core::StartupAll();
@@ -48,7 +49,7 @@ void Engine::startupMinor()
 
 void Engine::collectRuntimeModules()
 {
-    LT_PROFILE_ZONE("Engine::collectRuntimeModules");
+    ZoneScopedN("Engine::collectRuntimeModules");
 
     m_inputModule = GCM(InputModule::InputModule);
     m_windowModule = GCM(WindowModule::WindowModule);
@@ -60,7 +61,7 @@ void Engine::collectRuntimeModules()
 
 void Engine::startupMajor()
 {
-    LT_PROFILE_ZONE("Engine::startupRuntimeModules");
+    ZoneScopedN("Engine::startupRuntimeModules");
 
     LT_LOG(LogVerbosity::Info, "Engine", "StartupMajor");
 
@@ -70,7 +71,7 @@ void Engine::startupMajor()
     auto *projectModule = GCXM(ProjectModule::ProjectModule);
     ProjectModule::ProjectConfig &cfg = projectModule->getProjectConfig();
 
-    // Пути проекта
+    // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     std::string projectRoot = cfg.getProjectPath();
     std::string projectResources = cfg.getResourcesPath();
     std::string projectBuild = cfg.getBuildPath();
@@ -78,16 +79,16 @@ void Engine::startupMajor()
     std::string projectContent = projectBuild + "/Content";
     std::string projectDb = Fs::absolutePath(projectRoot + "/Project.assetdb.json");
 
-    // Пути движка — вычисляем относительно текущей exe-директории
+    // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ exe-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     fs::path exeDir = fs::current_path(); // build/Engine/Core/[Debug|Release]
     fs::path engineResources = fs::absolute(exeDir / "../../../build/Engine/Resources");
 
-    // Гарантируем, что все нужные директории существуют
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     Fs::createDirectory(projectResources);
     Fs::createDirectory(projectCache);
     Fs::createDirectory(projectContent);
 
-    // Создаём и конфигурируем AssetManager
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ AssetManager
     auto assetMgr = std::make_shared<ResourceModule::AssetManager>();
     assetMgr->setEngineResourcesRoot(engineResources);
     assetMgr->setProjectResourcesRoot(projectResources);
@@ -99,6 +100,9 @@ void Engine::startupMajor()
     LT_LOG(LogVerbosity::Info, "Editor", "ProjectResources: " + projectResources);
 
     Core::Register(assetMgr, 5);
+
+    // Р РµРіРёСЃС‚СЂРёСЂСѓРµРј TimeModule СЃ СЃР°РјС‹Рј РЅРёР·РєРёРј РїСЂРёРѕСЂРёС‚РµС‚РѕРј, С‡С‚РѕР±С‹ РѕРЅ Р±С‹Р» РґРѕСЃС‚СѓРїРµРЅ РґСЂСѓРіРёРј РјРѕРґСѓР»СЏРј
+    Core::Register(std::make_shared<TimeModule::TimeModule>(), 1);
 
     auto resourceManager = std::make_shared<ResourceModule::ResourceManager>();
     resourceManager->setDatabase(&assetMgr->getDatabase());
@@ -124,7 +128,7 @@ void Engine::startupMajor()
 
 void Engine::shutdown()
 {
-    LT_PROFILE_ZONE("Engine::shutdown");
+    ZoneScopedN("Engine::shutdown");
 
     LT_LOG(LogVerbosity::Info, "Engine", "Shutdown");
     m_engineContext->shutdown();
@@ -143,34 +147,55 @@ void Engine::engineTick()
 
     while (!window->shouldClose())
     {
-        LT_PROFILE_FRAME_BEGIN();
-        LT_PROFILE_MARK("BFrame");
+        FrameMark;
+        TracyMessage("BFrame", 5);
 
-        LT_PROFILE_SCOPE("Tick");
-        auto now = clock::now();
-        double rawDt = std::chrono::duration<double>(now - prevTime).count();
-        prevTime = now;
+        {
+            ZoneScopedN("Tick");
+            auto now = clock::now();
+            double rawDt = std::chrono::duration<double>(now - prevTime).count();
+            prevTime = now;
 
-        rawDt = std::clamp(rawDt, 1e-6, 0.25);
+            rawDt = std::clamp(rawDt, 1e-6, 0.25);
 
-        smothedDt += alpha * (rawDt - smothedDt);
-        float deltaTime = static_cast<float>(smothedDt);
+            smothedDt += alpha * (rawDt - smothedDt);
+            float deltaTime = static_cast<float>(smothedDt);
 
-        window->pollEvents();
+            window->pollEvents();
 
-        LT_PROFILE_ZONE("Tick/PhysicsTick");
-        m_physicsModule->tick(deltaTime);
-        LT_PROFILE_ZONE("Tick/ECSTick");
-        m_ecsModule->ecsTick(deltaTime);
+            // РћР±РЅРѕРІР»СЏРµРј TimeModule (РѕРЅ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РїРµСЂРµРґР°РЅРЅС‹Р№ deltaTime РёР»Рё РІС‹С‡РёСЃР»РёС‚СЊ СЃР°Рј)
+            {
+                ZoneScopedN("Tick/TimeTick");
+                auto *timeModule = GCM(TimeModule::TimeModule);
+                timeModule->tick(deltaTime);
+                // РСЃРїРѕР»СЊР·СѓРµРј deltaTime РёР· TimeModule РґР»СЏ СЃРѕРіР»Р°СЃРѕРІР°РЅРЅРѕСЃС‚Рё
+                deltaTime = timeModule->getDeltaTime();
+            }
 
-        LT_PROFILE_ZONE("Tick/ContextTick");
-        m_engineContext->tick(deltaTime);
-        LT_PROFILE_ZONE("Tick/Render");
-        m_renderModule->getRenderer()->render();
-        m_windowModule->getWindow()->swapWindow();
+            {
+                ZoneScopedN("Tick/PhysicsTick");
+                m_physicsModule->tick(deltaTime);
+            }
 
-        LT_PROFILE_MARK("EFrame");
-        LT_PROFILE_FRAME_END();
+            {
+                ZoneScopedN("Tick/ECSTick");
+                m_ecsModule->ecsTick(deltaTime);
+            }
+
+            {
+                ZoneScopedN("Tick/ContextTick");
+                m_engineContext->tick(deltaTime);
+            }
+            {
+                ZoneScopedN("Tick/Render");
+                m_renderModule->getRenderer()->render();
+                m_engineContext->render();
+            }
+            m_windowModule->getWindow()->swapWindow();
+            // endFrame already called in IRenderer::render()
+
+            TracyMessage("EFrame", 6);
+        }
     }
     m_renderModule->getRenderer()->waitIdle();
 }

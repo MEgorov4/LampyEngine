@@ -123,7 +123,7 @@ void ImGUIModule::onEvent(const ::SDL_Event &event)
 
 void ImGUIModule::renderUI(float deltaTime) const
 {
-    LT_PROFILE_ZONE("ImGUIModule::renderUI");
+    ZoneScopedN("ImGUIModule::renderUI");
 
     int w = GCM(WindowModule::WindowModule)->getWindow()->getWindowSize().first;
     int h = GCM(WindowModule::WindowModule)->getWindow()->getWindowSize().second;

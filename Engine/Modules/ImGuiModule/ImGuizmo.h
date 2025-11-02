@@ -111,6 +111,10 @@ void EditTransform(const Camera& camera, matrix_t& matrix)
 #define IMGUI_API
 #endif
 
+// Forward declarations for ImGui types
+struct ImDrawList;
+struct ImGuiContext;
+
 namespace ImGuizmo
 {
    // call inside your own window and before Manipulate() in order to draw gizmo to that window.

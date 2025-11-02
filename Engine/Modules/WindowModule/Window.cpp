@@ -9,7 +9,7 @@ namespace WindowModule
 
 Window::Window(int width, int height, const char *title) : m_inputModule(GCM(InputModule::InputModule))
 {
-    LT_PROFILE_ZONE("Window::Window");
+    ZoneScopedN("Window::Window");
 
     LT_LOGI("WindowModule_Window", "Window: Start create window: width = " + std::format("{}", width) + ", height = " +
                                        std::format("{}", height) + ", title = " + std::format("{}", title));
@@ -47,6 +47,9 @@ Window::Window(int width, int height, const char *title) : m_inputModule(GCM(Inp
         throw std::runtime_error("Failed to create SDL window");
     }
 
+    // Максимизация окна (разворачивание на весь экран, но оставаясь окном)
+    SDL_MaximizeWindow(m_window);
+
     // Создание контекста
     m_glContext = SDL_GL_CreateContext(m_window);
     if (!m_glContext)
@@ -62,7 +65,7 @@ Window::Window(int width, int height, const char *title) : m_inputModule(GCM(Inp
         throw std::runtime_error("Failed to make current context: " + std::string(error ? error : "Unknown error"));
     }
 
-    LT_LOGI("WindowModule_Window", "Window created");
+    LT_LOGI("WindowModule_Window", "Window created and maximized");
 }
 
 Window::~Window()
@@ -84,14 +87,14 @@ Window::~Window()
 
 void Window::swapWindow()
 {
-    LT_PROFILE_ZONE("Window::swapWindow");
+    ZoneScopedN("Window::swapWindow");
     LT_ASSERT_MSG(m_window, "Window is null");
     SDL_GL_SwapWindow(m_window);
 }
 
 std::pair<int, int> Window::getWindowSize() const
 {
-    LT_PROFILE_ZONE("Window::getWindowSize");
+    ZoneScopedN("Window::getWindowSize");
     LT_ASSERT_MSG(m_window, "Window is null");
 
     std::pair result{0, 0};
@@ -101,7 +104,7 @@ std::pair<int, int> Window::getWindowSize() const
 
 void Window::pollEvents()
 {
-    LT_PROFILE_ZONE("Window::pollEvents");
+    ZoneScopedN("Window::pollEvents");
     LT_ASSERT_MSG(m_window, "Window is null");
     LT_ASSERT_MSG(m_inputModule, "InputModule is null");
 

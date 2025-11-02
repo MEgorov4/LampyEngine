@@ -27,13 +27,15 @@ class OpenGLRenderFactory final : public IRenderFactory
   public:
     std::shared_ptr<ITexture> createTexture(const ResourceModule::AssetID &id) override
     {
+        if (id.empty())
+            return {};
         std::scoped_lock lock(m_mutex);
         const std::string key = id.str();
 
         if (auto it = m_textureCache.find(key); it != m_textureCache.end())
             return it->second;
 
-        auto *resourceMgr = GCM(ResourceModule::ResourceManager);
+        auto resourceMgr = GCM(ResourceModule::ResourceManager);
         LT_ASSERT_MSG(resourceMgr, "ResourceManager is null");
 
         auto rtex = resourceMgr->load<ResourceModule::RTexture>(id);
@@ -46,16 +48,20 @@ class OpenGLRenderFactory final : public IRenderFactory
 
     std::shared_ptr<IMesh> createMesh(const ResourceModule::AssetID &id) override
     {
+
+        if (id.empty())
+            return {};
         std::scoped_lock lock(m_mutex);
         const std::string key = id.str();
 
         if (auto it = m_meshCache.find(key); it != m_meshCache.end())
             return it->second;
 
-        auto *resourceMgr = GCM(ResourceModule::ResourceManager);
+        auto resourceMgr = GCM(ResourceModule::ResourceManager);
         LT_ASSERT_MSG(resourceMgr, "ResourceManager is null");
 
         auto rmesh = resourceMgr->load<ResourceModule::RMesh>(id);
+
         LT_ASSERT_MSG(rmesh, "Failed to load mesh resource");
 
         auto mesh = std::make_shared<OpenGLMesh>(rmesh);
@@ -75,13 +81,15 @@ class OpenGLRenderFactory final : public IRenderFactory
 
     std::shared_ptr<IShader> createShader(const ResourceModule::AssetID &vs, const ResourceModule::AssetID &fs) override
     {
+        if (vs.empty() || fs.empty())
+            return {};
         std::scoped_lock lock(m_mutex);
         const std::string key = vs.str() + fs.str();
 
         if (auto it = m_shaderCache.find(key); it != m_shaderCache.end())
             return it->second;
 
-        auto *resourceMgr = GCM(ResourceModule::ResourceManager);
+        auto resourceMgr = GCM(ResourceModule::ResourceManager);
         LT_ASSERT_MSG(resourceMgr, "ResourceManager is null");
 
         auto v = resourceMgr->load<ResourceModule::RShader>(vs);

@@ -19,7 +19,12 @@ AssetID::AssetID() noexcept = default;
 
 AssetID::AssetID(const std::string& str)
 {
-    LT_ASSERT_MSG(!str.empty(), "AssetID string cannot be empty");
+    // Пустая строка создает пустой AssetID (для опциональных ресурсов)
+    if (str.empty())
+    {
+        // m_bytes уже инициализирован нулями конструктором по умолчанию
+        return;
+    }
     
     // Если это UUID (36 символов с дефисами) в стандартном формате
     if (str.size() == 36 && str[8] == '-' && str[13] == '-' && str[18] == '-' && str[23] == '-') {
@@ -40,8 +45,6 @@ AssetID::AssetID(const std::string& str)
     } catch (...) {
         *this = MakeDeterministicIDFromPath(str);
     }
-    
-    LT_ASSERT_MSG(!empty(), "Generated AssetID is empty");
 }
 
 std::string AssetID::str() const
@@ -79,7 +82,11 @@ size_t AssetID::Hasher::operator()(const AssetID& id) const noexcept
 // --------------------------------------------------------
 AssetID ResourceModule::MakeDeterministicIDFromPath(const std::string& absPath)
 {
-    LT_ASSERT_MSG(!absPath.empty(), "Cannot generate ID from empty path");
+    // Пустой путь создает пустой AssetID (для опциональных ресурсов)
+    if (absPath.empty())
+    {
+        return AssetID{};
+    }
     
     static const auto LampyNamespaceUUID =
         boost::uuids::string_generator()("123e4567-e89b-12d3-a456-426655440000");
@@ -101,7 +108,5 @@ AssetID ResourceModule::MakeDeterministicIDFromPath(const std::string& absPath)
 
     AssetID id;
     std::copy(uuid.begin(), uuid.end(), id.m_bytes.begin());
-    
-    LT_ASSERT_MSG(!id.empty(), "Generated deterministic ID is empty");
     return id;
 }

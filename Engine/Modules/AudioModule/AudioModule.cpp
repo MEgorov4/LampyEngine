@@ -8,7 +8,7 @@ namespace AudioModule
 {
 void AudioModule::startup()
 {
-    LT_PROFILE_SCOPE("AudioModule::startup");
+    ZoneScopedN("AudioModule::startup");
     m_device = alcOpenDevice(nullptr);
     if (!m_device)
     {
@@ -29,7 +29,7 @@ void AudioModule::startup()
 
 void AudioModule::shutdown()
 {
-    LT_PROFILE_SCOPE("AudioModule::shutdown");
+    ZoneScopedN("AudioModule::shutdown");
     LT_LOG(LogVerbosity::Info, "AudioModule", "shutdown");
 
     if (m_context)
@@ -51,7 +51,7 @@ void AudioModule::playSoundAsync()
     m_audioThread = std::thread(
         []()
         {
-            LT_PROFILE_SCOPE("AudioModule::playSoundAsync");
+            ZoneScopedN("AudioModule::playSoundAsync");
             int sampleRate  = 44100;
             float duration  = 0.05f;
             float frequency = 50.f;

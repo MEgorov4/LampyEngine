@@ -1,0 +1,60 @@
+refactor: крупная рефакторинг рендер-системы и редактора
+
+Основные изменения:
+
+Рендер-система:
+- Реализована система RenderGraph для управления пассами рендеринга
+- Добавлены RenderEntityTracker, RenderSystemObserver, RenderListManager для отслеживания изменений ECS
+- Переход на событийную модель вместо прямого доступа к ECS
+- Реализованы CameraUpdater и TransformUpdater для обновления камеры и трансформаций
+- Значительное расширение RenderNodes с новыми пассами (Shadow, Light, Texture, Grid, Debug, Final)
+- Обновлена архитектура IRenderer для работы с дифф-системой изменений
+
+Редактор GUI:
+- Улучшен ContentBrowser: навигация по папкам, контекстное меню, события
+- Расширен OutputLog: фильтрация по категориям и уровням, автоскролл, цветовое кодирование
+- Обновлен WorldInspector и ComponentsRenderFabric для улучшенного отображения компонентов
+- Добавлены новые события в Events.h для интеграции модулей редактора
+- Реализован AssetBrowser модуль
+
+ECS модуль:
+- Значительные изменения в ECSModule для работы с событийной системой
+- Добавлен ComponentRegistry для регистрации компонентов
+- Расширены события ECS для поддержки рендер-системы
+
+Ресурсы:
+- Обновления AssetManager, Material, AssetDatabase
+- Добавлен MaterialImporter
+- Улучшения в ResourceManager
+
+Шейдеры:
+- Обновлены шейдеры: debugLine, final, light, reflection, shadow, texture
+- Удалены устаревшие world_grid шейдеры
+- Добавлены новые шейдеры: copyTexture, grid
+
+Система сборки:
+- Добавлен модуль TimeModule
+- Добавлен JobSystem в Foundation
+- Обновлены CMakeLists.txt для новых модулей
+- Добавлен флаг компиляции -Werror
+- Добавлен макрос TRACY_ENABLE для профилирования
+
+Профилирование:
+- Удалены ProfileScope.cpp/h (функциональность интегрирована в макросы)
+- Обновлены ProfilerMacros.h
+
+Новые файлы:
+- RenderModule: RenderEntityTracker, RenderSystemObserver, RenderListManager, 
+  RenderObjectFactory, CameraUpdater, TransformUpdater, RenderState, RenderLocator
+- EditorGuiModule: AssetBrowser модуль
+- ObjectCoreModule: ComponentRegistry
+- Foundation: JobSystem
+- TimeModule: новый модуль для управления временем
+- ResourceModule: MaterialImporter
+
+Удалены файлы:
+- ProfileScope.cpp/h
+- world_grid.frag/vert шейдеры
+
+Статистика: 80 файлов изменено, +5206 строк, -860 строк
+

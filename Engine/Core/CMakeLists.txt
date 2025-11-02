@@ -16,7 +16,8 @@ target_link_libraries(
           ObjectCoreModule
           LuaScriptModule
           ShaderCompilerModule
-          PhysicsModule)
+          PhysicsModule
+          TimeModule)
 
 set(RESOURCE_DIR "${CMAKE_SOURCE_DIR}/Resources")
 

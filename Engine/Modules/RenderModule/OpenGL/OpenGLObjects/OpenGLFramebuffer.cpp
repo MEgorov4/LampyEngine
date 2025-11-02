@@ -4,7 +4,7 @@
 namespace RenderModule::OpenGL
 {
 OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferData &data)
-    : IFramebuffer(data), m_width(data.width), m_height(data.width), m_depth(data.useDepth), fbo(0), m_colorTexture(0),
+    : IFramebuffer(data), m_width(data.width), m_height(data.height), m_depth(data.useDepth), fbo(0), m_colorTexture(0),
       m_depthTexture(0), rbo(0)
 {
     LT_LOGI("RenderModule::OpenGLFramebuffer", "Construct");
@@ -54,9 +54,9 @@ void OpenGLFramebuffer::unbind()
 
 void OpenGLFramebuffer::resize(int newWidth, int newHeight)
 {
-    LT_LOGI("RenderModule::OpenGLFramebuffer", "Resize");
     if (m_width == newWidth && m_height == newHeight)
         return;
+    LT_LOGI("RenderModule::OpenGLFramebuffer", "Resize");
 
     m_width = newWidth;
     m_height = newHeight;

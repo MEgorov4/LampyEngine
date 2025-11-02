@@ -5,16 +5,15 @@ layout(location = 1) in vec2 inUV;
 layout(location = 2) in vec3 inNormal;
 
 layout(std140, binding = 0) uniform CameraData {
-    mat4 lightView;
-    mat4 lightProjection;
-    vec4 position;
+    mat4 view;        // lightViewMatrix
+    mat4 projection;  // lightProjectionMatrix
+    vec4 position;    // unused for shadows
 };
 
-layout(std140, binding = 1) uniform ModelMatrices {
-    mat4 model;
-};
+// Per-object uniform (не UBO, так как меняется для каждого объекта)
+uniform mat4 model;
 
 void main() {
     mat4 worldMatrix = model;
-    gl_Position = lightProjection * lightView * worldMatrix * vec4(inPosition, 1.0);
+    gl_Position = projection * view * worldMatrix * vec4(inPosition, 1.0);
 }

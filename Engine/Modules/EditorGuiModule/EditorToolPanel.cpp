@@ -1,7 +1,8 @@
 #include "EditorToolPanel.h"
 
+#include "Events.h"
+
 #include <EngineMinimal.h>
-#include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/ProjectModule/ProjectModule.h>
 #include <imgui.h>
@@ -14,23 +15,30 @@ GUIEditorToolPanel::GUIEditorToolPanel() :
 
 void GUIEditorToolPanel::render(float deltaTime)
 {
-    if (ImGui::Begin("Tool panel", nullptr, 0))
+    if (!isVisible())
+        return;
+
+    bool windowOpen = true;
+    if (ImGui::Begin("Tool panel", &windowOpen, 0))
     {
-        if (!m_ecsModule->isSimulate())
+        // Get simulation status from ECS module (could be replaced with event-based approach)
+        bool isSimulating = m_ecsModule->isSimulate();
+        
+        if (!isSimulating)
         {
             if (ImGui::Button("Start"))
             {
-                m_ecsModule->simulate(true);
+                GCEB().emit(Events::EditorUI::SimulationStart{});
             }
         }
 
         ImGui::SameLine();
 
-        if (m_ecsModule->isSimulate())
+        if (isSimulating)
         {
             if (ImGui::Button("Stop"))
             {
-                m_ecsModule->simulate(false);
+                GCEB().emit(Events::EditorUI::SimulationStop{});
             }
         }
 
@@ -45,7 +53,9 @@ void GUIEditorToolPanel::render(float deltaTime)
             }
             else
             {
-                //Fs::writeTextFile(editorWorldPath, m_ecsModule->getCurrentWorldData());
+                Events::EditorUI::WorldSaveRequest evt{};
+                evt.filePath = editorWorldPath;
+                GCEB().emit(evt);
             }
         }
 
@@ -58,6 +68,13 @@ void GUIEditorToolPanel::render(float deltaTime)
 
         renderSaveWorldPopup();
     }
+    
+    // Handle window close button
+    if (!windowOpen)
+    {
+        hide();
+    }
+    
     ImGui::End();
 }
 
@@ -112,13 +129,16 @@ void GUIEditorToolPanel::renderSaveWorldPopup()
 
         if (ImGui::Button("Save"))
         {
-            //std::string worldPath = currentPath.string() + "\\" + buffer;
-            //std::string worldData = Fs::readTextFile(worldPath);
-
-            //m_ecsModule->openWorld(worldData);
-
-            //memset(buffer, 0, sizeof(buffer));
-            //ImGui::CloseCurrentPopup();
+            if (strlen(buffer) > 0)
+            {
+                std::string worldPath = (currentPath / buffer).string();
+                Events::EditorUI::WorldSaveAsRequest evt{};
+                evt.filePath = worldPath;
+                GCEB().emit(evt);
+                
+                memset(buffer, 0, sizeof(buffer));
+                ImGui::CloseCurrentPopup();
+            }
         }
 
         if (ImGui::Button("Cancel"))

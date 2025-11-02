@@ -17,14 +17,19 @@ class BaseResource
 
     std::string getGUID() const
     {
-        LT_ASSERT_MSG(!GUID.empty(), "Resource GUID is empty");
+        // Пустой GUID допустим для опциональных ресурсов
         return GUID;
     }
 
     void setGUID(const std::string &newGUID)
     {
-        LT_ASSERT_MSG(!newGUID.empty(), "Cannot set empty GUID");
+        // Пустой GUID допустим для опциональных ресурсов
         GUID = newGUID;
+    }
+    
+    bool isEmpty() const noexcept
+    {
+        return GUID.empty();
     }
 
   protected:

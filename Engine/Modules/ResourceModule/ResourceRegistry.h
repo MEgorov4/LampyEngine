@@ -21,7 +21,8 @@ class BaseResource;
     public:
         void registerResource(const AssetID& guid, std::shared_ptr<BaseResource> resource)
         {
-            LT_ASSERT_MSG(!guid.str().empty(), "Cannot register resource with empty GUID");
+            // Пустой GUID недопустим при регистрации ресурса
+            LT_ASSERT_MSG(!guid.empty(), "Cannot register resource with empty GUID");
             LT_ASSERT_MSG(resource, "Cannot register null resource");
             
             std::unique_lock lock(m_mutex);
@@ -30,7 +31,9 @@ class BaseResource;
 
         void unregister(const AssetID& guid)
         {
-            LT_ASSERT_MSG(!guid.str().empty(), "Cannot unregister resource with empty GUID");
+            // Пустой GUID допустим - просто ничего не делаем
+            if (guid.empty())
+                return;
             
             std::unique_lock lock(m_mutex);
             m_resources.erase(guid);
@@ -38,7 +41,9 @@ class BaseResource;
 
         std::shared_ptr<BaseResource> get(const AssetID& guid) const
         {
-            LT_ASSERT_MSG(!guid.str().empty(), "Cannot get resource with empty GUID");
+            // Пустой AssetID допустим для опциональных ресурсов - возвращаем nullptr
+            if (guid.empty())
+                return nullptr;
             
             std::shared_lock lock(m_mutex);
             if (auto it = m_resources.find(guid); it != m_resources.end())

@@ -8,7 +8,7 @@ namespace WindowModule
 {
 void WindowModule::startup()
 {
-    LT_PROFILE_SCOPE("WindowModule::startup");
+    ZoneScopedN("WindowModule::startup");
     m_window = std::make_unique<Window>(800, 600, "Lampy Engine");
 
     LT_LOGI("WindowModule", "Startup");
@@ -19,7 +19,7 @@ void WindowModule::startup()
 /// </summary>
 void WindowModule::shutdown()
 {
-    LT_PROFILE_SCOPE("WindowModule::shutdown");
+    ZoneScopedN("WindowModule::shutdown");
     LT_LOGI("WindowModule", "Shutdown");
     m_window.reset();
 }
@@ -31,7 +31,7 @@ void WindowModule::shutdown()
 /// <exception cref="std::runtime_error">Throws an assertion error if the window is not initialized.</returns>
 Window* WindowModule::getWindow() const
 {
-    LT_PROFILE_SCOPE("WindowModule::getWindow");
+    ZoneScopedN("WindowModule::getWindow");
     if (m_window)
     {
         return m_window.get();

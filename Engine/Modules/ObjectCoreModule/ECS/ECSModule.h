@@ -20,6 +20,12 @@ namespace ECSModule
         void simulate(bool state);
         bool isSimulate() const { return m_inSimulate; }
     private:
+        /// Зарегистрировать все доступные компоненты в реестре
+        void registerComponents();
+        
+        /// Эмитить данные для рендеринга кадра через EventBus
+        void emitRenderFrameData();
+        
         std::unique_ptr<WorldManager> m_worldManager;
         ModuleEventBinder m_binder;          ///< подключение к глобальной шине событий
         bool m_inSimulate = false;

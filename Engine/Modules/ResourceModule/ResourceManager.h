@@ -59,6 +59,7 @@ class ResourceManager : public IModule
     {
         LT_ASSERT_MSG(db, "Cannot set null AssetDatabase");
         m_assetDatabase = db;
+        LT_LOGI("ResourceManager", "AssetDatabase connected");
     }
     AssetDatabase *getDatabase() noexcept
     {
@@ -69,11 +70,13 @@ class ResourceManager : public IModule
     {
         LT_ASSERT_MSG(!path.empty(), "Engine resources root path cannot be empty");
         m_engineResourcesRoot = path;
+        LT_LOGI("ResourceManager", "Engine resources root set: " + path.string());
     }
     void setProjectResourcesRoot(const std::filesystem::path &path) noexcept
     {
         LT_ASSERT_MSG(!path.empty(), "Project resources root path cannot be empty");
         m_projectResourcesRoot = path;
+        LT_LOGI("ResourceManager", "Project resources root set: " + path.string());
     }
 
     template <typename T> std::shared_ptr<T> load(const AssetID &id);
@@ -86,13 +89,19 @@ namespace ResourceModule
 {
 template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id)
 {
-    LT_ASSERT_MSG(!id.str().empty(), "AssetID cannot be empty");
+    // Пустой AssetID допустим для опциональных ресурсов - возвращаем nullptr
+    if (id.empty())
+        return nullptr;
     
     auto &cache = getCache<T>();
     if (auto cached = cache.find(id))
+    {
+        LT_LOGI("ResourceManager", std::format("Resource [{}] found in cache", id.str()));
         return cached;
+    }
 
     LT_ASSERT_MSG(m_assetDatabase, "AssetDatabase not set! Call setDatabase() first");
+    LT_LOGI("ResourceManager", std::format("Loading resource [{}]...", id.str()));
     
     auto infoOpt = m_assetDatabase->get(id);
     if (!infoOpt)
@@ -106,6 +115,7 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
 
     if (m_usePak && m_pakReader && m_pakReader->exists(id))
     {
+        LT_LOGI("ResourceManager", std::format("Loading resource [{}] from PAK", id.str()));
         auto data = m_pakReader->readAsset(id);
         if (!data)
         {
@@ -114,6 +124,7 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
         }
         
         LT_ASSERT_MSG(!data->empty(), "PAK data is empty for asset: " + id.str());
+        LT_LOGI("ResourceManager", std::format("Read {} bytes from PAK for [{}]", data->size(), id.str()));
 
         // временный файл
         std::filesystem::path tmp = std::filesystem::temp_directory_path() / (id.str() + ".tmp");
@@ -133,6 +144,7 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
             LT_LOGE("ResourceManager", "Missing imported file: " + sourcePath.string());
             return nullptr;
         }
+        LT_LOGI("ResourceManager", std::format("Loading resource [{}] from filesystem: {}", id.str(), sourcePath.string()));
     }
 
     // 🔧 Создаём ресурс через его конструктор(path)
@@ -141,6 +153,7 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
     {
         resource = std::make_shared<T>(sourcePath.string());
         LT_ASSERT_MSG(resource, "Failed to create resource instance");
+        LT_LOGI("ResourceManager", std::format("Resource [{}] created successfully", id.str()));
     }
     catch (const std::exception &e)
     {
@@ -155,6 +168,7 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
 
     cache.put(id, resource);
     m_registry.registerResource(id, resource);
+    LT_LOGI("ResourceManager", std::format("Resource [{}] registered in cache and registry", id.str()));
     return resource;
 }
 
@@ -163,6 +177,7 @@ template <typename T> std::shared_ptr<T> ResourceManager::loadBySource(const std
     LT_ASSERT_MSG(!path.empty(), "Source path cannot be empty");
     LT_ASSERT_MSG(m_assetDatabase, "AssetDatabase not set for loadBySource()");
 
+    LT_LOGI("ResourceManager", std::format("Loading resource by source path: {}", path));
     auto infoOpt = m_assetDatabase->findBySource(path);
     if (!infoOpt)
     {
@@ -170,7 +185,10 @@ template <typename T> std::shared_ptr<T> ResourceManager::loadBySource(const std
         return nullptr;
     }
 
-    LT_ASSERT_MSG(!infoOpt->guid.str().empty(), "Found AssetInfo has empty GUID");
+    // После поиска по sourcePath GUID должен быть валидным
+    // Если GUID пустой - это ошибка в базе данных
+    LT_ASSERT_MSG(!infoOpt->guid.empty(), "Found AssetInfo has empty GUID");
+    LT_LOGI("ResourceManager", std::format("Found AssetID [{}] for source path: {}", infoOpt->guid.str(), path));
     return load<T>(infoOpt->guid);
 }
 

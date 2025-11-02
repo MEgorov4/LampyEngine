@@ -40,6 +40,15 @@ namespace RenderModule
 		float padding[3];
 	};
 
+	struct alignas(16) ShaderUniformBlock_MaterialData
+	{
+		glm::vec4 albedoColor;
+		float roughness;
+		float metallic;
+		float normalStrength;
+		float padding2;
+	};
+
 	struct TextureBinding
 	{
 		int binding;
@@ -65,5 +74,15 @@ namespace RenderModule
 		virtual void setUniformData(const std::string& blockName, const void* data, size_t dataSize) = 0;
 		virtual bool hasUniformBlock(const std::string& blockName) = 0;
 		virtual void bindTextures(const std::unordered_map<std::string, TextureHandle>& textures) = 0;
+		
+		// Методы для установки обычных uniform (не UBO) для per-object данных
+		virtual void setUniformMatrix4(const std::string& name, const glm::mat4& matrix) = 0;
+		virtual void setUniformMatrix3(const std::string& name, const glm::mat3& matrix) = 0;
+		virtual void setUniformVec4(const std::string& name, const glm::vec4& vec) = 0;
+		virtual void setUniformFloat(const std::string& name, float value) = 0;
+		virtual void setUniformInt(const std::string& name, int value) = 0;
+		// Методы для массивов uniform
+		virtual void setUniformVec4Array(const std::string& name, const glm::vec4* values, int count) = 0;
+		virtual void setUniformFloatArray(const std::string& name, const float* values, int count) = 0;
 	};
 }

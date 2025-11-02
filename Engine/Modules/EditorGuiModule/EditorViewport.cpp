@@ -5,31 +5,34 @@
 #include <Modules/InputModule/InputModule.h>
 #include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
 #include <Modules/RenderModule/IRenderer.h>
+#include <Modules/RenderModule/RenderLocator.h> // Для глобальных функций DebugDraw*
 #include <Modules/RenderModule/RenderModule.h>
 //clang-format off
-#include <imgui.h>
+#include <imgui.h> /////////////////////////
+/////////////////////
+
 #include <Modules/ImGuiModule/ImGuizmo.h>
 //clang-format on
 
 flecs::entity GUIEditorViewport::getViewportEntity()
 {
-    auto& world = m_ecsModule->getCurrentWorld()->get();
+    auto &world = m_ecsModule->getCurrentWorld()->get();
 
     m_viewportEntity = world.lookup("ViewportCamera");
 
     return m_viewportEntity;
 }
 
-GUIEditorViewport::GUIEditorViewport() :
-    ImGUIModule::GUIObject(), m_renderModule(GCM(RenderModule::RenderModule)),
-    m_inputModule(GCM(InputModule::InputModule)), m_ecsModule(GCM(ECSModule::ECSModule)),
-    m_viewportEntity(m_ecsModule->getCurrentWorld()->get().entity("ViewportCamera"))
+GUIEditorViewport::GUIEditorViewport()
+    : ImGUIModule::GUIObject(), m_renderModule(GCM(RenderModule::RenderModule)),
+      m_inputModule(GCM(InputModule::InputModule)), m_ecsModule(GCM(ECSModule::ECSModule)),
+      m_viewportEntity(m_ecsModule->getCurrentWorld()->get().entity("ViewportCamera"))
 {
-    m_keySub   = m_inputModule->OnKeyboardEvent.subscribe(std::bind_front(&GUIEditorViewport::onKeyAction, this));
+    m_keySub = m_inputModule->OnKeyboardEvent.subscribe(std::bind_front(&GUIEditorViewport::onKeyAction, this));
     m_mouseSub = m_inputModule->OnMouseMotionEvent.subscribe(std::bind_front(&GUIEditorViewport::onMouseAction, this));
 
     m_cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    m_cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
+    m_cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
 GUIEditorViewport::~GUIEditorViewport()
@@ -40,14 +43,35 @@ void GUIEditorViewport::render(float deltaTime)
 {
     getViewportEntity();
     m_deltaTime = deltaTime;
-    if (ImGui::Begin("Viewport", 0, ImGuiWindowFlags_NoScrollbar))
+    if (!isVisible())
+        return;
+
+    using namespace RenderModule;
+    DebugDrawLine(glm::vec3(5, 0, 0), glm::vec3(5, 5, 0), glm::vec3(1.0f, 1.0f, 1.0f));
+    DebugDrawBox(glm::vec3(-3, 1, 0), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.5f, 0.5f, 0.5f));
+    DebugDrawSphere(glm::vec3(-5, 2, 0), 0.8f, glm::vec3(0.0f, 1.0f, 1.0f));
+
+    bool windowOpen = true;
+    if (ImGui::Begin("Viewport", &windowOpen, ImGuiWindowFlags_NoScrollbar))
     {
         ImVec2 avail = ImGui::GetContentRegionAvail();
 
-        // 1. Отрисовываем рендер-таргет
-        ImGui::Image(m_renderModule->getRenderer()->getOutputRenderHandle(avail.x, avail.y).id, avail, ImVec2(0, 1),
-                     ImVec2(1, 0) // если текстура перевёрнута по Y
-        );
+        // Проверяем минимальные размеры перед обновлением рендера
+        if (avail.x >= 1.0f && avail.y >= 1.0f)
+        {
+            // 1. Отрисовываем рендер-таргет
+            ImGui::Image(m_renderModule->getRenderer()
+                             ->getOutputRenderHandle(static_cast<int>(avail.x), static_cast<int>(avail.y))
+                             .id,
+                         avail, ImVec2(0, 1), ImVec2(1, 0) // если текстура перевёрнута по Y
+            );
+        }
+        else
+        {
+            // Если размеры слишком маленькие, просто рисуем текущую текстуру без обновления
+            ImGui::Image(m_renderModule->getRenderer()->getOutputRenderHandle(1, 1).id, avail, ImVec2(0, 1),
+                         ImVec2(1, 0));
+        }
 
         // --- вычисляем реальный экранный прямоугольник картинки ---
         ImVec2 imgMin = ImGui::GetItemRectMin();
@@ -59,18 +83,18 @@ void GUIEditorViewport::render(float deltaTime)
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
         ImGuizmo::SetRect(imgMin.x, imgMin.y, avail.x, avail.y);
 
-        auto& world = m_ecsModule->getCurrentWorld()->get();
+        auto &world = m_ecsModule->getCurrentWorld()->get();
         if (auto ent = GUIWorldInspector::m_selectedEntity)
         {
             glm::vec3 pos{0.f};
             glm::quat rot{1.f, 0.f, 0.f, 0.f};
             glm::vec3 scl{1.f};
 
-            if (const PositionComponent* pComp = ent.get<PositionComponent>())
+            if (const PositionComponent *pComp = ent.get<PositionComponent>())
                 pos = pComp->toGLMVec();
-            if (const RotationComponent* rComp = ent.get<RotationComponent>())
+            if (const RotationComponent *rComp = ent.get<RotationComponent>())
                 rot = rComp->toQuat();
-            if (const ScaleComponent* sComp = ent.get<ScaleComponent>())
+            if (const ScaleComponent *sComp = ent.get<ScaleComponent>())
                 scl = sComp->toGLMVec();
 
             // 3. Собираем модельную матрицу
@@ -80,23 +104,23 @@ void GUIEditorViewport::render(float deltaTime)
             model = glm::scale(model, scl);
 
             // 4. Матрицы камеры — те же, что и в рендере
-            const PositionComponent* cPosComp = m_viewportEntity.get<PositionComponent>();
-            const RotationComponent* cRotComp = m_viewportEntity.get<RotationComponent>();
-            const CameraComponent* camComp    = m_viewportEntity.get<CameraComponent>();
+            const PositionComponent *cPosComp = m_viewportEntity.get<PositionComponent>();
+            const RotationComponent *cRotComp = m_viewportEntity.get<RotationComponent>();
+            const CameraComponent *camComp = m_viewportEntity.get<CameraComponent>();
 
             float aspect = avail.x > 0 ? float(avail.x) / float(avail.y) : 1.0f;
 
             glm::mat4 proj = glm::perspective(glm::radians(camComp->fov), aspect, camComp->nearClip, camComp->farClip);
             glm::vec3 cameraPos = cPosComp->toGLMVec();
-            glm::quat camRot    = cRotComp->toQuat();
-            glm::vec3 forward   = camRot * glm::vec3(0, 0, -1);
-            glm::vec3 up        = camRot * glm::vec3(0, 1, 0);
+            glm::quat camRot = cRotComp->toQuat();
+            glm::vec3 forward = camRot * glm::vec3(0, 0, -1);
+            glm::vec3 up = camRot * glm::vec3(0, 1, 0);
 
             glm::mat4 view = glm::lookAt(cameraPos, cameraPos + forward, up);
 
             // 5. Гизмо
             static ImGuizmo::OPERATION gizmoOp = ImGuizmo::TRANSLATE;
-            static ImGuizmo::MODE gizmoMode    = ImGuizmo::LOCAL;
+            static ImGuizmo::MODE gizmoMode = ImGuizmo::LOCAL;
 
             if (ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), gizmoOp, gizmoMode,
                                      glm::value_ptr(model)))
@@ -112,7 +136,7 @@ void GUIEditorViewport::render(float deltaTime)
                 // Обновляем ECS компоненты
                 ent.set<PositionComponent>({newT.x, newT.y, newT.z});
 
-                if (auto* rc = ent.get_mut<RotationComponent>())
+                if (auto *rc = ent.get_mut<RotationComponent>())
                 {
                     rc->fromQuat(newR); // сохраняем в тех же Y->X->Z
                     ent.modified<RotationComponent>();
@@ -129,6 +153,13 @@ void GUIEditorViewport::render(float deltaTime)
                 gizmoOp = ImGuizmo::SCALE;
         }
     }
+
+    // Handle window close button
+    if (!windowOpen)
+    {
+        hide();
+    }
+
     ImGui::End();
 }
 
@@ -139,13 +170,13 @@ void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
 
     if (!m_processInput)
         return;
-    m_cameraPos              = m_viewportEntity.get<PositionComponent>()->toGLMVec();
+    m_cameraPos = m_viewportEntity.get<PositionComponent>()->toGLMVec();
     glm::quat cameraRotation = m_viewportEntity.get<RotationComponent>()->toQuat();
 
     float speed = m_cameraSpeed;
     glm::vec3 movement(0.0f);
     glm::vec3 cameraFront = cameraRotation * glm::vec3(0, 0, -1);
-    cameraFront           = glm::normalize(cameraFront);
+    cameraFront = glm::normalize(cameraFront);
 
     glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, m_cameraUp));
 
@@ -167,7 +198,7 @@ void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
 
     glm::vec3 newCameraPos = m_cameraPos + movement;
     glm::vec3 velocity{0.0f}; // хранить как член класса
-    float accel   = 20.0f;
+    float accel = 20.0f;
     float damping = 5.0f;
 
     glm::vec3 targetVel = movement / m_deltaTime; // какая скорость нужна
@@ -187,22 +218,22 @@ void GUIEditorViewport::onMouseAction(SDL_MouseMotionEvent mouseMotion)
         m_firstMouse = true;
         return;
     }
-    const RotationComponent* rotation = m_viewportEntity.get<RotationComponent>();
+    const RotationComponent *rotation = m_viewportEntity.get<RotationComponent>();
 
     float pitch = rotation->x;
-    float yaw   = rotation->y;
+    float yaw = rotation->y;
 
     if (m_firstMouse)
     {
-        m_lastX      = mouseMotion.x;
-        m_lastY      = mouseMotion.y;
+        m_lastX = mouseMotion.x;
+        m_lastY = mouseMotion.y;
         m_firstMouse = false;
     }
 
     float xoffset = (mouseMotion.x - m_lastX);
     float yoffset = -(m_lastY - mouseMotion.y);
-    m_lastX       = mouseMotion.x;
-    m_lastY       = mouseMotion.y;
+    m_lastX = mouseMotion.x;
+    m_lastY = mouseMotion.y;
 
     float sensitivity = 0.1f;
     xoffset *= sensitivity;
@@ -213,7 +244,10 @@ void GUIEditorViewport::onMouseAction(SDL_MouseMotionEvent mouseMotion)
 
     if (m_viewportEntity.is_alive())
     {
-        m_viewportEntity.set<RotationComponent>({pitch, yaw, rotation->z});
+        // Правильно устанавливаем RotationComponent с обновлением quaternion
+        RotationComponent newRot;
+        newRot.fromEulerDegrees(glm::vec3(pitch, yaw, rotation->z));
+        m_viewportEntity.set<RotationComponent>(newRot);
     }
 }
 

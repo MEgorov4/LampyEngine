@@ -62,8 +62,6 @@ bool AssetDatabase::load(const std::string& path)
 
     for (auto& [guidStr, infoJson] : j.items())
     {
-        LT_ASSERT_MSG(!guidStr.empty(), "GUID string in JSON is empty");
-        
         AssetInfo info;
         try
         {
@@ -75,8 +73,13 @@ bool AssetDatabase::load(const std::string& path)
             continue;
         }
         
-        LT_ASSERT_MSG(!info.guid.empty(), "AssetInfo has empty GUID");
-        LT_ASSERT_MSG(!info.sourcePath.empty(), "AssetInfo has empty source path");
+        // После загрузки из JSON GUID должен быть валидным для записей в базе
+        // sourcePath также должен быть не пустым для валидных ассетов
+        if (info.guid.empty() || info.sourcePath.empty())
+        {
+            LT_LOGW("AssetDatabase", "Skipping invalid asset entry with empty GUID or source path");
+            continue;
+        }
         
         m_sourceToGuid[NormalizePath(info.sourcePath)] = info.guid;
         m_assets.emplace(info.guid, std::move(info));
@@ -93,8 +96,13 @@ bool AssetDatabase::save(const std::string& path) const
         std::shared_lock lock(m_mutex);
         for (const auto& [guid, info] : m_assets)
         {
-            LT_ASSERT_MSG(!guid.empty(), "Asset has empty GUID");
-            LT_ASSERT_MSG(!info.sourcePath.empty(), "Asset has empty source path");
+            // При сохранении пропускаем записи с пустым GUID или sourcePath
+            // (они не должны быть в базе, но на всякий случай проверяем)
+            if (guid.empty() || info.sourcePath.empty())
+            {
+                LT_LOGW("AssetDatabase", "Skipping invalid asset with empty GUID or source path when saving");
+                continue;
+            }
             j[guid.str()] = info;
         }
     }
@@ -116,30 +124,46 @@ bool AssetDatabase::save(const std::string& path) const
 
 void AssetDatabase::upsert(const AssetInfo& info)
 {
+    // Пустой GUID недопустим при добавлении ассета в базу (ассет должен иметь валидный GUID)
+    // sourcePath также должен быть не пустым для валидных ассетов
     LT_ASSERT_MSG(!info.guid.empty(), "Cannot upsert asset with empty GUID");
     LT_ASSERT_MSG(!info.sourcePath.empty(), "Cannot upsert asset with empty source path");
     
     std::unique_lock lock(m_mutex);
-    m_assets[info.guid]                            = info;
-    m_sourceToGuid[NormalizePath(info.sourcePath)] = info.guid;
+    m_assets[info.guid] = info;
+    
+    // Обновляем индекс source->guid только если sourcePath не пустой
+    if (!info.sourcePath.empty())
+    {
+        m_sourceToGuid[NormalizePath(info.sourcePath)] = info.guid;
+    }
 }
 
 bool AssetDatabase::remove(const AssetID& guid)
 {
-    LT_ASSERT_MSG(!guid.empty(), "Cannot remove asset with empty GUID");
+    // Пустой GUID допустим - просто возвращаем false
+    if (guid.empty())
+        return false;
     
     std::unique_lock lock(m_mutex);
     auto it = m_assets.find(guid);
     if (it == m_assets.end())
         return false;
-    m_sourceToGuid.erase(NormalizePath(it->second.sourcePath));
+    
+    // Удаляем из индекса source->guid только если sourcePath не пустой
+    if (!it->second.sourcePath.empty())
+    {
+        m_sourceToGuid.erase(NormalizePath(it->second.sourcePath));
+    }
     m_assets.erase(it);
     return true;
 }
 
 std::optional<AssetInfo> AssetDatabase::get(const AssetID& guid) const
 {
-    LT_ASSERT_MSG(!guid.empty(), "Cannot get asset with empty GUID");
+    // Пустой AssetID допустим для опциональных ресурсов - возвращаем nullopt
+    if (guid.empty())
+        return std::nullopt;
     
     std::shared_lock lock(m_mutex);
     if (auto it = m_assets.find(guid); it != m_assets.end())

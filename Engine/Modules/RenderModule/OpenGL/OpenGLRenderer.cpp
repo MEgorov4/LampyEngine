@@ -3,6 +3,7 @@
 #include <Modules/ResourceModule/ResourceManager.h>
 #include <Modules/WindowModule/Window.h>
 #include <Modules/WindowModule/WindowModule.h>
+#include "../RenderLocator.h"
 
 #include "OpenGLObjects/OpenGLFramebuffer.h"
 #include "OpenGLObjects/OpenGLMesh.h"
@@ -19,6 +20,7 @@ OpenGLRenderer::OpenGLRenderer() : IRenderer()
 
 void OpenGLRenderer::init()
 {
+    ZoneScopedN("OpenGLRenderer::init");
     LT_LOGI("RenderModule_OpenGLRenderer", "Start initialize OpenGL");
     glewExperimental = GL_TRUE;
 
@@ -33,6 +35,13 @@ void OpenGLRenderer::init()
     if (!GLEW_ARB_gl_spirv || !GLEW_ARB_spirv_extensions)
     {
         throw std::runtime_error("Required SPIR-V OpenGL extensions are not supported!");
+    }
+
+    // Initialize Tracy GPU profiler after glewInit() and when GL context is current
+    auto* ctx = RenderLocator::Get();
+    if (ctx)
+    {
+        ctx->initAfterGL();
     }
 
     SDL_GL_SetSwapInterval(1);

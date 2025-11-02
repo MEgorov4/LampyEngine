@@ -11,5 +11,6 @@ target_link_libraries(
           RenderModule
           LuaScriptModule
           InputModule
+          ResourceModule
           EngineContext
           imguizmo::imguizmo)

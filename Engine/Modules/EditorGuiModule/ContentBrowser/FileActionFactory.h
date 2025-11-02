@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Events.h"
 #include <EngineMinimal.h>
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/ProjectModule/ProjectModule.h>
@@ -37,7 +38,9 @@ class DeleteFileAction : public IFileAction
 
     void execute(const std::string& filePath) override
     {
-        Fs::deleteFile(filePath);
+        Events::EditorUI::FileDeleteRequest evt{};
+        evt.filePath = filePath;
+        GCEB().emit(evt);
     }
 
     std::string getName() const override
@@ -55,7 +58,7 @@ class CopyPathAction : public IFileAction
 
     void execute(const std::string& filePath) override
     {
-        Fs::copyRelativePathToClipboard(filePath, Fs::currentPath()); // TODO: Внутри нерабочая логика
+        Fs::copyRelativePathToClipboard(filePath, Fs::currentPath()); // TODO: пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     }
 
     std::string getName() const override
@@ -108,7 +111,9 @@ class DuplicateFileAction : public IFileAction
 
     void execute(const std::string& filePath) override
     {
-        Fs::duplicateFileInDirectory(filePath);
+        Events::EditorUI::FileDuplicateRequest evt{};
+        evt.filePath = filePath;
+        GCEB().emit(evt);
     }
 
     std::string getName() const override
@@ -126,8 +131,9 @@ class OpenWorldFileAction : public IFileAction
 
     void execute(const std::string& filePath) override
     {
-        //std::string worldData = Fs::readTextFile(filePath);
-        //m_ecsModule->openWorld(worldData);
+        Events::EditorUI::WorldLoadRequest evt{};
+        evt.filePath = filePath;
+        GCEB().emit(evt);
     }
 
     std::string getName() const override
@@ -145,7 +151,9 @@ class SetWorldFileAsEditorDefaultAction : public IFileAction
 
     void execute(const std::string& filePath) override
     {
-        m_projectModule->getProjectConfig().setEditorStartWorld(filePath);
+        Events::EditorUI::ProjectStartWorldSet evt{};
+        evt.worldPath = filePath;
+        GCEB().emit(evt);
     }
 
     std::string getName() const override

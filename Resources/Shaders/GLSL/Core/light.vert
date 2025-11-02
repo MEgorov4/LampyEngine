@@ -9,9 +9,8 @@ layout(std140, binding = 0) uniform CameraData {
     vec4 position;
 };
 
-layout(std140, binding = 1) uniform ModelMatrices {
-    mat4 model;
-};
+// Per-object uniform (не UBO, так как меняется для каждого объекта)
+uniform mat4 model;
 
 layout (location = 0) out vec3 fragWorldPos;
 layout (location = 1) out vec3 fragNormal;

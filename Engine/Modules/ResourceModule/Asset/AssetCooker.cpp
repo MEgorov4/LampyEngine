@@ -45,8 +45,10 @@ bool AssetCooker::writeRuntimeDatabase() const noexcept
     nlohmann::json j = nlohmann::json::object();
     m_db.forEach([&](const AssetID& guid, const AssetInfo& info)
     {
-        LT_ASSERT_MSG(!guid.empty(), "Asset has empty GUID");
-        LT_ASSERT_MSG(!info.sourcePath.empty(), "Asset has empty source path");
+        // Пропускаем записи с пустым GUID при создании runtime базы
+        // (пустые GUID допустимы для опциональных ресурсов, но не нужны в runtime базе)
+        if (guid.empty() || info.sourcePath.empty())
+            return;
         
         nlohmann::json e;
         e["type"] = static_cast<int>(info.type);
@@ -75,7 +77,9 @@ bool AssetCooker::copyLooseFiles() const noexcept
     m_db.forEachByOrigin(AssetOrigin::Project,
                          [&](const AssetID& guid, const AssetInfo& info)
                          {
-                             LT_ASSERT_MSG(!guid.empty(), "Asset has empty GUID");
+                             // Пропускаем записи с пустым GUID
+                             if (guid.empty())
+                                 return;
                              
                              if (info.importedPath.empty())
                                  return;
@@ -99,7 +103,9 @@ bool AssetCooker::copyLooseFiles() const noexcept
             AssetOrigin::Engine,
             [&](const AssetID& guid, const AssetInfo& info)
             {
-                LT_ASSERT_MSG(!guid.empty(), "Asset has empty GUID");
+                // Пропускаем записи с пустым GUID
+                if (guid.empty())
+                    return;
                 
                 if (info.importedPath.empty())
                     return;

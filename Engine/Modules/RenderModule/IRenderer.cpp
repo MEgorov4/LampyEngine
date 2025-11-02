@@ -1,19 +1,27 @@
 #include "IRenderer.h"
 
+#include <EngineMinimal.h>
+
 #include "Foundation/Assert/Assert.h"
 #include "RenderContext.h"
-#include "RenderFactory.h"
 #include "RenderGraph/RenderGraphBuilder.h"
 #include "RenderGraph/RenderNodes.h"
 #include "RenderLocator.h"
+#include "RenderObjectFactory.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
+#include <EngineContext/Core/EventHelpers.h>
 #include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/ResourceModule/ResourceManager.h>
 
 namespace RenderModule
 {
-IRenderer::IRenderer() : m_ecsModule(GCM(ECSModule::ECSModule))
+IRenderer::IRenderer()
+    : m_ecsModule(GCM(ECSModule::ECSModule)), m_listManager(m_entityTracker),
+      m_transformUpdater(m_entityTracker, m_listManager)
 {
     LT_ASSERT_MSG(m_ecsModule, "Failed to get ECSModule from CoreLocator");
 }
@@ -24,11 +32,23 @@ IRenderer::~IRenderer()
 
 void IRenderer::postInit()
 {
+    // Инициализируем RenderListManager и обновляторы с RenderContext
+    auto *ctxPtr = RenderLocator::Get();
+    if (ctxPtr)
+    {
+        m_listManager.setContext(ctxPtr);
+        m_cameraUpdater = std::make_unique<CameraUpdater>(ctxPtr);
+    }
+
+    // Настраиваем RenderGraph
     RenderGraphBuilder builder(m_renderGraph);
 
-    builder.addResource("shadow_pass_depth", 1920, 1080)
+    builder        .addResource("shadow_pass_depth", 1920, 1080)
         .addResource("light_pass_color", 1920, 1080)
         .addResource("texture_pass_color", 1920, 1080)
+        .addResource("texture_pass_depth", 1920, 1080)
+        .addResource("grid_pass_color", 1920, 1080)
+        .addResource("debug_pass_color", 1920, 1080)
         .addResource("final", 1920, 1080)
 
         .addPass("Shadow")
@@ -44,81 +64,258 @@ void IRenderer::postInit()
 
         .addPass("Texture")
         .read("light_pass_color")
+        .read("shadow_pass_depth")
         .write("texture_pass_color")
         .exec(RenderNodes::TexturePass)
         .end()
 
-        .addPass("Final")
+        .addPass("Grid")
         .read("texture_pass_color")
+        .write("grid_pass_color")
+        .exec(RenderNodes::GridPass)
+        .end()
+
+        .addPass("Debug")
+        .read("grid_pass_color")
+        .write("debug_pass_color")
+        .exec(RenderNodes::DebugPass)
+        .end()
+
+        .addPass("Final")
+        .read("debug_pass_color")
         .write("final")
         .exec(RenderNodes::FinalCompose)
         .end()
 
         .build();
+
+    // Настраиваем подписки на события ECS после инициализации
+    setupEventSubscriptions();
+
+    // Инициализируем observers для отслеживания изменений в ECS
+    setupRenderObservers();
+}
+
+void IRenderer::setupEventSubscriptions()
+{
+    using namespace Events::ECS;
+
+    // Подписываемся на все события ECS, которые влияют на рендер-лист
+    m_eventBinder.bind<WorldOpened>([this](const WorldOpened &event) { onWorldOpened(event); });
+
+    m_eventBinder.bind<WorldClosed>([this](const WorldClosed &event) { onWorldClosed(event); });
+
+    m_eventBinder.bind<EntityCreated>([this](const EntityCreated &event) { onEntityCreated(event); });
+
+    m_eventBinder.bind<EntityDestroyed>([this](const EntityDestroyed &event) { onEntityDestroyed(event); });
+
+    m_eventBinder.bind<ComponentChanged>([this](const ComponentChanged &event) { onComponentChanged(event); });
+
+    // Подписываемся на событие данных для рендеринга кадра (эмитится каждый кадр из ECSModule)
+    m_eventBinder.bind<RenderFrameData>([this](const RenderFrameData &event) { onRenderFrameData(event); });
+}
+
+void IRenderer::setupRenderObservers()
+{
+    // Инициализируем observers в текущем мире ECS
+    auto *worldPtr = m_ecsModule->getCurrentWorld();
+    if (!worldPtr)
+        return;
+
+    auto &world = worldPtr->get();
+    m_renderObserver.initialize(world, m_entityTracker);
+
+    LT_LOGI("Renderer", "Render observers initialized");
+}
+
+void IRenderer::onWorldOpened(const Events::ECS::WorldOpened &event)
+{
+    LT_LOGI("Renderer", "World opened: " + event.name + " - rebuilding render list");
+    m_needsFullRebuild = true;
+    m_entityTracker.clear();
+
+    // Реинициализируем observers для нового мира
+    auto *worldPtr = m_ecsModule->getCurrentWorld();
+    if (worldPtr)
+    {
+        auto &world = worldPtr->get();
+        m_renderObserver.initialize(world, m_entityTracker);
+    }
+}
+
+void IRenderer::onWorldClosed(const Events::ECS::WorldClosed &event)
+{
+    LT_LOGI("Renderer", "World closed: " + event.name + " - clearing render list");
+    m_entityTracker.clear();
+    m_listManager.clear();
+    m_needsFullRebuild = true;
+}
+
+void IRenderer::onEntityCreated(const Events::ECS::EntityCreated &event)
+{
+    // Observer'ы автоматически обработают создание сущности
+    // Если у нее есть MeshComponent, она будет добавлена в diff
+    LT_LOGI("Renderer", "Entity created: " + event.name + " (id: " + std::to_string(event.id) + ")");
+}
+
+void IRenderer::onEntityDestroyed(const Events::ECS::EntityDestroyed &event)
+{
+    // Обрабатываем удаление напрямую, так как observers могут не сработать
+    // если MeshComponent был удален до destruct() или если observers еще не вызвались
+    m_listManager.removeObject(event.id);
+    m_entityTracker.removeState(event.id);
+
+    LT_LOGI("Renderer", "Entity destroyed (id: " + std::to_string(event.id) + ") - removed from render list");
+}
+
+void IRenderer::onComponentChanged(const Events::ECS::ComponentChanged &event)
+{
+    // Если это MeshComponent, нужно проверить изменения вручную
+    // Это запасной вариант, если observer не сработал
+    if (event.componentName == "MeshComponent")
+    {
+        auto *worldPtr = m_ecsModule->getCurrentWorld();
+        if (!worldPtr)
+            return;
+
+        auto &world = worldPtr->get();
+        auto entity = world.entity(event.entityId);
+        if (!entity.is_valid())
+            return;
+
+        // Проверяем, есть ли MeshComponent
+        const MeshComponent *mesh = entity.get<MeshComponent>();
+        if (!mesh)
+            return;
+
+        // Проверяем, есть ли все необходимые компоненты
+        bool hasPos = entity.has<PositionComponent>();
+        bool hasRot = entity.has<RotationComponent>();
+        bool hasScale = entity.has<ScaleComponent>();
+        bool hasMesh = entity.has<MeshComponent>();
+
+        LT_LOGI("Renderer", "ComponentChanged: MeshComponent for entity " + std::to_string(event.entityId) +
+                                " - pos:" + std::to_string(hasPos) + " rot:" + std::to_string(hasRot) +
+                                " scale:" + std::to_string(hasScale) + " mesh:" + std::to_string(hasMesh));
+
+        // Если сущность есть в трекере, проверяем изменения
+        auto *state = m_entityTracker.getState(event.entityId);
+        if (state)
+        {
+            // State существует - проверяем изменения
+            if (state->hasMeshChanged(*mesh))
+            {
+                // Создаем diff вручную, так как observer мог не сработать
+                RenderDiff diff;
+                RenderDiff::EntityChange change;
+                change.type = RenderDiff::EntityChange::Updated;
+                change.entityId = event.entityId;
+                change.newState = std::make_unique<EntityRenderState>();
+
+                // Обновляем состояние из ECS
+                const PositionComponent *pos = entity.get<PositionComponent>();
+                const RotationComponent *rot = entity.get<RotationComponent>();
+                const ScaleComponent *scale = entity.get<ScaleComponent>();
+
+                if (pos)
+                    change.newState->position = *pos;
+                if (rot)
+                    change.newState->rotation = *rot;
+                if (scale)
+                    change.newState->scale = *scale;
+                change.newState->mesh = *mesh;
+                const MaterialComponent* material = entity.get<MaterialComponent>();
+                if (material)
+                    change.newState->material = *material;
+                change.newState->entityId = event.entityId;
+                change.newState->isValid = true;
+
+                diff.changes.push_back(std::move(change));
+
+                // Применяем diff сразу
+                applyRenderDiff(diff);
+
+                LT_LOGI("Renderer",
+                        "ComponentChanged: MeshComponent updated for entity " + std::to_string(event.entityId));
+            }
+        }
+        else if (hasPos && hasRot && hasScale && hasMesh)
+        {
+            // State не существует, но все компоненты есть - добавляем entity
+            RenderDiff diff;
+            RenderDiff::EntityChange change;
+            change.type = RenderDiff::EntityChange::Added;
+            change.entityId = event.entityId;
+            change.newState = std::make_unique<EntityRenderState>();
+
+            // Обновляем состояние из ECS
+            const PositionComponent *pos = entity.get<PositionComponent>();
+            const RotationComponent *rot = entity.get<RotationComponent>();
+            const ScaleComponent *scale = entity.get<ScaleComponent>();
+
+            if (pos)
+                change.newState->position = *pos;
+            if (rot)
+                change.newState->rotation = *rot;
+            if (scale)
+                change.newState->scale = *scale;
+            change.newState->mesh = *mesh;
+            const MaterialComponent* material = entity.get<MaterialComponent>();
+            if (material)
+                change.newState->material = *material;
+            change.newState->entityId = event.entityId;
+            change.newState->isValid = true;
+
+            diff.changes.push_back(std::move(change));
+
+            // Применяем diff сразу
+            applyRenderDiff(diff);
+
+            LT_LOGI("Renderer", "ComponentChanged: MeshComponent added for entity " + std::to_string(event.entityId) +
+                                    " (observer fallback - all components present)");
+        }
+        else
+        {
+            LT_LOGI("Renderer", "ComponentChanged: MeshComponent for entity " + std::to_string(event.entityId) +
+                                    " - waiting for missing components");
+        }
+    }
+}
+
+void IRenderer::onRenderFrameData(const Events::ECS::RenderFrameData &event)
+{
+    // Обновляем данные для рендеринга каждый кадр из события от ECSModule
+    // Это заменяет прямое обращение к ECS
+
+    // Обновляем камеру
+    if (m_cameraUpdater)
+    {
+        m_cameraUpdater->updateFromEvent(event.camera);
+    }
+
+    // Обновляем трансформации объектов
+    m_transformUpdater.updateFromEvent(event);
 }
 
 void IRenderer::updateRenderList()
 {
-    LT_ASSERT_MSG(m_ecsModule, "ECSModule is null");
-    
-    auto *worldPtr = m_ecsModule->getCurrentWorld();
-    if (!worldPtr)
+    ZoneScopedN("IRenderer::updateRenderList");
+
+    // Если нужна полная перестройка (при первом запуске или смене мира)
+    if (m_needsFullRebuild)
     {
-        LT_ASSERT_MSG(false, "Not active world");
+        m_needsFullRebuild = false;
+        rebuildRenderList();
         return;
     }
 
-    auto &world = worldPtr->get();
-    
-    auto* ctxPtr = RenderLocator::Get();
-    LT_ASSERT_MSG(ctxPtr, "RenderContext is null");
-    
-    auto &ctx = RenderLocator::Ref();
-    auto &scene = ctx.scene();
+    // Получаем diff изменений от observers
+    RenderDiff diff = m_renderObserver.consumeDiff();
 
-    scene.clear();
-
-    // ============================================================
-    // 1️⃣ Камера
-    // ============================================================
+    // Применяем diff, если есть изменения
+    if (!diff.empty())
     {
-        auto qCam = world.query<PositionComponent, RotationComponent, CameraComponent>();
-        qCam.each(
-            [&](flecs::entity, const PositionComponent &pos, const RotationComponent &rot, const CameraComponent &cam) {
-                const glm::vec3 camPos = pos.toGLMVec();
-                const glm::quat q = glm::normalize(rot.toQuat());
-                const glm::vec3 forward = q * glm::vec3(0, 0, -1);
-                const glm::vec3 up = q * glm::vec3(0, 1, 0);
-
-                const auto [w, h] = ctx.getViewport();
-                const float aspect = (h != 0) ? float(w) / float(h) : 16.f / 9.f;
-
-                scene.camera.position = glm::vec4(camPos, 1.f);
-                scene.camera.view = glm::lookAt(camPos, camPos + forward, up);
-                scene.camera.projection = glm::perspective(glm::radians(cam.fov), aspect, cam.nearClip, cam.farClip);
-            });
-    }
-
-    // ============================================================
-    // 2️⃣ Рендер-объекты (модели)
-    // ============================================================
-    {
-        auto qMesh = world.query<PositionComponent, RotationComponent, ScaleComponent, MeshComponent>();
-        qMesh.each([&](flecs::entity, const PositionComponent &pos, const RotationComponent &rot,
-                       const ScaleComponent &scale, const MeshComponent &mesh) {
-            RenderObject obj;
-            glm::mat4 model(1.f);
-            model = glm::translate(model, pos.toGLMVec());
-            model *= glm::mat4_cast(rot.toQuat());
-            model = glm::scale(model, scale.toGLMVec());
-            obj.modelMatrix.model = model;
-
-            obj.mesh = RenderFactory::get().createMesh(mesh.meshID);
-            // obj.shader  = ShaderFactory::createOrGetShader(mesh.fragShaderID, mesh.vertShaderID);
-            // obj.texture = TextureFactory::createOrGetTexture(mesh.textureID);
-
-            scene.objects.push_back(std::move(obj));
-        });
+        applyRenderDiff(diff);
     }
 
     // ============================================================
@@ -162,23 +359,497 @@ void IRenderer::updateRenderList()
     //            });
     //    }
 
-    // LT_LOGI("Renderer", std::format(
-    //     "RenderContext updated: objects = {}, light spot = {}",
-    //     scene.objects.size(), scene.pointLights.size()));
+    // Обновляем источники света из ECS
+    updateLightsFromECS();
 }
 
 void IRenderer::render()
 {
-    LT_PROFILE_SCOPE("IRenderer::render");
+    ZoneScopedN("IRenderer::render");
+
+    // Переносим отладочные примитивы из буфера ожидания в сцену
+    // Это позволяет добавлять их в любое время из любого места
+    auto *ctxPtr = RenderLocator::Get();
+    if (ctxPtr)
+    {
+        ctxPtr->beginFrame();
+        ctxPtr->flushDebugPrimitives();
+    }
+
+    // Данные камеры и трансформаций объектов приходят через событие RenderFrameData от ECSModule
+    // Обновляем рендер-объекты только при изменениях структуры (через EventBus/diff)
     updateRenderList();
+
     m_activeTextureHandle = m_renderGraph.execute();
+    
+    if (ctxPtr)
+    {
+        ctxPtr->endFrame();
+    }
+}
+
+void IRenderer::drawWorldGrid()
+{
+    ZoneScopedN("IRenderer::drawWorldGrid");
+    auto *ctxPtr = RenderLocator::Get();
+    if (!ctxPtr)
+        return;
+
+    // Параметры сетки
+    const float gridSize = 100.0f; // Размер сетки в одну сторону от центра
+    const float gridStep = 1.0f;   // Шаг между линиями
+    const float majorStep = 10.0f; // Шаг для основных линий
+
+    // Цвета
+    const glm::vec3 majorLineColor = glm::vec3(0.5f, 0.5f, 0.5f); // Серый для основных линий
+    const glm::vec3 minorLineColor = glm::vec3(0.3f, 0.3f, 0.3f); // Темно-серый для обычных линий
+    const glm::vec3 axisColorX = glm::vec3(1.0f, 0.2f, 0.2f);     // Красный для оси X
+    const glm::vec3 axisColorZ = glm::vec3(0.2f, 0.2f, 1.0f);     // Синий для оси Z
+
+    const float y = 0.0f; // Высота сетки (горизонтальная плоскость)
+
+    // Рисуем оси (основные линии, проходящие через центр)
+    {
+        // Ось X (красная)
+        DebugLine axisX;
+        axisX.from = glm::vec3(-gridSize, y, 0.0f);
+        axisX.to = glm::vec3(gridSize, y, 0.0f);
+        axisX.color = axisColorX;
+        ctxPtr->addDebugLine(axisX);
+
+        // Ось Z (синяя)
+        DebugLine axisZ;
+        axisZ.from = glm::vec3(0.0f, y, -gridSize);
+        axisZ.to = glm::vec3(0.0f, y, gridSize);
+        axisZ.color = axisColorZ;
+        ctxPtr->addDebugLine(axisZ);
+    }
+
+    // Рисуем линии вдоль оси Z (параллельные оси X)
+    for (float x = -gridSize; x <= gridSize; x += gridStep)
+    {
+        // Проверяем, является ли линия основной (кратна majorStep) или это ось
+        bool isAxis = (std::abs(x) < 0.001f);
+        if (isAxis)
+            continue; // Пропускаем ось Z (уже нарисована)
+
+        // Проверяем, кратна ли координата majorStep
+        float remainder = std::abs(std::fmod(std::abs(x), majorStep));
+        bool isMajor = (remainder < 0.001f || remainder > (majorStep - 0.001f));
+
+        DebugLine line;
+        line.from = glm::vec3(x, y, -gridSize);
+        line.to = glm::vec3(x, y, gridSize);
+        line.color = isMajor ? majorLineColor : minorLineColor;
+        ctxPtr->addDebugLine(line);
+    }
+
+    // Рисуем линии вдоль оси X (параллельные оси Z)
+    for (float z = -gridSize; z <= gridSize; z += gridStep)
+    {
+        // Проверяем, является ли линия осью
+        bool isAxis = (std::abs(z) < 0.001f);
+        if (isAxis)
+            continue; // Пропускаем ось X (уже нарисована)
+
+        // Проверяем, кратна ли координата majorStep
+        float remainder = std::abs(std::fmod(std::abs(z), majorStep));
+        bool isMajor = (remainder < 0.001f || remainder > (majorStep - 0.001f));
+
+        DebugLine line;
+        line.from = glm::vec3(-gridSize, y, z);
+        line.to = glm::vec3(gridSize, y, z);
+        line.color = isMajor ? majorLineColor : minorLineColor;
+        ctxPtr->addDebugLine(line);
+    }
 }
 
 TextureHandle IRenderer::getOutputRenderHandle(int w, int h)
 {
+    // Проверяем минимальные размеры viewport
+    const int minWidth = 1;
+    const int minHeight = 1;
+
+    // Если размеры слишком маленькие, используем минимальные значения
+    if (w < minWidth || h < minHeight)
+    {
+        // Не обновляем viewport и не ресайзим граф при некорректных размерах
+        return m_activeTextureHandle;
+    }
+
     LT_ASSERT_MSG(w > 0 && h > 0, "Output dimensions must be positive");
+
+    // Обновляем viewport в RenderContext перед изменением размеров
+    auto *ctxPtr = RenderLocator::Get();
+    if (ctxPtr)
+    {
+        ctxPtr->setViewport(w, h);
+    }
+
     m_renderGraph.resizeAll(w, h);
     return m_activeTextureHandle;
+}
+
+void IRenderer::drawLine(const glm::vec3 &from, const glm::vec3 &to, const glm::vec3 &color)
+{
+    auto *ctxPtr = RenderLocator::Get();
+    if (!ctxPtr)
+        return;
+
+    RenderModule::DebugLine line;
+    line.from = from;
+    line.to = to;
+    line.color = color;
+    ctxPtr->addDebugLine(line);
+}
+
+void IRenderer::drawBox(const glm::vec3 &center, const glm::vec3 &size, const glm::vec3 &color)
+{
+    auto *ctxPtr = RenderLocator::Get();
+    if (!ctxPtr)
+        return;
+
+    RenderModule::DebugBox box;
+    box.center = center;
+    box.size = size;
+    box.color = color;
+    ctxPtr->addDebugBox(box);
+}
+
+void IRenderer::drawSphere(const glm::vec3 &center, float radius, const glm::vec3 &color)
+{
+    auto *ctxPtr = RenderLocator::Get();
+    if (!ctxPtr)
+        return;
+
+    RenderModule::DebugSphere sphere;
+    sphere.center = center;
+    sphere.radius = radius;
+    sphere.color = color;
+    ctxPtr->addDebugSphere(sphere);
+}
+
+void IRenderer::applyRenderDiff(const RenderDiff &diff)
+{
+    ZoneScopedN("IRenderer::applyRenderDiff");
+
+    for (const auto &change : diff.changes)
+    {
+        switch (change.type)
+        {
+        case RenderDiff::EntityChange::Added: {
+            // Добавляем новый рендер-объект
+            if (!change.newState || !change.newState->isValid)
+                break;
+
+            auto &state = m_entityTracker.getOrCreateState(change.entityId);
+
+            // Копируем компоненты из нового состояния
+            state.entityId = change.newState->entityId;
+            state.isValid = change.newState->isValid;
+            state.position = change.newState->position;
+            state.rotation = change.newState->rotation;
+            state.scale = change.newState->scale;
+            state.mesh = change.newState->mesh;
+
+            // Создаем объект через фабрику
+            RenderObject obj = RenderObjectFactory::createFromState(state);
+            m_listManager.addObject(obj, change.entityId);
+
+            LT_LOGI("Renderer", "Applied diff: Added entity " + std::to_string(change.entityId));
+            break;
+        }
+
+        case RenderDiff::EntityChange::Updated: {
+            // Обновление создается только при изменении MeshComponent (ресурсов)
+            // Трансформации обновляются каждый кадр через RenderFrameData, поэтому здесь
+            // обрабатываем только изменения ресурсов (меш/текстура/шейдер)
+            if (!change.newState)
+                break;
+
+            auto *state = m_entityTracker.getState(change.entityId);
+            if (!state)
+            {
+                LT_LOGE("Renderer",
+                        "Cannot update entity " + std::to_string(change.entityId) + " - not found in tracker");
+                break;
+            }
+
+            // Обновляем состояние в трекере (включая трансформации для синхронизации)
+            state->position = change.newState->position;
+            state->rotation = change.newState->rotation;
+            state->scale = change.newState->scale;
+            state->mesh = change.newState->mesh;
+
+            // Ищем индекс объекта через менеджер
+            size_t *pIndex = m_listManager.getObjectIndex(change.entityId);
+            if (!pIndex || !m_listManager.isValidIndex(*pIndex))
+            {
+                LT_LOGE("Renderer", "Cannot find render object for entity " + std::to_string(change.entityId));
+                break;
+            }
+
+            // Обновляем ресурсы объекта
+            auto &objects = m_listManager.getObjects();
+            RenderObjectFactory::updateResources(objects[*pIndex], *state);
+
+            LT_LOGI("Renderer",
+                    "Applied diff: Updated entity " + std::to_string(change.entityId) + " (resources changed)");
+            break;
+        }
+
+        case RenderDiff::EntityChange::Removed: {
+            // Проверяем, не была ли сущность уже удалена через onEntityDestroyed
+            // Это может произойти, если EntityDestroyed сработал раньше observer'а
+            auto *state = m_entityTracker.getState(change.entityId);
+            if (!state)
+            {
+                // Сущность уже удалена - это нормально, просто пропускаем
+                LT_LOGI("Renderer",
+                        "Applied diff: Removed entity " + std::to_string(change.entityId) + " (already removed)");
+                break;
+            }
+
+            // Удаляем объект через менеджер
+            m_listManager.removeObject(change.entityId);
+            m_entityTracker.removeState(change.entityId);
+
+            LT_LOGI("Renderer", "Applied diff: Removed entity " + std::to_string(change.entityId));
+            break;
+        }
+        }
+    }
+}
+
+void IRenderer::updateLightsFromECS()
+{
+    auto *worldPtr = m_ecsModule->getCurrentWorld();
+    if (!worldPtr)
+        return;
+
+    auto &world = worldPtr->get();
+    auto &scene = RenderLocator::Get()->scene();
+    auto *ctxPtr = RenderLocator::Get();
+
+    // Очищаем point lights для нового кадра
+    scene.pointLights.clear();
+
+    // ============================================================
+    // DirectionalLight (если есть)
+    // ============================================================
+    {
+        if (world.component<DirectionalLightComponent>().is_valid())
+        {
+            auto qDirLight = world.query<DirectionalLightComponent, PositionComponent, RotationComponent>();
+            bool foundLight = false;
+            
+            qDirLight.each(
+                [&](flecs::entity e, const DirectionalLightComponent& light, const PositionComponent& pos, const RotationComponent& rot)
+                {
+                    foundLight = true;
+                    
+                    // Получаем direction из RotationComponent
+                    glm::quat rotation = rot.toQuat();
+                    // Направление света - вперед по локальной оси -Z (стандарт для directional light)
+                    glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);
+                    glm::vec3 direction = rotation * forward;
+                    
+                    // Направление передаём как есть, инверсия выполняется в шейдере
+                    scene.sun.direction = glm::vec4(glm::normalize(direction), 0.0f);
+                    scene.sun.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // Default white
+                    scene.sun.intensity = light.intencity;
+                    
+                    // Вычисляем view и projection матрицы для источника света
+                    // Позиция источника света (для view matrix)
+                    glm::vec3 lightPos = pos.toGLMVec();
+                    
+                    // View matrix - смотрим в направлении света
+                    glm::vec3 lightDir = glm::normalize(direction);
+                    // Целевая точка - немного ниже по направлению света для стабильности
+                    glm::vec3 target = lightPos + lightDir * 100.0f;
+                    scene.sun.lightViewMatrix = glm::lookAt(lightPos, target, glm::vec3(0.0f, 1.0f, 0.0f));
+                    
+                    // Orthographic projection для directional light
+                    // Охватываем большую область сцены
+                    const float orthoSize = 100.0f; // Размер области теней
+                    scene.sun.lightProjectionMatrix = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 0.1f, 500.0f);
+                    
+                    // Debug визуализация направления DirectionalLight
+                    if (ctxPtr)
+                    {
+                        glm::vec3 lightPos = pos.toGLMVec();
+                        // Визуализируем направление, в котором светит свет (в шейдере используется -lightDirection)
+                        glm::vec3 lightDir = -glm::normalize(direction);
+                        float arrowLength = 10.0f; // Длина стрелки
+                        glm::vec3 arrowEnd = lightPos + lightDir * arrowLength;
+                        
+                        // Основная линия направления
+                        DebugLine dirLine;
+                        dirLine.from = lightPos;
+                        dirLine.to = arrowEnd;
+                        dirLine.color = glm::vec3(1.0f, 1.0f, 0.0f); // Желтый цвет
+                        ctxPtr->addDebugLine(dirLine);
+                        
+                        // Стрелка на конце (конус)
+                        float arrowHeadSize = 1.0f;
+                        glm::vec3 perpendicular1 = glm::normalize(glm::cross(lightDir, glm::vec3(0.0f, 1.0f, 0.0f)));
+                        if (glm::length(perpendicular1) < 0.1f) // Если lightDir параллелен Y, используем другой вектор
+                            perpendicular1 = glm::normalize(glm::cross(lightDir, glm::vec3(1.0f, 0.0f, 0.0f)));
+                        glm::vec3 perpendicular2 = glm::normalize(glm::cross(lightDir, perpendicular1));
+                        
+                        // Три линии для стрелки
+                        DebugLine arrow1, arrow2, arrow3;
+                        arrow1.from = arrowEnd;
+                        arrow1.to = arrowEnd - lightDir * arrowHeadSize + perpendicular1 * arrowHeadSize * 0.3f;
+                        arrow1.color = glm::vec3(1.0f, 1.0f, 0.0f);
+                        ctxPtr->addDebugLine(arrow1);
+                        
+                        arrow2.from = arrowEnd;
+                        arrow2.to = arrowEnd - lightDir * arrowHeadSize - perpendicular1 * arrowHeadSize * 0.3f;
+                        arrow2.color = glm::vec3(1.0f, 1.0f, 0.0f);
+                        ctxPtr->addDebugLine(arrow2);
+                        
+                        arrow3.from = arrowEnd;
+                        arrow3.to = arrowEnd - lightDir * arrowHeadSize + perpendicular2 * arrowHeadSize * 0.3f;
+                        arrow3.color = glm::vec3(1.0f, 1.0f, 0.0f);
+                        ctxPtr->addDebugLine(arrow3);
+                    }
+                });
+            
+            if (!foundLight)
+            {
+                // Default directional light (сверху)
+                scene.sun.direction = glm::vec4(0.f, -1.f, 0.f, 0.f);
+                scene.sun.color = glm::vec4(1.f, 1.f, 1.f, 1.f);
+                scene.sun.intensity = 1.f;
+                
+                // Default light matrices
+                scene.sun.lightViewMatrix = glm::lookAt(glm::vec3(0.0f, 50.0f, 0.0f), 
+                                                        glm::vec3(0.0f, 0.0f, 0.0f), 
+                                                        glm::vec3(0.0f, 0.0f, 1.0f));
+                const float orthoSize = 100.0f;
+                scene.sun.lightProjectionMatrix = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 0.1f, 500.0f);
+            }
+        }
+        else
+        {
+            // Default directional light (сверху)
+            scene.sun.direction = glm::vec4(0.f, -1.f, 0.f, 0.f);
+            scene.sun.color = glm::vec4(1.f, 1.f, 1.f, 1.f);
+            scene.sun.intensity = 1.f;
+            
+            // Default light matrices
+            scene.sun.lightViewMatrix = glm::lookAt(glm::vec3(0.0f, 50.0f, 0.0f), 
+                                                    glm::vec3(0.0f, 0.0f, 0.0f), 
+                                                    glm::vec3(0.0f, 0.0f, 1.0f));
+            const float orthoSize = 100.0f;
+            scene.sun.lightProjectionMatrix = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 0.1f, 500.0f);
+        }
+    }
+
+    // ============================================================
+    // PointLight (если есть)
+    // ============================================================
+    {
+        if (world.component<PointLightComponent>().is_valid())
+        {
+            auto qPoint = world.query<PointLightComponent, PositionComponent>();
+            qPoint.each(
+                [&](flecs::entity e, const PointLightComponent& light, const PositionComponent& pos)
+                {
+                    PointLightRenderData pointLight;
+                    pointLight.position = glm::vec4(pos.toGLMVec(), 1.0f);
+                    pointLight.color = glm::vec4(light.color, 1.0f); // Используем цвет из компонента
+                    // Убеждаемся, что intensity не равна нулю
+                    pointLight.intensity = (light.intencity > 0.0f) ? light.intencity : 1.0f;
+                    pointLight.innerRadius = light.innerRadius;
+                    pointLight.outerRadius = (light.outerRadius > 0.0f) ? light.outerRadius : 10.0f; // Минимум 10 для внешнего радиуса
+                    
+                    scene.pointLights.push_back(pointLight);
+                    
+                    // Debug визуализация радиуса PointLight
+                    if (ctxPtr)
+                    {
+                        glm::vec3 lightPos = pos.toGLMVec();
+                        float outerRadius = light.outerRadius;
+                        
+                        // Рисуем сферу с внешним радиусом источника света
+                        DebugSphere sphere;
+                        sphere.center = lightPos;
+                        sphere.radius = outerRadius;
+                        sphere.color = glm::vec3(light.color.x, light.color.y, light.color.z); // Используем цвет из компонента
+                        ctxPtr->addDebugSphere(sphere);
+                        
+                        // Рисуем внутреннюю сферу (inner radius), если она > 0
+                        if (light.innerRadius > 0.0f)
+                        {
+                            DebugSphere innerSphere;
+                            innerSphere.center = lightPos;
+                            innerSphere.radius = light.innerRadius;
+                            innerSphere.color = glm::vec3(light.color.x * 1.5f, light.color.y * 1.5f, light.color.z * 1.5f); // Более яркий цвет
+                            ctxPtr->addDebugSphere(innerSphere);
+                        }
+                        
+                        // Рисуем крест в центре источника света для лучшей видимости
+                        float crossSize = 0.5f;
+                        DebugLine crossX1, crossY1, crossZ1;
+                        
+                        crossX1.from = lightPos - glm::vec3(crossSize, 0.0f, 0.0f);
+                        crossX1.to = lightPos + glm::vec3(crossSize, 0.0f, 0.0f);
+                        crossX1.color = glm::vec3(1.0f, 0.0f, 0.0f); // Красный для X
+                        ctxPtr->addDebugLine(crossX1);
+                        
+                        crossY1.from = lightPos - glm::vec3(0.0f, crossSize, 0.0f);
+                        crossY1.to = lightPos + glm::vec3(0.0f, crossSize, 0.0f);
+                        crossY1.color = glm::vec3(0.0f, 1.0f, 0.0f); // Зеленый для Y
+                        ctxPtr->addDebugLine(crossY1);
+                        
+                        crossZ1.from = lightPos - glm::vec3(0.0f, 0.0f, crossSize);
+                        crossZ1.to = lightPos + glm::vec3(0.0f, 0.0f, crossSize);
+                        crossZ1.color = glm::vec3(0.0f, 0.0f, 1.0f); // Синий для Z
+                        ctxPtr->addDebugLine(crossZ1);
+                    }
+                });
+        }
+    }
+}
+
+void IRenderer::rebuildRenderList()
+{
+    ZoneScopedN("IRenderer::rebuildRenderList");
+    LT_ASSERT_MSG(m_ecsModule, "ECSModule is null");
+
+    auto *worldPtr = m_ecsModule->getCurrentWorld();
+    if (!worldPtr)
+    {
+        return;
+    }
+
+    auto &world = worldPtr->get();
+
+    // Очищаем список объектов и маппинг
+    m_listManager.clear();
+    m_entityTracker.clear();
+
+    // Заново собираем все рендер-объекты из ECS
+    auto qMesh = world.query<PositionComponent, RotationComponent, ScaleComponent, MeshComponent>();
+    qMesh.each([&](flecs::entity e, const PositionComponent &pos, const RotationComponent &rot,
+                   const ScaleComponent &scale, const MeshComponent &mesh) {
+        // Создаем состояние сущности
+        auto &state = m_entityTracker.getOrCreateState(e.id());
+        state.entityId = e.id();
+        state.isValid = true;
+        state.position = pos;
+        state.rotation = rot;
+        state.scale = scale;
+        state.mesh = mesh;
+
+        // Создаем рендер-объект через фабрику
+        RenderObject obj = RenderObjectFactory::createFromState(state);
+        m_listManager.addObject(obj, e.id());
+    });
+
+    LT_LOGI("Renderer", "Rebuilt render list with " + std::to_string(m_listManager.size()) + " objects");
 }
 
 } // namespace RenderModule
