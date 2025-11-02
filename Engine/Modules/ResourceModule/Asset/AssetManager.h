@@ -3,6 +3,8 @@
 #include "AssetDatabase.h"
 #include "AssetID.h"
 #include "AssetImporterHub.h"
+#include "Foundation/Profiler/ProfileAllocator.h"
+#include <EngineContext/Foundation/Assert/Assert.h>
 
 #include <EngineMinimal.h>
 #include <efsw/efsw.hpp>
@@ -36,18 +38,22 @@ class AssetManager : public IModule
 
     void setProjectResourcesRoot(const std::filesystem::path& root) noexcept
     {
+        LT_ASSERT_MSG(!root.empty(), "Project resources root path cannot be empty");
         m_projectResourcesRoot = root;
     }
     void setEngineResourcesRoot(const std::filesystem::path& root) noexcept
     {
+        LT_ASSERT_MSG(!root.empty(), "Engine resources root path cannot be empty");
         m_engineResourcesRoot = root;
     }
     void setCacheRoot(const std::filesystem::path& root) noexcept
     {
+        LT_ASSERT_MSG(!root.empty(), "Cache root path cannot be empty");
         m_cacheRoot = root;
     }
     void setDatabasePath(const std::filesystem::path& path) noexcept
     {
+        LT_ASSERT_MSG(!path.empty(), "Database path cannot be empty");
         m_dbPath = path;
     }
 
@@ -56,7 +62,7 @@ class AssetManager : public IModule
     std::unique_ptr<efsw::FileWatchListener> m_listener;
     std::unique_ptr<std::thread> m_watchThread;
     std::mutex m_queueMutex;
-    std::vector<std::string> m_changedFiles;
+    std::vector<std::string, ProfileAllocator<std::string>> m_changedFiles;
 
     AssetImporterHub m_importers;
     AssetDatabase m_database;

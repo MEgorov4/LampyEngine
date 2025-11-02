@@ -1,13 +1,14 @@
 #pragma once
-#include <EngineMinimal.h>
 #include "BaseResource.h"
+#include "Foundation/Profiler/ProfileAllocator.h"
 
+#include <EngineMinimal.h>
 
 namespace ResourceModule
 {
 struct TextureInfo
 {
-    std::vector<uint8_t> pixels;
+    std::vector<uint8_t, ProfileAllocator<uint8_t>> pixels;
     int width    = 0;
     int height   = 0;
     int channels = 0;

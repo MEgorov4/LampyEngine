@@ -1,13 +1,16 @@
 // PakBuilder.cpp
 #include "PakBuilder.h"
+
+#include "Foundation/Profiler/ProfileAllocator.h"
 #include "PakEntry.h"
-#include <nlohmann/json.hpp>
+
+#include <EngineMinimal.h>
 #include <fstream>
+#include <nlohmann/json.hpp>
 
 using namespace ResourceModule;
 
-bool PakBuilder::BuildPak(const AssetDatabase& db,
-                          const std::filesystem::path& cacheDir,
+bool PakBuilder::BuildPak(const AssetDatabase& db, const std::filesystem::path& cacheDir,
                           const std::filesystem::path& outPakPath)
 {
     LT_LOGI("PakBuilder", "Building PAK: " + outPakPath.string());
@@ -27,37 +30,39 @@ bool PakBuilder::BuildPak(const AssetDatabase& db,
     uint64_t offset = sizeof(PakHeader);
 
     // Пишем ассеты подряд, формируем индекс
-    db.forEach([&](const AssetID& guid, const AssetInfo& info)
-    {
-        const auto& imported = info.importedPath;
-        if (imported.empty()) return;
-
-        std::ifstream in(imported, std::ios::binary);
-        if (!in.is_open())
+    db.forEach(
+        [&](const AssetID& guid, const AssetInfo& info)
         {
-            LT_LOGW("PakBuilder", "Skip missing imported: " + imported);
-            return;
-        }
+            const auto& imported = info.importedPath;
+            if (imported.empty())
+                return;
 
-        in.seekg(0, std::ios::end);
-        const uint64_t size = static_cast<uint64_t>(in.tellg());
-        in.seekg(0, std::ios::beg);
+            std::ifstream in(imported, std::ios::binary);
+            if (!in.is_open())
+            {
+                LT_LOGW("PakBuilder", "Skip missing imported: " + imported);
+                return;
+            }
 
-        std::vector<char> buffer(size);
-        if (size)
-            in.read(buffer.data(), size);
+            in.seekg(0, std::ios::end);
+            const uint64_t size = static_cast<uint64_t>(in.tellg());
+            in.seekg(0, std::ios::beg);
 
-        ofs.write(buffer.data(), size);
+            std::vector<char, ProfileAllocator<char>> buffer(size);
+            if (size)
+                in.read(buffer.data(), size);
 
-        nlohmann::json e;
-        e["offset"] = offset;
-        e["size"]   = size;
-        e["type"]   = static_cast<int>(info.type);
-        e["path"]   = imported; // опционально (для отладки)
+            ofs.write(buffer.data(), size);
 
-        indexJson[guid.str()] = std::move(e);
-        offset += size;
-    });
+            nlohmann::json e;
+            e["offset"] = offset;
+            e["size"]   = size;
+            e["type"]   = static_cast<int>(info.type);
+            e["path"]   = imported; // опционально (для отладки)
+
+            indexJson[guid.str()] = std::move(e);
+            offset += size;
+        });
 
     // Пишем JSON-индекс в конец
     const std::string indexStr = indexJson.dump();

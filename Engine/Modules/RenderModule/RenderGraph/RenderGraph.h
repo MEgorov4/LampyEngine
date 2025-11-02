@@ -1,15 +1,16 @@
 #pragma once
+#include "../Abstract/ITexture.h"
+#include "Foundation/Profiler/ProfileAllocator.h"
 #include "RenderGraphTypes.h"
 
 #include <unordered_map>
 #include <vector>
-#include "../Abstract/ITexture.h"
 
 namespace RenderModule
 {
 class RenderGraph
 {
-    std::vector<RenderGraphPass> m_passes;
+    std::vector<RenderGraphPass, ProfileAllocator<RenderGraphPass>> m_passes;
     std::unordered_map<std::string, RenderGraphResource> m_resources;
 
   public:
@@ -36,11 +37,11 @@ class RenderGraph
     {
         for (auto& pass : m_passes)
         {
-            std::vector<RenderGraphResource> inputs;
+            std::vector<RenderGraphResource, ProfileAllocator<RenderGraphResource>> inputs;
             for (auto& name : pass.reads)
                 inputs.push_back(m_resources.at(name));
 
-            std::vector<RenderGraphResource> outputs;
+            std::vector<RenderGraphResource, ProfileAllocator<RenderGraphResource>> outputs;
             for (auto& name : pass.writes)
                 outputs.push_back(m_resources.at(name));
 

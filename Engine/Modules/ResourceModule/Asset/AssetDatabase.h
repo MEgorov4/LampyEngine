@@ -1,5 +1,7 @@
 #pragma once
 #include "AssetInfo.h"
+#include "Foundation/Profiler/ProfileAllocator.h"
+#include <EngineContext/Foundation/Assert/Assert.h>
 
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -23,7 +25,7 @@ class AssetDatabase
     std::optional<AssetInfo> get(const AssetID& guid) const;
     std::optional<AssetInfo> findBySource(const std::string& srcPath) const;
 
-    std::vector<AssetInfo> getByOrigin(AssetOrigin origin) const;
+    std::vector<AssetInfo, ProfileAllocator<AssetInfo>> getByOrigin(AssetOrigin origin) const;
 
     void clear();
     size_t size() const;

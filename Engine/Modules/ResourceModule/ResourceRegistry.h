@@ -10,6 +10,7 @@
 
 #include "Asset/AssetID.h"
 #include "BaseResource.h"
+#include "../../EngineContext/Foundation/Assert/Assert.h"
 
 namespace ResourceModule
 {
@@ -20,18 +21,25 @@ class BaseResource;
     public:
         void registerResource(const AssetID& guid, std::shared_ptr<BaseResource> resource)
         {
+            LT_ASSERT_MSG(!guid.str().empty(), "Cannot register resource with empty GUID");
+            LT_ASSERT_MSG(resource, "Cannot register null resource");
+            
             std::unique_lock lock(m_mutex);
             m_resources[guid] = std::move(resource);
         }
 
         void unregister(const AssetID& guid)
         {
+            LT_ASSERT_MSG(!guid.str().empty(), "Cannot unregister resource with empty GUID");
+            
             std::unique_lock lock(m_mutex);
             m_resources.erase(guid);
         }
 
         std::shared_ptr<BaseResource> get(const AssetID& guid) const
         {
+            LT_ASSERT_MSG(!guid.str().empty(), "Cannot get resource with empty GUID");
+            
             std::shared_lock lock(m_mutex);
             if (auto it = m_resources.find(guid); it != m_resources.end())
                 return it->second;

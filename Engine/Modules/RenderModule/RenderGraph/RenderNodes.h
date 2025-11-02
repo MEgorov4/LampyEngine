@@ -7,7 +7,8 @@
 #include "../IRenderer.h"
 #include "../OpenGL/OpenGLObjects/OpenGLMesh2D.h"
 #include "../RenderContext.h"
-#include "../RenderLocator.h" 
+#include "../RenderLocator.h"
+#include "Foundation/Profiler/ProfileAllocator.h"
 
 namespace RenderModule::RenderNodes
 {
@@ -16,36 +17,35 @@ using Resource = RenderGraphResource;
 // ---------------------------------------------------------
 // 1️⃣ Shadow Pass
 // ---------------------------------------------------------
-inline void ShadowPass(const std::vector<Resource>& inputs, std::vector<Resource>& outputs)
+inline void ShadowPass(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
+                       std::vector<Resource, ProfileAllocator<Resource>> &outputs)
 {
-    auto& ctx   = RenderLocator::Ref();
-    auto& scene = ctx.scene();
-    auto  rm    = ctx.resources();
+    auto &ctx = RenderLocator::Ref();
+    auto &scene = ctx.scene();
+    auto rm = ctx.resources();
 
     static std::shared_ptr<IShader> shader;
     static std::shared_ptr<IFramebuffer> fb;
 
     if (!shader)
     {
-        shader = ShaderFactory::createOrGetShader(
-            {"Shaders/GLSL/Core/shadow.vert"},
-            {"Shaders/GLSL/Core/shadow.frag"});
+
+        shader =
+            RenderFactory::get().createShader({"Shaders/GLSL/Core/shadow.vert"}, {"Shaders/GLSL/Core/shadow.frag"});
     }
 
     if (!fb)
     {
-        fb = FramebufferFactory::createOrGetFramebuffer({
-            .height   = ctx.getViewport().second,
-            .width    = ctx.getViewport().first,
-            .useDepth = true,
-            .name     = "ShadowPassFB"
-        });
+        fb = RenderFactory::get().createFramebuffer({.height = ctx.getViewport().second,
+                                                     .width = ctx.getViewport().first,
+                                                     .useDepth = true,
+                                                     .name = "ShadowPassFB"});
     }
 
     fb->bind();
     shader->use();
 
-    for (auto& obj : scene.objects)
+    for (auto &obj : scene.objects)
     {
         if (shader->hasUniformBlock("ModelMatrices"))
             shader->setUniformData("ModelMatrices", &obj.modelMatrix, sizeof(ShaderUniformBlock_ModelData));
@@ -61,36 +61,34 @@ inline void ShadowPass(const std::vector<Resource>& inputs, std::vector<Resource
 // ---------------------------------------------------------
 // 2️⃣ Light Pass
 // ---------------------------------------------------------
-inline void LightPass(const std::vector<Resource>& inputs, std::vector<Resource>& outputs)
+inline void LightPass(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
+                      std::vector<Resource, ProfileAllocator<Resource>> &outputs)
 {
-    auto& ctx   = RenderLocator::Ref();
-    auto& scene = ctx.scene();
-    auto  rm    = ctx.resources();
+    auto &ctx = RenderLocator::Ref();
+    auto &scene = ctx.scene();
+    auto rm = ctx.resources();
 
     static std::shared_ptr<IShader> shader;
     static std::shared_ptr<IFramebuffer> fb;
 
     if (!shader)
     {
-        shader = ShaderFactory::createOrGetShader(
-            ResourceModule::AssetID{"Shaders/GLSL/Core/light.vert"},
-            ResourceModule::AssetID{"Shaders/GLSL/Core/light.frag"});
+        shader = RenderFactory::get().createShader(ResourceModule::AssetID{"Shaders/GLSL/Core/light.vert"},
+                                                   ResourceModule::AssetID{"Shaders/GLSL/Core/light.frag"});
     }
 
     if (!fb)
     {
-        fb = FramebufferFactory::createOrGetFramebuffer({
-            .height   = ctx.getViewport().second,
-            .width    = ctx.getViewport().first,
-            .useDepth = true,
-            .name     = "LightPassFB"
-        });
+        fb = RenderFactory::get().createFramebuffer({.height = ctx.getViewport().second,
+                                                     .width = ctx.getViewport().first,
+                                                     .useDepth = true,
+                                                     .name = "LightPassFB"});
     }
 
     fb->bind();
     shader->use();
 
-    for (auto& obj : scene.objects)
+    for (auto &obj : scene.objects)
     {
         if (shader->hasUniformBlock("ModelMatrices"))
             shader->setUniformData("ModelMatrices", &obj.modelMatrix, sizeof(ShaderUniformBlock_ModelData));
@@ -106,11 +104,12 @@ inline void LightPass(const std::vector<Resource>& inputs, std::vector<Resource>
 // ---------------------------------------------------------
 // 3️⃣ Texture Pass
 // ---------------------------------------------------------
-inline void TexturePass(const std::vector<Resource>& inputs, std::vector<Resource>& outputs)
+inline void TexturePass(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
+                        std::vector<Resource, ProfileAllocator<Resource>> &outputs)
 {
-    auto& ctx   = RenderLocator::Ref();
-    auto& scene = ctx.scene();
-    auto  rm    = ctx.resources();
+    auto &ctx = RenderLocator::Ref();
+    auto &scene = ctx.scene();
+    auto rm = ctx.resources();
 
     static std::shared_ptr<IShader> shader;
     static std::shared_ptr<IFramebuffer> fb;
@@ -118,31 +117,28 @@ inline void TexturePass(const std::vector<Resource>& inputs, std::vector<Resourc
 
     if (!shader)
     {
-        shader = ShaderFactory::createOrGetShader(
-            {"Shaders/GLSL/Core/texture.vert"},
-            {"Shaders/GLSL/Core/texture.frag"});
+        shader =
+            RenderFactory::get().createShader({"Shaders/GLSL/Core/texture.vert"}, {"Shaders/GLSL/Core/texture.frag"});
         shader->scanTextureBindings({{"albedoTexture", 0}});
     }
 
     if (!fb)
     {
-        fb = FramebufferFactory::createOrGetFramebuffer({
-            .height   = ctx.getViewport().second,
-            .width    = ctx.getViewport().first,
-            .useDepth = true,
-            .name     = "TexturePassFB"
-        });
+        fb = RenderFactory::get().createFramebuffer({.height = ctx.getViewport().second,
+                                                     .width = ctx.getViewport().first,
+                                                     .useDepth = true,
+                                                     .name = "TexturePassFB"});
     }
 
     if (!fallback)
     {
-        fallback = TextureFactory::createOrGetTexture({"Textures/Generic/GrayBoxTexture.png"});
+        fallback = RenderFactory::get().createTexture({"Textures/Generic/GrayBoxTexture.png"});
     }
 
     fb->bind();
     shader->use();
 
-    for (auto& obj : scene.objects)
+    for (auto &obj : scene.objects)
     {
         if (shader->hasUniformBlock("ModelMatrices"))
             shader->setUniformData("ModelMatrices", &obj.modelMatrix, sizeof(ShaderUniformBlock_ModelData));
@@ -164,10 +160,11 @@ inline void TexturePass(const std::vector<Resource>& inputs, std::vector<Resourc
 // ---------------------------------------------------------
 // 4️⃣ Final Pass
 // ---------------------------------------------------------
-inline void FinalCompose(const std::vector<Resource>& inputs, std::vector<Resource>& outputs)
+inline void FinalCompose(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
+                         std::vector<Resource, ProfileAllocator<Resource>> &outputs)
 {
-    auto& ctx = RenderLocator::Ref();
-    auto  rm  = ctx.resources();
+    auto &ctx = RenderLocator::Ref();
+    auto rm = ctx.resources();
 
     static std::shared_ptr<IShader> shader;
     static std::shared_ptr<IFramebuffer> fb;
@@ -175,36 +172,28 @@ inline void FinalCompose(const std::vector<Resource>& inputs, std::vector<Resour
 
     if (!shader)
     {
-        shader = ShaderFactory::createOrGetShader(
-            {"Shaders/GLSL/Core/final.vert"},
-            {"Shaders/GLSL/Core/final.frag"});
-        shader->scanTextureBindings({
-            {"shadow_pass_depth", 0},
-            {"light_pass_color", 1},
-            {"texture_pass_color", 2}
-        });
+        shader = RenderFactory::get().createShader({"Shaders/GLSL/Core/final.vert"}, {"Shaders/GLSL/Core/final.frag"});
+        shader->scanTextureBindings({{"shadow_pass_depth", 0}, {"light_pass_color", 1}, {"texture_pass_color", 2}});
     }
 
     if (!fb)
     {
-        fb = FramebufferFactory::createOrGetFramebuffer({
-            .height   = ctx.getViewport().second,
-            .width    = ctx.getViewport().first,
-            .useDepth = true,
-            .name     = "FinalPassFB"
-        });
+        fb = RenderFactory::get().createFramebuffer({.height = ctx.getViewport().second,
+                                                     .width = ctx.getViewport().first,
+                                                     .useDepth = true,
+                                                     .name = "FinalPassFB"});
     }
 
     if (!quad)
     {
-        quad = std::make_shared<OpenGL::OpenGLMesh2D>();
+        quad = RenderFactory::get().createMesh2D();
     }
 
     fb->bind();
     shader->use();
 
     std::unordered_map<std::string, TextureHandle> texBindings;
-    for (auto& in : inputs)
+    for (auto &in : inputs)
         texBindings[in.name] = in.handle;
 
     shader->bindTextures(texBindings);

@@ -11,6 +11,7 @@
 #include "Math/Math.h"
 #include "Time/Time.h"
 
+#include "Profiler/ProfileAllocator.h"
 #include "Profiler/ProfilerMacros.h"
 
 using namespace EngineCore::Foundation;

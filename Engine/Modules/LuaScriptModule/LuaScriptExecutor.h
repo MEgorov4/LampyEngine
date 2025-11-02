@@ -1,18 +1,16 @@
-#pragma once 
-
-
-#include <sol/sol.hpp>
+#pragma once
+#include <EngineMinimal.h>
 #include <sol/forward.hpp>
 #include <sol/reference.hpp>
-#include <vector>
+#include <sol/sol.hpp>
 
 class LuaScriptExecutor
 {
-	std::vector<sol::table> m_tables;
+    std::vector<sol::table, ProfileAllocator<sol::table>> m_tables;
 
-public:
-	void addScript(const sol::table& table);
-	void removeScript(const sol::table& table);
-	void executeStart();
-	void executeUpdate(float deltaSeconds);
+  public:
+    void addScript(const sol::table& table);
+    void removeScript(const sol::table& table);
+    void executeStart();
+    void executeUpdate(float deltaSeconds);
 };

@@ -1,4 +1,5 @@
 #include "AssetID.h"
+#include <EngineContext/Foundation/Assert/Assert.h>
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -18,23 +19,29 @@ AssetID::AssetID() noexcept = default;
 
 AssetID::AssetID(const std::string& str)
 {
-    // Если это формат UUID (36 символов с дефисами) — парсим напрямую
+    LT_ASSERT_MSG(!str.empty(), "AssetID string cannot be empty");
+    
+    // Р•СЃР»Рё СЌС‚Рѕ UUID (36 СЃРёРјРІРѕР»РѕРІ СЃ РґРµС„РёСЃР°РјРё) РІ СЃС‚Р°РЅРґР°СЂС‚РЅРѕРј С„РѕСЂРјР°С‚Рµ
     if (str.size() == 36 && str[8] == '-' && str[13] == '-' && str[18] == '-' && str[23] == '-') {
         try {
             boost::uuids::string_generator gen;
             const auto uuid = gen(str);
             std::copy(uuid.begin(), uuid.end(), m_bytes.begin());
             return;
-        } catch (...) {}
+        } catch (...) {
+            // Fall through to path-based generation
+        }
     }
 
-    // Иначе считаем, что это путь
+    // Р•СЃР»Рё СЌС‚Рѕ РїСѓС‚СЊ, С‚Рѕ РґРµР»Р°РµРј РґРµС‚РµСЂРјРёРЅРёСЂРѕРІР°РЅРЅС‹Р№ GUID
     try {
         std::filesystem::path p = std::filesystem::weakly_canonical(str);
         *this = MakeDeterministicIDFromPath(p.generic_string());
     } catch (...) {
         *this = MakeDeterministicIDFromPath(str);
     }
+    
+    LT_ASSERT_MSG(!empty(), "Generated AssetID is empty");
 }
 
 std::string AssetID::str() const
@@ -68,14 +75,16 @@ size_t AssetID::Hasher::operator()(const AssetID& id) const noexcept
 }
 
 // --------------------------------------------------------
-// ?? ГЛАВНОЕ: детерминированный GUID от пути
+// Р“РµРЅРµСЂР°С†РёСЏ: РґРµС‚РµСЂРјРёРЅРёСЂРѕРІР°РЅРЅС‹Р№ GUID РѕС‚ РїСѓС‚Рё
 // --------------------------------------------------------
 AssetID ResourceModule::MakeDeterministicIDFromPath(const std::string& absPath)
 {
+    LT_ASSERT_MSG(!absPath.empty(), "Cannot generate ID from empty path");
+    
     static const auto LampyNamespaceUUID =
         boost::uuids::string_generator()("123e4567-e89b-12d3-a456-426655440000");
 
-    // --- ? normalize path ---
+    // --- РќРѕСЂРјР°Р»РёР·Р°С†РёСЏ РїСѓС‚Рё ---
     std::string norm = absPath;
     for (auto& c : norm)
     {
@@ -86,12 +95,13 @@ AssetID ResourceModule::MakeDeterministicIDFromPath(const std::string& absPath)
         if (c == '\\') c = '/';
 #endif
     }
-    // -------------------------
 
     boost::uuids::name_generator_sha1 gen(LampyNamespaceUUID);
     const auto uuid = gen(norm);
 
     AssetID id;
     std::copy(uuid.begin(), uuid.end(), id.m_bytes.begin());
+    
+    LT_ASSERT_MSG(!id.empty(), "Generated deterministic ID is empty");
     return id;
 }

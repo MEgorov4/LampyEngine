@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Foundation/Profiler/ProfileAllocator.h"
+
 #include <EngineMinimal.h>
 
 namespace WindowModule
@@ -27,7 +29,8 @@ class ImGUIModule : public IModule
     InputModule::InputModule* m_inputModule;
     WindowModule::WindowModule* m_windowModule;
 
-    std::vector<std::shared_ptr<GUIObject>> m_guiObjects; ///< List of registered GUI objects.
+    std::vector<std::shared_ptr<GUIObject>, ProfileAllocator<std::shared_ptr<GUIObject>>>
+        m_guiObjects; ///< List of registered GUI objects.
     Event<SDL_Event>::Subscription m_inputSub;
 
   public:

@@ -1,5 +1,7 @@
 #pragma once
 #include "../IAssetImporter.h"
+#include "Foundation/Profiler/ProfileAllocator.h"
+#include <EngineContext/Foundation/Assert/Assert.h>
 
 #include <fstream>
 #include <tiny_obj_loader.h>
@@ -19,12 +21,18 @@ class MeshImporter final : public IAssetImporter
         return AssetType::Mesh;
     }
 
-        AssetInfo import(const std::filesystem::path& sourcePath, const std::filesystem::path& cacheRoot) override
+    AssetInfo import(const std::filesystem::path& sourcePath, const std::filesystem::path& cacheRoot) override
     {
+        LT_ASSERT_MSG(!sourcePath.empty(), "Source path cannot be empty");
+        LT_ASSERT_MSG(!cacheRoot.empty(), "Cache root cannot be empty");
+        LT_ASSERT_MSG(std::filesystem::exists(sourcePath), "Source file does not exist: " + sourcePath.string());
+        LT_ASSERT_MSG(std::filesystem::is_regular_file(sourcePath), "Source path is not a file: " + sourcePath.string());
+        
         AssetInfo info{};
         info.type       = AssetType::Mesh;
         info.sourcePath = sourcePath.string();
         info.guid       = MakeDeterministicIDFromPath(std::filesystem::path(sourcePath).generic_string());
+        LT_ASSERT_MSG(!info.guid.empty(), "Generated GUID is empty");
 
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
@@ -55,10 +63,10 @@ class MeshImporter final : public IAssetImporter
         };
 
         std::unordered_map<VertexKey, uint32_t, HashKey> vertexMap;
-        std::vector<float> vertices;
-        std::vector<float> normals;
-        std::vector<float> texcoords;
-        std::vector<uint32_t> indices;
+        std::vector<float, ProfileAllocator<float>> vertices;
+        std::vector<float, ProfileAllocator<float>> normals;
+        std::vector<float, ProfileAllocator<float>> texcoords;
+        std::vector<uint32_t, ProfileAllocator<uint32_t>> indices;
 
         for (const auto& shape : shapes)
         {
@@ -68,12 +76,12 @@ class MeshImporter final : public IAssetImporter
                 auto it = vertexMap.find(key);
                 if (it != vertexMap.end())
                 {
-                    // Уже есть такая вершина — используем индекс
+                    // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
                     indices.push_back(it->second);
                 }
                 else
                 {
-                    // Новая вершина
+                    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                     uint32_t newIndex = static_cast<uint32_t>(vertices.size() / 3);
                     vertexMap[key]    = newIndex;
                     indices.push_back(newIndex);
@@ -104,15 +112,30 @@ class MeshImporter final : public IAssetImporter
             }
         }
 
-        // ---- Запись в meshbin ----
+        LT_ASSERT_MSG(!vertices.empty(), "No vertices loaded from mesh");
+        LT_ASSERT_MSG(!indices.empty(), "No indices loaded from mesh");
+        LT_ASSERT_MSG(vertices.size() % 3 == 0, "Vertex count is not multiple of 3");
+        LT_ASSERT_MSG(normals.size() % 3 == 0, "Normal count is not multiple of 3");
+        LT_ASSERT_MSG(texcoords.size() % 2 == 0, "Texture coordinate count is not multiple of 2");
+
+        // ---- Р—Р°РїРёСЃСЊ РІ meshbin ----
         std::filesystem::path outDir = cacheRoot / "Meshes";
         std::filesystem::create_directories(outDir);
+        LT_ASSERT_MSG(std::filesystem::exists(outDir), "Failed to create output directory");
+        
         std::filesystem::path outFile = outDir / (sourcePath.stem().string() + ".meshbin");
+        LT_ASSERT_MSG(!outFile.empty(), "Output file path is empty");
 
         std::ofstream ofs(outFile, std::ios::binary | std::ios::trunc);
+        LT_ASSERT_MSG(ofs.is_open(), "Failed to open output file for writing: " + outFile.string());
 
         uint32_t vertexCount = static_cast<uint32_t>(vertices.size() / 3);
         uint32_t indexCount  = static_cast<uint32_t>(indices.size());
+        
+        LT_ASSERT_MSG(vertexCount > 0, "Vertex count is zero");
+        LT_ASSERT_MSG(indexCount > 0, "Index count is zero");
+        LT_ASSERT_MSG(vertexCount < 1000000, "Vertex count is unreasonably large");
+        LT_ASSERT_MSG(indexCount < 10000000, "Index count is unreasonably large");
 
         ofs.write(reinterpret_cast<const char*>(&vertexCount), sizeof(vertexCount));
         ofs.write(reinterpret_cast<const char*>(&indexCount), sizeof(indexCount));
@@ -123,12 +146,17 @@ class MeshImporter final : public IAssetImporter
         ofs.write(reinterpret_cast<const char*>(indices.data()), indices.size() * sizeof(uint32_t));
 
         ofs.close();
+        LT_ASSERT_MSG(std::filesystem::exists(outFile), "Output file was not created");
+        LT_ASSERT_MSG(std::filesystem::file_size(outFile) > 0, "Output file is empty");
 
         info.importedPath      = outFile.string();
         info.sourceFileSize    = std::filesystem::file_size(sourcePath);
         info.importedFileSize  = std::filesystem::file_size(outFile);
         info.sourceTimestamp   = std::filesystem::last_write_time(sourcePath).time_since_epoch().count();
         info.importedTimestamp = std::filesystem::last_write_time(outFile).time_since_epoch().count();
+        
+        LT_ASSERT_MSG(!info.importedPath.empty(), "Imported path is empty");
+        LT_ASSERT_MSG(info.importedFileSize > 0, "Imported file size is zero");
 
         LT_LOGI("MeshImporter", std::format("Imported mesh: {} ({} verts, {} tris)", sourcePath.filename().string(),
                                             vertexCount, indexCount / 3));

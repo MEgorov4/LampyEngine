@@ -2,6 +2,7 @@
 
 #include "Foundation/Assert/Assert.h"
 #include "RenderContext.h"
+#include "RenderFactory.h"
 #include "RenderGraph/RenderGraphBuilder.h"
 #include "RenderGraph/RenderNodes.h"
 #include "RenderLocator.h"
@@ -14,11 +15,11 @@ namespace RenderModule
 {
 IRenderer::IRenderer() : m_ecsModule(GCM(ECSModule::ECSModule))
 {
+    LT_ASSERT_MSG(m_ecsModule, "Failed to get ECSModule from CoreLocator");
 }
 
 IRenderer::~IRenderer()
 {
-    // ничего: граф сам управляет ресурсами-описателями, а GPU-объекты живут в фабриках/нодах
 }
 
 void IRenderer::postInit()
@@ -58,6 +59,8 @@ void IRenderer::postInit()
 
 void IRenderer::updateRenderList()
 {
+    LT_ASSERT_MSG(m_ecsModule, "ECSModule is null");
+    
     auto *worldPtr = m_ecsModule->getCurrentWorld();
     if (!worldPtr)
     {
@@ -66,6 +69,10 @@ void IRenderer::updateRenderList()
     }
 
     auto &world = worldPtr->get();
+    
+    auto* ctxPtr = RenderLocator::Get();
+    LT_ASSERT_MSG(ctxPtr, "RenderContext is null");
+    
     auto &ctx = RenderLocator::Ref();
     auto &scene = ctx.scene();
 
@@ -106,7 +113,7 @@ void IRenderer::updateRenderList()
             model = glm::scale(model, scale.toGLMVec());
             obj.modelMatrix.model = model;
 
-            obj.mesh = MeshFactory::createOrGetMesh(mesh.meshID);
+            obj.mesh = RenderFactory::get().createMesh(mesh.meshID);
             // obj.shader  = ShaderFactory::createOrGetShader(mesh.fragShaderID, mesh.vertShaderID);
             // obj.texture = TextureFactory::createOrGetTexture(mesh.textureID);
 
@@ -169,6 +176,7 @@ void IRenderer::render()
 
 TextureHandle IRenderer::getOutputRenderHandle(int w, int h)
 {
+    LT_ASSERT_MSG(w > 0 && h > 0, "Output dimensions must be positive");
     m_renderGraph.resizeAll(w, h);
     return m_activeTextureHandle;
 }

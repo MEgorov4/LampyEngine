@@ -4,7 +4,7 @@
 
 namespace EngineCore::Foundation
 {
-DirectoryIterator::DirectoryIterator(const std::string& rootPath, const std::string& currentPath)
+DirectoryIterator::DirectoryIterator(const std::string &rootPath, const std::string &currentPath)
 {
     // root
     if (Fs::exists(rootPath) && Fs::isDirectory(rootPath))
@@ -29,7 +29,7 @@ DirectoryIterator::DirectoryIterator(const std::string& rootPath, const std::str
 
 FsResult DirectoryIterator::stepIntoRoot()
 {
-    m_currentPath     = m_rootPath;
+    m_currentPath = m_rootPath;
     m_dirLastEditTime = std::nullopt;
     return FsResult::Success;
 }
@@ -38,7 +38,7 @@ FsResult DirectoryIterator::stepIntoParent()
 {
     if (m_currentPath != m_rootPath)
     {
-        m_currentPath     = m_currentPath.parent_path();
+        m_currentPath = m_currentPath.parent_path();
         m_dirLastEditTime = std::nullopt;
         return FsResult::Success;
     }
@@ -46,7 +46,7 @@ FsResult DirectoryIterator::stepIntoParent()
     return FsResult::InvalidPath;
 }
 
-FsResult DirectoryIterator::stepIntoFolder(const std::string& folderName)
+FsResult DirectoryIterator::stepIntoFolder(const std::string &folderName)
 {
     fs::path next = m_currentPath / fs::path(folderName);
     if (!Fs::exists(next.string()) || !Fs::isDirectory(next.string()))
@@ -55,7 +55,7 @@ FsResult DirectoryIterator::stepIntoFolder(const std::string& folderName)
         return FsResult::InvalidPath;
     }
 
-    m_currentPath     = next;
+    m_currentPath = next;
     m_dirLastEditTime = std::nullopt;
     return FsResult::Success;
 }
@@ -70,12 +70,12 @@ std::string DirectoryIterator::currentDir() const
     return m_currentPath.string();
 }
 
-std::string DirectoryIterator::currentDirAppend(const std::string& appendName) const
+std::string DirectoryIterator::currentDirAppend(const std::string &appendName) const
 {
     return (m_currentPath / fs::path(appendName)).string();
 }
 
-std::vector<std::string> DirectoryIterator::list(const SearchFilter& filter) const
+std::vector<std::string, ProfileAllocator<std::string>> DirectoryIterator::list(const SearchFilter &filter) const
 {
     return Fs::getDirectoryContents(m_currentPath.string(), filter);
 }

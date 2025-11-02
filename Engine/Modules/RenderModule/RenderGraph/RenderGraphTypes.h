@@ -1,5 +1,6 @@
 #pragma once
 #include "../Abstract/ITexture.h"
+#include "Foundation/Profiler/ProfileAllocator.h"
 
 #include <functional>
 #include <string>
@@ -16,12 +17,13 @@ struct RenderGraphResource
     int height = 0;
 };
 
-// Основная нода графа (аналог старого Pass)
 struct RenderGraphPass
 {
     std::string name;
-    std::vector<std::string> reads;
-    std::vector<std::string> writes;
-    std::function<void(const std::vector<RenderGraphResource>&, std::vector<RenderGraphResource>&)> execute;
+    std::vector<std::string, ProfileAllocator<std::string>> reads;
+    std::vector<std::string, ProfileAllocator<std::string>> writes;
+    std::function<void(const std::vector<RenderGraphResource, ProfileAllocator<RenderGraphResource>>&,
+                       std::vector<RenderGraphResource, ProfileAllocator<RenderGraphResource>>&)>
+        execute;
 };
 } // namespace RenderModule

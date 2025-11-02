@@ -1,9 +1,9 @@
-#pragma once 
-
-#include <EngineMinimal.h>
+#pragma once
 
 #include "../ImGuiModule/GUIObject.h"
+#include "Foundation/Profiler/ProfileAllocator.h"
 
+#include <EngineMinimal.h>
 
 /// <summary>
 /// A GUI component for displaying log messages in an ImGui window.
@@ -11,10 +11,10 @@
 /// </summary>
 class GUIOutputLog : public ImGUIModule::GUIObject
 {
-    std::vector<std::string> m_messages; ///< Stores log messages to be displayed.
-    int m_subscriberID; ///< ID for unsubscribing from the Logger event.
+    std::vector<std::string, ProfileAllocator<std::string>> m_messages; ///< Stores log messages to be displayed.
+    int m_subscriberID;                                                 ///< ID for unsubscribing from the Logger event.
 
-public:
+  public:
     /// <summary>
     /// Constructs a GUI log output panel and subscribes to the Logger event.
     /// </summary>

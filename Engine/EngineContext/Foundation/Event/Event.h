@@ -1,4 +1,6 @@
 #pragma once
+#include "Foundation/Profiler/ProfileAllocator.h"
+
 #include <algorithm>
 #include <atomic>
 #include <functional>
@@ -117,7 +119,7 @@ template <typename... Args> class Event
 
   private:
     mutable std::mutex m_mutex;
-    std::vector<std::pair<HandlerID, Handler>> m_handlers;
+    std::vector<std::pair<HandlerID, Handler>, ProfileAllocator<std::pair<HandlerID, Handler>>> m_handlers;
     std::atomic_uint64_t m_nextId{0};
 };
 } // namespace EngineCore::Foundation

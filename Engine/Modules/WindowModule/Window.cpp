@@ -85,13 +85,14 @@ Window::~Window()
 void Window::swapWindow()
 {
     LT_PROFILE_ZONE("Window::swapWindow");
-
+    LT_ASSERT_MSG(m_window, "Window is null");
     SDL_GL_SwapWindow(m_window);
 }
 
 std::pair<int, int> Window::getWindowSize() const
 {
     LT_PROFILE_ZONE("Window::getWindowSize");
+    LT_ASSERT_MSG(m_window, "Window is null");
 
     std::pair result{0, 0};
     SDL_GetWindowSize(m_window, &result.first, &result.second);
@@ -101,6 +102,8 @@ std::pair<int, int> Window::getWindowSize() const
 void Window::pollEvents()
 {
     LT_PROFILE_ZONE("Window::pollEvents");
+    LT_ASSERT_MSG(m_window, "Window is null");
+    LT_ASSERT_MSG(m_inputModule, "InputModule is null");
 
     SDL_Event event;
     while (SDL_PollEvent(&event))

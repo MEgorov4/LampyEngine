@@ -1,18 +1,13 @@
 #include "Profiler.h"
-
 #ifdef TRACY_ENABLE
 #include <tracy/Tracy.hpp>
 #endif
 
 using namespace EngineCore::Foundation;
 
-static bool frameStarted = false;
-
 void Profiler::BeginFrame() noexcept
 {
 #ifdef TRACY_ENABLE
-    if (!TracyIsConnected)
-        return;
     FrameMark;
 #endif
 }
@@ -32,5 +27,25 @@ void Profiler::BeginZone(const char *name) noexcept
 {
 #ifdef TRACY_ENABLE
     ZoneTransientN(___tracy_scoped_zone, name, true);
+#endif
+}
+
+void Profiler::Alloc(const void *ptr, std::size_t size, const char *name) noexcept
+{
+#ifdef TRACY_ENABLE
+    if (name)
+        TracyAllocN(ptr, size, name);
+    else
+        TracyAlloc(ptr, size);
+#endif
+}
+
+void Profiler::Free(const void *ptr, const char *name) noexcept
+{
+#ifdef TRACY_ENABLE
+    if (name)
+        TracyFreeN(ptr, name);
+    else
+        TracyFree(ptr);
 #endif
 }

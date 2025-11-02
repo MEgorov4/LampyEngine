@@ -1,6 +1,7 @@
 #include "Fs.h"
 
 #include "../Log/LoggerMacro.h"
+#include "Foundation/Profiler/ProfileAllocator.h"
 
 #include <fstream>
 #include <sstream>
@@ -114,7 +115,7 @@ std::string Fs::readTextFile(const std::string& filePath)
     return ss.str();
 }
 
-std::vector<uint8_t> Fs::readBinaryFile(const std::string& filePath)
+std::vector<uint8_t, ProfileAllocator<uint8_t>> Fs::readBinaryFile(const std::string& filePath)
 {
     std::ifstream f(filePath, std::ios::binary);
     if (!f)
@@ -126,7 +127,7 @@ std::vector<uint8_t> Fs::readBinaryFile(const std::string& filePath)
     const std::streamsize size = f.tellg();
     f.seekg(0, std::ios::beg);
 
-    std::vector<uint8_t> data(static_cast<size_t>(size));
+    std::vector<uint8_t, ProfileAllocator<uint8_t>> data(static_cast<size_t>(size));
     if (size > 0)
         f.read(reinterpret_cast<char*>(data.data()), size);
 
@@ -157,7 +158,7 @@ FsResult Fs::appendTextFile(const std::string& filePath, const std::string& cont
     return FsResult::Success;
 }
 
-FsResult Fs::writeBinaryFile(const std::string& filePath, const std::vector<uint8_t>& data)
+FsResult Fs::writeBinaryFile(const std::string& filePath, const std::vector<uint8_t, ProfileAllocator<uint8_t>>& data)
 {
     std::ofstream f(filePath, std::ios::binary | std::ios::out);
     if (!f)
@@ -170,7 +171,7 @@ FsResult Fs::writeBinaryFile(const std::string& filePath, const std::vector<uint
     return FsResult::Success;
 }
 
-FsResult Fs::appendBinaryFile(const std::string& filePath, const std::vector<uint8_t>& data)
+FsResult Fs::appendBinaryFile(const std::string& filePath, const std::vector<uint8_t, ProfileAllocator<uint8_t>>& data)
 {
     std::ofstream f(filePath, std::ios::binary | std::ios::app);
     if (!f)
@@ -288,9 +289,10 @@ FsResult Fs::createEmptyFile(const std::string& dirPath, const std::string& file
     return FsResult::Success;
 }
 
-std::vector<std::string> Fs::getDirectoryContents(const std::string& dirPath, const SearchFilter& filter)
+std::vector<std::string, ProfileAllocator<std::string>> Fs::getDirectoryContents(const std::string& dirPath,
+                                                                                 const SearchFilter& filter)
 {
-    std::vector<std::string> out;
+    std::vector<std::string, ProfileAllocator<std::string>> out;
     if (!isDirectory(dirPath))
     {
         LT_LOG(LogVerbosity::Error, "Filesystem", "Invalid directory path: " + dirPath);

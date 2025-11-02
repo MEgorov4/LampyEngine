@@ -1,5 +1,6 @@
 #include "ResourceManager.h"
 #include "Pak/PakReader.h"
+#include "../../EngineContext/Foundation/Assert/Assert.h"
 #include <filesystem>
 #include <fstream>
 
@@ -18,7 +19,11 @@ void ResourceManager::shutdown()
 
 void ResourceManager::mountPak(const std::string &pakPath)
 {
+    LT_ASSERT_MSG(!pakPath.empty(), "PAK path cannot be empty");
+    
     m_pakReader = std::make_unique<PakReader>(pakPath);
+    LT_ASSERT_MSG(m_pakReader, "Failed to create PakReader");
+    
     m_usePak = m_pakReader->isOpen();
     if (m_usePak)
         LT_LOGI("ResourceManager", "Mounted PAK: " + pakPath);
@@ -28,6 +33,7 @@ void ResourceManager::mountPak(const std::string &pakPath)
 
 void ResourceManager::unload(const AssetID &guid)
 {
+    LT_ASSERT_MSG(!guid.str().empty(), "Cannot unload resource with empty GUID");
     m_registry.unregister(guid);
 }
 

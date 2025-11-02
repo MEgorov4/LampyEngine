@@ -23,7 +23,6 @@ void Engine::run()
 {
     LT_PROFILE_ZONE("Engine::run");
 
-    LT_LOGE("BEBE", Fs::currentPath());
     LT_LOG(LogVerbosity::Info, "Engine", "Run");
     startupMinor();
     startupMajor();

@@ -6,6 +6,7 @@
 #include "Pak/PakReader.h"
 #include "ResourceCache.h"
 #include "ResourceRegistry.h"
+#include "../../EngineContext/Foundation/Assert/Assert.h"
 
 #include <EngineMinimal.h>
 
@@ -19,15 +20,13 @@ class AssetRegistryAccessor
   public:
     static void Set(AssetDatabase *db) noexcept
     {
+        LT_ASSERT_MSG(db, "Cannot set null AssetDatabase");
         s_database = db;
     }
 
     static AssetDatabase *Get() noexcept
     {
-        if (!s_database)
-        {
-            LT_LOGE("AssetRegistryAccessor", "AssetDatabase not set!");
-        }
+        LT_ASSERT_MSG(s_database, "AssetDatabase not set!");
         return s_database;
     }
 };
@@ -58,6 +57,7 @@ class ResourceManager : public IModule
     // 🔧 Новые методы для связи
     void setDatabase(AssetDatabase *db) noexcept
     {
+        LT_ASSERT_MSG(db, "Cannot set null AssetDatabase");
         m_assetDatabase = db;
     }
     AssetDatabase *getDatabase() noexcept
@@ -67,10 +67,12 @@ class ResourceManager : public IModule
 
     void setEngineResourcesRoot(const std::filesystem::path &path) noexcept
     {
+        LT_ASSERT_MSG(!path.empty(), "Engine resources root path cannot be empty");
         m_engineResourcesRoot = path;
     }
     void setProjectResourcesRoot(const std::filesystem::path &path) noexcept
     {
+        LT_ASSERT_MSG(!path.empty(), "Project resources root path cannot be empty");
         m_projectResourcesRoot = path;
     }
 
@@ -84,16 +86,14 @@ namespace ResourceModule
 {
 template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id)
 {
+    LT_ASSERT_MSG(!id.str().empty(), "AssetID cannot be empty");
+    
     auto &cache = getCache<T>();
     if (auto cached = cache.find(id))
         return cached;
 
-    if (!m_assetDatabase)
-    {
-        LT_LOGE("ResourceManager", "AssetDatabase not set!");
-        return nullptr;
-    }
-
+    LT_ASSERT_MSG(m_assetDatabase, "AssetDatabase not set! Call setDatabase() first");
+    
     auto infoOpt = m_assetDatabase->get(id);
     if (!infoOpt)
     {
@@ -112,10 +112,14 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
             LT_LOGE("ResourceManager", "Failed to read asset from pak: " + id.str());
             return nullptr;
         }
+        
+        LT_ASSERT_MSG(!data->empty(), "PAK data is empty for asset: " + id.str());
 
         // временный файл
         std::filesystem::path tmp = std::filesystem::temp_directory_path() / (id.str() + ".tmp");
         std::ofstream ofs(tmp, std::ios::binary);
+        LT_ASSERT_MSG(ofs.is_open(), "Failed to create temporary file for PAK asset");
+        
         ofs.write(reinterpret_cast<const char *>(data->data()), data->size());
         ofs.close();
 
@@ -136,6 +140,7 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
     try
     {
         resource = std::make_shared<T>(sourcePath.string());
+        LT_ASSERT_MSG(resource, "Failed to create resource instance");
     }
     catch (const std::exception &e)
     {
@@ -155,11 +160,8 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
 
 template <typename T> std::shared_ptr<T> ResourceManager::loadBySource(const std::string &path)
 {
-    if (!m_assetDatabase)
-    {
-        LT_LOGE("ResourceManager", "AssetDatabase not set for loadFromSource()");
-        return nullptr;
-    }
+    LT_ASSERT_MSG(!path.empty(), "Source path cannot be empty");
+    LT_ASSERT_MSG(m_assetDatabase, "AssetDatabase not set for loadBySource()");
 
     auto infoOpt = m_assetDatabase->findBySource(path);
     if (!infoOpt)
@@ -168,6 +170,7 @@ template <typename T> std::shared_ptr<T> ResourceManager::loadBySource(const std
         return nullptr;
     }
 
+    LT_ASSERT_MSG(!infoOpt->guid.str().empty(), "Found AssetInfo has empty GUID");
     return load<T>(infoOpt->guid);
 }
 

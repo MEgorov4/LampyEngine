@@ -19,12 +19,7 @@ namespace ResourceModule
         AssetCooker(const AssetDatabase& db,
                     std::filesystem::path cacheDir,
                     std::filesystem::path contentDir,
-                    CookSettings settings = {}) noexcept
-            : m_db(db)
-            , m_cacheDir(std::move(cacheDir))
-            , m_contentDir(std::move(contentDir))
-            , m_settings(settings)
-        { }
+                    CookSettings settings = {}) noexcept;
 
         bool cook(); // главный вход
 

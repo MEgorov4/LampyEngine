@@ -133,7 +133,7 @@ void ProjectModule::setupProjectEnvironment()
 
 void ProjectModule::saveProjectConfig()
 {
-    LT_LOG(LogVerbosity::Debug, "ProjectModule", "Save project config");
+    LT_LOG(LogVerbosity::Info, "ProjectModule", "Save project config");
 
     nlohmann::json jsonData;
     jsonData["projectPath"] = m_projectConfig.getProjectPath();

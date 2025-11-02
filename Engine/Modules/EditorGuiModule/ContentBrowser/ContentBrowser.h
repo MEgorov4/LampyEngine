@@ -4,41 +4,41 @@
 
 #include "../../ImGuiModule/GUIObject.h"
 
-
 namespace ECSModule
 {
-    class ECSModule;
+class ECSModule;
 }
 
 namespace ProjectModule
 {
-    class ProjectModule;
+class ProjectModule;
 }
 
 class GUIFolderActionPopup;
 
 class GUIContentBrowser : public ImGUIModule::GUIObject
 {
-    ProjectModule::ProjectModule* m_projectModule;
+    ProjectModule::ProjectModule *m_projectModule;
 
     std::string m_rootPath;
     std::string m_currentPath;
-    std::vector<std::string> m_files;
-    std::vector<std::string> m_folders;
-    
+    std::vector<std::string, ProfileAllocator<std::string>> m_files;
+    std::vector<std::string, ProfileAllocator<std::string>> m_folders;
+
     DirectoryIterator m_dirIter;
-    void renderFolderTree(const std::filesystem::path& directory);
+    void renderFolderTree(const std::filesystem::path &directory);
     void renderInFolderFiles();
 
     void updateContent();
-public:
+
+  public:
     GUIContentBrowser();
     ~GUIContentBrowser() override = default;
 
     void render(float deltaTime) override;
-private:
+
+  private:
     void renderFoldersSectionPopup();
-    void renderFilePopup(const std::string& filePath);
+    void renderFilePopup(const std::string &filePath);
     void renderFolderPopup();
 };
-

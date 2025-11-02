@@ -30,7 +30,11 @@ void LuaScriptModule::startup()
 
 void LuaScriptModule::shutdown()
 {
-    lua_close(m_luaState);
+    LT_LOGI("LuaScriptModule", "Shutdown");
+    // Не вызываем lua_close() вручную - sol::state сам управляет Lua state
+    // и корректно закроет его в деструкторе, освободив все ссылки перед закрытием
+    // Вызов lua_close() здесь приводит к тому, что деструктор sol::state пытается
+    // освободить уже закрытый Lua state, что вызывает краш
 }
 
 void LuaScriptModule::processCommand(const std::string& command)
