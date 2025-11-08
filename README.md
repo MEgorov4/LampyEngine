@@ -28,6 +28,19 @@
 
 ## [Документация](https://megorov4.github.io/LampyEngine/)
 
+## SDK
+
+```bash
+# Генерация проектов
+py gen.py -d
+
+# Сборка и установка SDK (по умолчанию Release в <repo>/SDK-Install)
+py prod.py
+
+# Кастомный пример:
+py prod.py --config Debug --prefix C:/LampySDK
+```
+
 ## Демо
 ![image](https://github.com/user-attachments/assets/491758a3-1f7c-46d7-9091-c5e7c2d9155d)
 ![PhysicsTest](https://github.com/user-attachments/assets/04693b79-ca1d-4186-8109-2a8f205ee7e7)

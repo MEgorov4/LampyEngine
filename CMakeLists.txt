@@ -43,6 +43,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Engine/Core)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Engine/Core)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Engine/Core)
 
+set(ENGINE_VERSION ${VERSION})
+set(ENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+set(ENGINE_SRC_DIR ${ENGINE_ROOT}/Src)
+set(CORE_NAME Core)
+set(ENGINE_NAME Engine)
+set(EDITOR_NAME EditorApp)
+set(RUNTIME_NAME GameApp)
+set(TEST_NAME Tests)
+
 find_package(efsw REQUIRED)
 find_package(glew REQUIRED)
 find_package(SDL3 REQUIRED)
@@ -81,6 +90,7 @@ if(MSVC)
 endif()
 
 add_subdirectory(Engine)
+add_subdirectory(SDK)
 
 set(CMAKE_SUPPRESS_REGENERATION true)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -92,28 +102,5 @@ function(_group target folder)
     message(STATUS "Skip grouping: target '${target}' not found")
   endif()
 endfunction()
-
-_group(Engine "Core")
-_group(EngineContext "Core")
-_group(ObjectCoreModule "Core")
-
-_group(AudioModule "Core/Modules")
-_group(InputModule "Core/Modules")
-_group(RenderModule "Core/Modules")
-_group(LuaScriptModule "Core/Modules")
-_group(MemoryModule "Core/Modules")
-_group(PhysicsModule "Core/Modules")
-_group(ResourceModule "Core/Modules")
-_group(ShaderCompilerModule "Core/Modules")
-_group(WindowModule "Core/Modules")
-_group(TimeModule "Core/Modules")
-
-_group(EditorModule "Editor")
-_group(ImGuiModule "Editor/Modules")
-_group(EditorGuiModule "Editor/Modules")
-_group(ProjectModule "Editor/Modules")
-
-_group(ProjectBrowser "ProjectBrowser")
-_group(EngineTests "Core/Tests")
 
 

@@ -8,20 +8,19 @@ class ImGUIModule;
 
 class EditorGUIModule;
 
-class Editor : public IEngineContext
+class EditorApplication : public Application
 {
     std::shared_ptr<EditorGUIModule> m_editorGUIModule;
     std::shared_ptr<ImGUIModule::ImGUIModule> m_imGUIModule;
 
   public:
-    ~Editor() override = default;
-
-    void startupMinor(ContextLocator &locator) override;
-
-    void startupMajor(ContextLocator &locator) override;
+    ~EditorApplication() override = default;
+    
+    void startup();
+    void onStartupMinor(ContextLocator* locator) override;
+    void onStartupMajor(ContextLocator* locator) override;
+    void onShutdown() override;
 
     void render() override;
     void tick(float deltaTime) override;
-
-    void shutdown() override;
 };

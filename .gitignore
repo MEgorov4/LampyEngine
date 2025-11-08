@@ -13,3 +13,4 @@
 *.dir
 *.vcxproj
 *.vcxproj.filters
+/SDK-Install
