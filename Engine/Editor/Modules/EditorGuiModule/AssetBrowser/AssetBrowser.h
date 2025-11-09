@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../ImGuiModule/GUIObject.h"
+#include <Modules/ImGuiModule/GUIObject.h> 
 #include <Modules/ResourceModule/Asset/AssetID.h>
 #include <Modules/ResourceModule/Asset/AssetInfo.h>
 #include <vector>

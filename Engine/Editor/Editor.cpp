@@ -1,8 +1,8 @@
 ﻿#include "Editor.h"
 
-#include <Modules/EditorGuiModule/EditorGUIModule.h>
 #include <Modules/ImGuiModule/ImGUiModule.h>
 #include <Modules/ProjectModule/ProjectModule.h>
+#include <Editor/Modules/EditorGuiModule/EditorGUIModule.h>
 #include <Modules/ResourceModule/Asset/AssetManager.h>
 
 void EditorApplication::startup()
@@ -15,7 +15,6 @@ void EditorApplication::onStartupMinor(ContextLocator* locator)
 {
     LT_LOG(LogVerbosity::Info, "Editor", "initMinor");
     locator->registerMinor(std::make_shared<ProjectModule::ProjectModule>(), 0);
-    locator->registerMinor(std::make_shared<EngineCore::Foundation::JobSystem>(), 1);
     locator->startupMinor();
 }
 
@@ -23,7 +22,6 @@ void EditorApplication::onStartupMinor(ContextLocator* locator)
 void EditorApplication::onStartupMajor(ContextLocator* locator)
 {
     LT_LOG(LogVerbosity::Info, "Editor", "initMajor");
-    locator->registerMajor(std::make_shared<ImGUIModule::ImGUIModule>(), 10);
     locator->registerMajor(std::make_shared<EditorGUIModule>(), 10);
     locator->startupMajor();
 }

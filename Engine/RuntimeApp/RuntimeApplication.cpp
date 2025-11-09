@@ -1,8 +1,5 @@
 #include "RuntimeApplication.h"
 
-#include <Modules/ProjectModule/ProjectModule.h>
-
-#include <Foundation/JobSystem/JobSystem.h>
 
 void RuntimeApplication::startup()
 {
@@ -11,8 +8,6 @@ void RuntimeApplication::startup()
 
 void RuntimeApplication::onStartupMinor(ContextLocator *locator)
 {
-    locator->registerMinor(std::make_shared<ProjectModule::ProjectModule>(), 0);
-    locator->registerMinor(std::make_shared<EngineCore::Foundation::JobSystem>(), 1);
     locator->startupMinor();
 }
 

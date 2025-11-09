@@ -1,7 +1,7 @@
 #pragma once
 
 #include <EngineMinimal.h>
-#include "../ImGuiModule/GUIObject.h"
+#include <Modules/ImGuiModule/GUIObject.h> 
 
 
 class GUIMainMenuBar : public ImGUIModule::GUIObject

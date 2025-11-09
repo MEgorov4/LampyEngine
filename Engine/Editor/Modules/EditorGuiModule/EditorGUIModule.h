@@ -56,7 +56,6 @@ class EditorGUIModule : public IModule
     InputModule::InputModule *m_inputModule;
     ScriptModule::LuaScriptModule *m_luaScriptModule;
 
-    // Window management
     std::vector<std::weak_ptr<ImGUIModule::GUIObject>> m_windowObjects;
     std::vector<std::string> m_windowNames;
 

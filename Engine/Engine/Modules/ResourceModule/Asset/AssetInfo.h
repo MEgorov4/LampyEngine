@@ -18,7 +18,6 @@ enum class AssetType : uint8_t
     Audio,
     Script,
     World,
-    Scene
 };
 
 enum class AssetOrigin : uint8_t

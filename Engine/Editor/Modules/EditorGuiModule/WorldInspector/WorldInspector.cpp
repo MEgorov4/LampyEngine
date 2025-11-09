@@ -2,14 +2,14 @@
 #include "../Events.h"
 #include <imgui.h>
 #include <filesystem>
-#include "../../ObjectCoreModule/ECS/ECSModule.h"
-#include "../../ObjectCoreModule/ECS/ComponentRegistry.h"
-#include "../../ProjectModule/ProjectModule.h"
-#include "../../ObjectCoreModule/ECS/Systems/ECSLuaScriptsSystem.h"
-#include "../../ObjectCoreModule/ECS/Components/ECSComponents.h"
-#include "../../ObjectCoreModule/ECS/Systems/ECSPhysicsSystem.h"
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
+#include <Modules/ObjectCoreModule/ECS/ComponentRegistry.h>
+#include <Modules/ProjectModule/ProjectModule.h>
+#include <Modules/ObjectCoreModule/ECS/Systems/ECSLuaScriptsSystem.h>
+#include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
+#include <Modules/ObjectCoreModule/ECS/Systems/ECSPhysicsSystem.h>
 #include "ComponentsRenderFabric.h"
-#include "Core/CoreGlobal.h"
+#include <Core/CoreGlobal.h>
 
 flecs::entity GUIWorldInspector::m_selectedEntity = {};
 

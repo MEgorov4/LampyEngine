@@ -7,6 +7,7 @@
 #include "Importers/TextureImporter.h"
 #include "Importers/WorldImporter.h"
 #include "Importers/MaterialImporter.h"
+#include "Importers/ScriptImporter.h"
 
 using namespace ResourceModule;
 
@@ -140,6 +141,9 @@ void AssetManager::registerDefaultImporters()
     m_importers.registerImporter(std::move(materialImporter));
     LT_LOGI("AssetManager", "Registered MaterialImporter");
     
+    auto scriptImporter = std::make_unique<ScriptImporter>();
+    m_importers.registerImporter(std::move(scriptImporter));
+    LT_LOGI("AssetManager", "Registered ScriptImporter");
     LT_LOGI("AssetManager", "All default importers registered");
 }
 
@@ -224,6 +228,7 @@ void AssetManager::processFileChanges()
             LT_ASSERT_MSG(!info.guid.empty(), "Generated GUID is empty");
 
             m_database.upsert(info);
+            OnAssetImported(info);
             LT_LOGI("AssetManager", std::format("Reimported [{}] {}", info.guid.str(), info.sourcePath));
         }
         else
@@ -363,6 +368,7 @@ void AssetManager::scanAndImportAllIn(const std::filesystem::path& root)
         LT_ASSERT_MSG(!info.sourcePath.empty(), "Source path is empty");
 
         m_database.upsert(info);
+        OnAssetImported(info);
         filesImported++;
 
         LT_LOGI("AssetManager", std::format("Imported [{}] {}", info.guid.str(), info.sourcePath));

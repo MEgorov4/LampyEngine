@@ -22,6 +22,11 @@ namespace RenderModule
 class RenderModule;
 }
 
+namespace ResourceModule
+{
+class AssetManager;
+}
+
 namespace WindowModule
 {
 class WindowModule;
@@ -32,13 +37,13 @@ class WindowModule;
 /// </summary>
 class Application
 {
-    InputModule::InputModule* m_inputModule;
-    WindowModule::WindowModule* m_windowModule;
-    RenderModule::RenderModule* m_renderModule;
-    PhysicsModule::PhysicsModule* m_physicsModule;
-    ECSModule::ECSModule* m_ecsModule;
+    InputModule::InputModule* m_inputModule = nullptr;
+    WindowModule::WindowModule* m_windowModule = nullptr;
+    RenderModule::RenderModule* m_renderModule = nullptr;
+    PhysicsModule::PhysicsModule* m_physicsModule = nullptr;
+    ECSModule::ECSModule* m_ecsModule = nullptr;
+    ResourceModule::AssetManager* m_assetManager = nullptr;
 
-    std::unique_ptr<IEngineContext> m_engineContext; ///< Unique pointer to the engine context.
     std::unique_ptr<ContextLocator> m_contextLocator;
 
   public:

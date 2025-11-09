@@ -64,8 +64,7 @@ void GUIAssetBrowser::render(float deltaTime)
 
         // Table with assets
         if (ImGui::BeginTable("AssetsTable", 3, 
-            ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | 
-            ImGuiTableFlags_Sortable | ImGuiTableFlags_ScrollY))
+            ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY))
         {
             // Column headers
             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
@@ -175,7 +174,6 @@ void GUIAssetBrowser::applyFilters()
             case 4: selectedType = ResourceModule::AssetType::Audio; break;
             case 5: selectedType = ResourceModule::AssetType::Script; break;
             case 6: selectedType = ResourceModule::AssetType::World; break;
-            case 7: selectedType = ResourceModule::AssetType::Scene; break;
         }
     }
     
@@ -210,7 +208,6 @@ std::string GUIAssetBrowser::getAssetTypeString(ResourceModule::AssetType type) 
         case ResourceModule::AssetType::Audio: return "Audio";
         case ResourceModule::AssetType::Script: return "Script";
         case ResourceModule::AssetType::World: return "World";
-        case ResourceModule::AssetType::Scene: return "Scene";
         default: return "Unknown";
     }
 }

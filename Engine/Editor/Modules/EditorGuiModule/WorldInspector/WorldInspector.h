@@ -2,7 +2,7 @@
 #include <flecs.h>
 #include <memory>
 
-#include "../../ImGuiModule/GUIObject.h"
+#include <Modules/ImGuiModule/GUIObject.h> 
 
 
 namespace FilesystemModule

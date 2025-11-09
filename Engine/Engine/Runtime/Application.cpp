@@ -3,7 +3,6 @@
 
 #include <Editor/Editor.h>
 #include <Modules/AudioModule/AudioModule.h>
-#include <Modules/EditorGuiModule/EditorGUIModule.h>
 #include <Modules/ImGuiModule/ImGuiModule.h>
 #include <Modules/InputModule/InputModule.h>
 #include <Modules/LuaScriptModule/LuaScriptModule.h>
@@ -53,7 +52,7 @@ void Application::collectRuntimeModules()
     m_renderModule = GCM(RenderModule::RenderModule);
     m_physicsModule = GCM(PhysicsModule::PhysicsModule);
     m_ecsModule = GCM(ECSModule::ECSModule);
-    auto *assetManager = GCM(ResourceModule::AssetManager);
+    m_assetManager = GCM(ResourceModule::AssetManager);
 }
 
 void Application::startupMajor()
@@ -62,13 +61,16 @@ void Application::startupMajor()
 
     LT_LOG(LogVerbosity::Info, "Engine", "StartupMajor");
 
+    Core::Register(std::make_shared<JobSystem>(), 0);
+    Core::Register(std::make_shared<TimeModule::TimeModule>(), 1);
+
     using namespace EngineCore::Foundation;
     namespace fs = std::filesystem;
+    
 
     auto *projectModule = GCXM(ProjectModule::ProjectModule);
     ProjectModule::ProjectConfig &cfg = projectModule->getProjectConfig();
 
-    // ���� �������
     std::string projectRoot = cfg.getProjectPath();
     std::string projectResources = cfg.getResourcesPath();
     std::string projectBuild = cfg.getBuildPath();
@@ -76,8 +78,12 @@ void Application::startupMajor()
     std::string projectContent = projectBuild + "/Content";
     std::string projectDb = Fs::absolutePath(projectRoot + "/Project.assetdb.json");
 
-    fs::path exeDir = fs::current_path(); // build/Engine/Core/[Debug|Release]
-    fs::path engineResources = fs::absolute(exeDir / "../../../build/Engine/Resources");
+    fs::path exeDir = fs::current_path(); 
+
+    fs::path engineResources = fs::absolute(exeDir / "../Resources");
+    if (!fs::exists(engineResources))
+        engineResources = fs::absolute(exeDir / "../../Resources");
+    LT_LOGE("Engine", "Exe path: " + exeDir.string());
 
     Fs::createDirectory(projectResources);
     Fs::createDirectory(projectCache);
@@ -95,8 +101,6 @@ void Application::startupMajor()
 
     Core::Register(assetMgr, 5);
 
-    Core::Register(std::make_shared<TimeModule::TimeModule>(), 1);
-
     auto resourceManager = std::make_shared<ResourceModule::ResourceManager>();
     resourceManager->setDatabase(&assetMgr->getDatabase());
     ResourceModule::AssetRegistryAccessor::Set(&assetMgr->getDatabase());
@@ -111,12 +115,12 @@ void Application::startupMajor()
     Core::Register(std::make_shared<AudioModule::AudioModule>(), 30);
     Core::Register(std::make_shared<ScriptModule::LuaScriptModule>(), 35);
     Core::Register(std::make_shared<RenderModule::RenderModule>(), 40);
-    Core::Register(std::make_shared<ECSModule::ECSModule>(), 45);
-    Core::Register(std::make_shared<PhysicsModule::PhysicsModule>(), 50);
+    Core::Register(std::make_shared<ImGUIModule::ImGUIModule>(), 45);
+    Core::Register(std::make_shared<ECSModule::ECSModule>(), 50);
+    Core::Register(std::make_shared<PhysicsModule::PhysicsModule>(), 55);
     Core::StartupAll();
-    ECSModule::ECSModule m_ecsModule;
 
-    m_engineContext->startupMajor(*m_contextLocator);
+    onStartupMajor(m_contextLocator.get());
 }
 
 void Application::shutdown()
@@ -124,7 +128,6 @@ void Application::shutdown()
     ZoneScopedN("Engine::shutdown");
 
     LT_LOG(LogVerbosity::Info, "Engine", "Shutdown");
-    m_engineContext->shutdown();
     m_contextLocator->shutdownAll();
     Core::ShutdownAll();
 }
@@ -156,6 +159,12 @@ void Application::engineTick()
 
             window->pollEvents();
 
+            if (m_assetManager)
+            {
+                ZoneScopedN("Tick/ProcessAssetChanges");
+                m_assetManager->processFileChanges();
+            }
+
             {
                 ZoneScopedN("Tick/TimeTick");
                 auto *timeModule = GCM(TimeModule::TimeModule);
@@ -175,12 +184,15 @@ void Application::engineTick()
 
             {
                 ZoneScopedN("Tick/ContextTick");
-                m_engineContext->tick(deltaTime);
+                tick(deltaTime);
             }
             {
                 ZoneScopedN("Tick/Render");
                 m_renderModule->getRenderer()->render();
-                m_engineContext->render();
+            }
+            {
+                ZoneScopedN("Tick/ContextRender");
+                render();
             }
             m_windowModule->getWindow()->swapWindow();
 

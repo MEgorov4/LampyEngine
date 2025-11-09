@@ -5,8 +5,7 @@
 #include "Events.h"
 #include "Systems/ECSLuaScriptsSystem.h"
 #include "Systems/ECSPhysicsSystem.h"
-#include <Modules/EditorGuiModule/Events.h>
-
+#include "Editor/Modules/EditorGuiModule/Events.h"
 #include <Modules/LuaScriptModule/LuaScriptModule.h>
 #include <Modules/PhysicsModule/PhysicsModule.h>
 #include <Modules/ProjectModule/ProjectModule.h>
@@ -240,8 +239,6 @@ void ECSModule::emitRenderFrameData()
     auto qMesh = world.query<PositionComponent, RotationComponent, ScaleComponent, MeshComponent>();
     qMesh.each([&](flecs::entity e, const PositionComponent &pos, const RotationComponent &rot,
                    const ScaleComponent &scale, const MeshComponent &) {
-        // Проверяем валидность сущности перед добавлением в frameData
-        // Это защищает от случаев, когда сущность удаляется во время выполнения query
         if (!e.is_valid())
         {
             return;
@@ -255,7 +252,7 @@ void ECSModule::emitRenderFrameData()
         transform.rotX = rot.x;
         transform.rotY = rot.y;
         transform.rotZ = rot.z;
-        // Используем toQuat() для получения правильного quaternion (обрабатывает случай, когда quat не инициализирован)
+
         const glm::quat quat = rot.toQuat();
         transform.rotQX = quat.x;
         transform.rotQY = quat.y;

@@ -2,7 +2,7 @@
 
 #include <EngineMinimal.h>
 
-#include "../../ImGuiModule/GUIObject.h"
+#include <Modules/ImGuiModule/GUIObject.h> 
 
 namespace ECSModule
 {

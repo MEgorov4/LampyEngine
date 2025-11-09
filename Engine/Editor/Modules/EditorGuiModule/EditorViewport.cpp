@@ -4,9 +4,11 @@
 
 #include <Modules/InputModule/InputModule.h>
 #include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
+#include <Modules/LuaScriptModule/LuaScriptModule.h>
 #include <Modules/RenderModule/IRenderer.h>
 #include <Modules/RenderModule/RenderLocator.h> // Для глобальных функций DebugDraw*
 #include <Modules/RenderModule/RenderModule.h>
+#include <Modules/TimeModule/TimeModule.h>
 //clang-format off
 #include <imgui.h> /////////////////////////
 /////////////////////
@@ -33,6 +35,9 @@ GUIEditorViewport::GUIEditorViewport()
 
     m_cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     m_cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+   GCM(ScriptModule::LuaScriptModule)
+        ->callDevScript("Scripts/Dev/viewport_camera.lua", "setup", m_ecsModule->getCurrentWorld()->get());
 }
 
 GUIEditorViewport::~GUIEditorViewport()
@@ -42,24 +47,19 @@ GUIEditorViewport::~GUIEditorViewport()
 void GUIEditorViewport::render(float deltaTime)
 {
     getViewportEntity();
-    m_deltaTime = deltaTime;
+    m_deltaTime = GCM(TimeModule::TimeModule)->getDeltaTime();
     if (!isVisible())
         return;
 
     using namespace RenderModule;
-    DebugDrawLine(glm::vec3(5, 0, 0), glm::vec3(5, 5, 0), glm::vec3(1.0f, 1.0f, 1.0f));
-    DebugDrawBox(glm::vec3(-3, 1, 0), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.5f, 0.5f, 0.5f));
-    DebugDrawSphere(glm::vec3(-5, 2, 0), 0.8f, glm::vec3(0.0f, 1.0f, 1.0f));
 
     bool windowOpen = true;
     if (ImGui::Begin("Viewport", &windowOpen, ImGuiWindowFlags_NoScrollbar))
     {
         ImVec2 avail = ImGui::GetContentRegionAvail();
 
-        // Проверяем минимальные размеры перед обновлением рендера
         if (avail.x >= 1.0f && avail.y >= 1.0f)
         {
-            // 1. Отрисовываем рендер-таргет
             ImGui::Image(m_renderModule->getRenderer()
                              ->getOutputRenderHandle(static_cast<int>(avail.x), static_cast<int>(avail.y))
                              .id,
@@ -154,7 +154,6 @@ void GUIEditorViewport::render(float deltaTime)
         }
     }
 
-    // Handle window close button
     if (!windowOpen)
     {
         hide();
@@ -165,90 +164,92 @@ void GUIEditorViewport::render(float deltaTime)
 
 void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
 {
-    if (!m_viewportEntity.is_valid())
-        return;
+    GCM(ScriptModule::LuaScriptModule)->callDevScript("Scripts/Dev/viewport_camera.lua", "key_action", event);
+    //if (!m_viewportEntity.is_valid())
+    //    return;
 
-    if (!m_processInput)
-        return;
-    m_cameraPos = m_viewportEntity.get<PositionComponent>()->toGLMVec();
-    glm::quat cameraRotation = m_viewportEntity.get<RotationComponent>()->toQuat();
+    //if (!m_processInput)
+    //    return;
+    //m_cameraPos = m_viewportEntity.get<PositionComponent>()->toGLMVec();
+    //glm::quat cameraRotation = m_viewportEntity.get<RotationComponent>()->toQuat();
 
-    float speed = m_cameraSpeed;
-    glm::vec3 movement(0.0f);
-    glm::vec3 cameraFront = cameraRotation * glm::vec3(0, 0, -1);
-    cameraFront = glm::normalize(cameraFront);
+    //float speed = m_cameraSpeed;
+    //glm::vec3 movement(0.0f);
+    //glm::vec3 cameraFront = cameraRotation * glm::vec3(0, 0, -1);
+    //cameraFront = glm::normalize(cameraFront);
 
-    glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, m_cameraUp));
+    //glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, m_cameraUp));
 
-    if (event.key == SDLK_W)
-        movement += speed * cameraFront;
-    if (event.key == SDLK_S)
-        movement -= speed * cameraFront;
+    //if (event.key == SDLK_W)
+    //    movement += speed * cameraFront;
+    //if (event.key == SDLK_S)
+    //    movement -= speed * cameraFront;
 
-    if (event.key == SDLK_A)
-        movement -= speed * cameraRight;
-    if (event.key == SDLK_D)
-        movement += speed * cameraRight;
+    //if (event.key == SDLK_A)
+    //    movement -= speed * cameraRight;
+    //if (event.key == SDLK_D)
+    //    movement += speed * cameraRight;
 
-    glm::vec3 cameraUp = cameraRotation * glm::vec4(0, 1, 0, 1);
-    if (event.key == SDLK_SPACE)
-        movement += speed * cameraUp;
-    if (event.key == SDL_KMOD_CTRL)
-        movement -= speed * cameraUp;
+    //glm::vec3 cameraUp = cameraRotation * glm::vec4(0, 1, 0, 1);
+    //if (event.key == SDLK_SPACE)
+    //    movement += speed * cameraUp;
+    //if (event.key == SDL_KMOD_CTRL)
+    //    movement -= speed * cameraUp;
 
-    glm::vec3 newCameraPos = m_cameraPos + movement;
-    glm::vec3 velocity{0.0f}; // хранить как член класса
-    float accel = 20.0f;
-    float damping = 5.0f;
+    //glm::vec3 newCameraPos = m_cameraPos + movement;
+    //glm::vec3 velocity{0.0f}; // хранить как член класса
+    //float accel = 20.0f;
+    //float damping = 5.0f;
 
-    glm::vec3 targetVel = movement / m_deltaTime; // какая скорость нужна
-    velocity += (targetVel - velocity) * accel * m_deltaTime;
-    velocity *= 1.0f / (1.0f + damping * m_deltaTime);
+    //glm::vec3 targetVel = movement / m_deltaTime; // какая скорость нужна
+    //velocity += (targetVel - velocity) * accel * m_deltaTime;
+    //velocity *= 1.0f / (1.0f + damping * m_deltaTime);
 
-    m_cameraPos += velocity * m_deltaTime;
-    m_viewportEntity.set<PositionComponent>({.x = m_cameraPos.x, .y = m_cameraPos.y, .z = m_cameraPos.z});
+    //m_cameraPos += velocity * m_deltaTime;
+    //m_viewportEntity.set<PositionComponent>({.x = m_cameraPos.x, .y = m_cameraPos.y, .z = m_cameraPos.z});
 }
 
 void GUIEditorViewport::onMouseAction(SDL_MouseMotionEvent mouseMotion)
 {
-    if (!m_viewportEntity.is_valid())
-        return;
-    if (!m_processInput)
-    {
-        m_firstMouse = true;
-        return;
-    }
-    const RotationComponent *rotation = m_viewportEntity.get<RotationComponent>();
+    GCM(ScriptModule::LuaScriptModule)->callDevScript("Scripts/Dev/viewport_camera.lua", "mouse_action", mouseMotion);
+    //if (!m_viewportEntity.is_valid())
+    //    return;
+    //if (!m_processInput)
+    //{
+    //    m_firstMouse = true;
+    //    return;
+    //}
+    //const RotationComponent *rotation = m_viewportEntity.get<RotationComponent>();
 
-    float pitch = rotation->x;
-    float yaw = rotation->y;
+    //float pitch = rotation->x;
+    //float yaw = rotation->y;
 
-    if (m_firstMouse)
-    {
-        m_lastX = mouseMotion.x;
-        m_lastY = mouseMotion.y;
-        m_firstMouse = false;
-    }
+    //if (m_firstMouse)
+    //{
+    //    m_lastX = mouseMotion.x;
+    //    m_lastY = mouseMotion.y;
+    //    m_firstMouse = false;
+    //}
 
-    float xoffset = (mouseMotion.x - m_lastX);
-    float yoffset = -(m_lastY - mouseMotion.y);
-    m_lastX = mouseMotion.x;
-    m_lastY = mouseMotion.y;
+    //float xoffset = (mouseMotion.x - m_lastX);
+    //float yoffset = -(m_lastY - mouseMotion.y);
+    //m_lastX = mouseMotion.x;
+    //m_lastY = mouseMotion.y;
 
-    float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
+    //float sensitivity = 0.1f;
+    //xoffset *= sensitivity;
+    //yoffset *= sensitivity;
 
-    yaw += xoffset;
-    pitch += yoffset;
+    //yaw += xoffset;
+    //pitch += yoffset;
 
-    if (m_viewportEntity.is_alive())
-    {
-        // Правильно устанавливаем RotationComponent с обновлением quaternion
-        RotationComponent newRot;
-        newRot.fromEulerDegrees(glm::vec3(pitch, yaw, rotation->z));
-        m_viewportEntity.set<RotationComponent>(newRot);
-    }
+    //if (m_viewportEntity.is_alive())
+    //{
+    //    // Правильно устанавливаем RotationComponent с обновлением quaternion
+    //    RotationComponent newRot;
+    //    newRot.fromEulerDegrees(glm::vec3(pitch, yaw, rotation->z));
+    //    m_viewportEntity.set<RotationComponent>(newRot);
+    //}
 }
 
 void GUIEditorViewport::drawGuizmo(int x, int y)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../ImGuiModule/GUIObject.h"
+#include <Modules/ImGuiModule/GUIObject.h> 
 #include "Foundation/Log/LogVerbosity.h"
 #include "Foundation/Log/Logger.h"
 #include "Foundation/Profiler/ProfileAllocator.h"

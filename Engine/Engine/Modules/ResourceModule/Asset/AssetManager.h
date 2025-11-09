@@ -1,6 +1,7 @@
 #pragma once
 
 #include <EngineMinimal.h>
+#include "../../../Foundation/Event/Event.h"
 #include "AssetDatabase.h"
 #include "AssetID.h"
 #include "AssetImporterHub.h"
@@ -54,6 +55,8 @@ class AssetManager : public IModule
         LT_ASSERT_MSG(!path.empty(), "Database path cannot be empty");
         m_dbPath = path;
     }
+
+    EngineCore::Foundation::Event<const AssetInfo&> OnAssetImported;
 
   private:
     std::unique_ptr<efsw::FileWatcher> m_watcher;

@@ -5,7 +5,8 @@
 #include <memory>
 #include <stdexcept>
 #include <typeindex>
-#include "../Foundation/Event/EventBus.h"
+#include <Foundation/Event/EventBus.h>
+#include <Foundation/Assert/Assert.h>
 
 namespace EngineCore::Base
 {
@@ -29,6 +30,7 @@ class CoreLocator final
         for (auto& m : m_modules)
             if (m.id == std::type_index(typeid(T)))
                 return *std::static_pointer_cast<T>(m.instance);
+        LT_ASSERT(false);
         throw std::runtime_error("CoreLocator::get() module not found");
     }
 

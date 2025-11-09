@@ -41,13 +41,12 @@ class ModuleEventBinder
 
         *subPtr = GCEB().subscribe<TEvent>([subPtr, func = std::forward<Fn>(func)](const TEvent &e) mutable {
             func(e);
-            subPtr->unsubscribe(); // автоотписка
+            subPtr->unsubscribe();
         });
 
         m_subscriptions.push_back(subPtr);
     }
 
-    /// Очистить все подписки
     void clear()
     {
         m_subscriptions.clear();
