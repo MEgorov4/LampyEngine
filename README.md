@@ -42,5 +42,6 @@ py prod.py --config Debug --prefix C:/LampySDK
 ```
 
 ## Демо
+<img width="1917" height="1030" alt="image" src="https://github.com/user-attachments/assets/a28b51e6-6761-441c-a6c5-897cd7f5695d" />
 ![image](https://github.com/user-attachments/assets/491758a3-1f7c-46d7-9091-c5e7c2d9155d)
 ![PhysicsTest](https://github.com/user-attachments/assets/04693b79-ca1d-4186-8109-2a8f205ee7e7)
