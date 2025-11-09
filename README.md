@@ -40,7 +40,7 @@ py prod.py
 # Кастомный пример:
 py prod.py --config Debug --prefix C:/LampySDK
 ```
-## Профилирование Tracy 
+## Интеграция Tracy 
 <img width="1917" height="1029" alt="image" src="https://github.com/user-attachments/assets/66965dc5-9971-4c20-a283-5b011616b22a" />
 
 ## Демо
