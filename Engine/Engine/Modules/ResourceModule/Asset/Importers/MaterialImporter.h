@@ -18,18 +18,17 @@ namespace ResourceModule
 
         AssetType getAssetType() const noexcept override { return AssetType::Material; }
 
-        AssetInfo import(const std::filesystem::path& sourcePath,
-                         const std::filesystem::path& cacheRoot) override
+        AssetInfo import(const std::filesystem::path& sourcePath, const std::filesystem::path& cacheRoot) override
         {
             LT_ASSERT_MSG(!sourcePath.empty(), "Source path cannot be empty");
             LT_ASSERT_MSG(!cacheRoot.empty(), "Cache root cannot be empty");
             LT_ASSERT_MSG(std::filesystem::exists(sourcePath), "Source file does not exist: " + sourcePath.string());
             LT_ASSERT_MSG(std::filesystem::is_regular_file(sourcePath), "Source path is not a file");
-            
+
             AssetInfo info{};
-            info.type = AssetType::Material;
+            info.type       = AssetType::Material;
             info.sourcePath = sourcePath.string();
-            info.guid = MakeDeterministicIDFromPath(std::filesystem::path(sourcePath).generic_string());
+            info.guid       = MakeDeterministicIDFromPath(std::filesystem::path(sourcePath).generic_string());
             LT_ASSERT_MSG(!info.guid.empty(), "Generated GUID is empty");
 
             // Читаем JSON файл материала
@@ -44,7 +43,7 @@ namespace ResourceModule
             file.close();
 
             // Создаем Material из JSON
-            RMaterial mat;
+            RMaterial mat{};
             if (j.contains("albedoColor"))
             {
                 auto& albedo = j["albedoColor"];

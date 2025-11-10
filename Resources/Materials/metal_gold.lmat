@@ -1,0 +1,14 @@
+{
+    "name": "Gold Metal",
+    "guid": "Materials/metal_gold.lmat",
+    "albedoColor": [1.0, 0.84, 0.0, 1.0],
+    "emissiveColor": [0.0, 0.0, 0.0],
+    "roughness": 0.2,
+    "metallic": 1.0,
+    "normalStrength": 1.0,
+    "albedoTexture": "",
+    "normalTexture": "",
+    "roughnessMetallicTexture": "",
+    "emissiveTexture": ""
+}
+

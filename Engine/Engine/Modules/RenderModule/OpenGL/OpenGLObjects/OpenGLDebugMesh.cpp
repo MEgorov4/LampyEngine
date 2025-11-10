@@ -167,10 +167,18 @@ namespace RenderModule::OpenGL
     void OpenGLDebugMesh::draw() const
     {
         bind();
-        if (m_hasIndices)
+        if (m_isTriangleStrip)
+        {
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, m_vertexCount);
+        }
+        else if (m_hasIndices)
+        {
             glDrawElements(GL_LINES, m_indexCount, GL_UNSIGNED_INT, nullptr);
+        }
         else
+        {
             glDrawArrays(GL_LINES, 0, m_vertexCount);
+        }
         unbind();
     }
 
@@ -206,7 +214,29 @@ namespace RenderModule::OpenGL
 
     void OpenGLDebugMesh::setVerticesData(const float* vertices, size_t vertexCount)
     {
+        m_isTriangleStrip = false;
         updateBuffers(vertices, vertexCount, nullptr, 0);
+    }
+    
+    void OpenGLDebugMesh::setQuadData()
+    {
+        // Простой quad 2×2 в плоскости XZ (Y=0)
+        // Вершины для GL_TRIANGLE_STRIP: (-1,0,-1), (-1,0,1), (1,0,-1), (1,0,1)
+        float vertices[] = {
+            -1.0f, 0.0f, -1.0f,  // 0
+            -1.0f, 0.0f,  1.0f,  // 1
+             1.0f, 0.0f, -1.0f,  // 2
+             1.0f, 0.0f,  1.0f   // 3
+        };
+        m_isTriangleStrip = true;
+        updateBuffers(vertices, 4, nullptr, 0);
+    }
+    
+    void OpenGLDebugMesh::drawTriangleStrip() const
+    {
+        bind();
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, m_vertexCount);
+        unbind();
     }
 }
 

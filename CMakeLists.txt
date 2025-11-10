@@ -89,6 +89,19 @@ if(MSVC)
   add_compile_options(/bigobj)
 endif()
 
+# Function to copy Resources directory to build directory
+function(copy_resources_to_build target_name)
+  if(EXISTS ${CMAKE_SOURCE_DIR}/Resources)
+    # Copy Resources to build directory after each build
+    add_custom_command(TARGET ${target_name} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_directory
+      ${CMAKE_SOURCE_DIR}/Resources
+      ${CMAKE_BINARY_DIR}/Resources
+      COMMENT "Copying Resources to build directory..."
+    )
+  endif()
+endfunction()
+
 add_subdirectory(Engine)
 add_subdirectory(SDK)
 

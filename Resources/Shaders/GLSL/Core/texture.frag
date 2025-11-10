@@ -17,13 +17,13 @@ layout(binding = 3) uniform sampler2D shadowMap;
 layout(std140, binding = 0) uniform CameraData {
     mat4 view;
     mat4 projection;
-    vec4 position;
+    vec4 position; // World-space camera position
 };
 
 // ModelMatrices не используется в fragment shader
 
 layout(std140, binding = 2) uniform DirectionalLightData {
-    vec4 lightDirection;
+    vec4 lightDirection; // World-space light direction (normalized, direction from light source)
     vec4 lightColor;
     float lightIntensity;
     float padding[3];
@@ -37,28 +37,35 @@ layout(std140, binding = 3) uniform MaterialData {
     float padding2;
 };
 
+// Light-space matrix for shadow mapping (separate from world-space lighting)
+// Used only for shadow calculation, not for BRDF lighting
 layout(std140, binding = 4) uniform LightSpaceMatrix {
-    mat4 lightSpaceMatrix;
+    mat4 lightSpaceMatrix; // Transforms world-space positions to light-space for shadow mapping
 };
 
 // Point lights через обычные uniform массивы (не UBO)
 uniform int lightCount;
-uniform vec4 pointPositions[100];
+uniform vec4 pointPositions[100]; // World-space point light positions
 uniform vec4 pointColors[100];
 uniform float pointIntensities[100];
 uniform float pointInnerRadii[100]; // Внутренние радиусы (полная интенсивность)
 uniform float pointOuterRadii[100]; // Внешние радиусы (затухание до 0)
 
+// Debug mode: 0 = normal rendering, 1-9 = debug visualization modes
+uniform int debugMode;
+
 const float PI = 3.14159265359;
 const float tiling = 1.0;
 
 // Shadow calculation
+// Note: This function uses light-space coordinates (separate from world-space lighting)
+// fragPosLightSpace is in light-space, but N and lightDir are in world-space for bias calculation
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 lightDir)
 {
-    // Perspective divide
+    // Perspective divide (light-space to NDC)
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     
-    // Transform to [0,1] range
+    // Transform to [0,1] range (light-space NDC to texture coordinates)
     projCoords = projCoords * 0.5 + 0.5;
     
     // Get depth of current fragment from light's perspective
@@ -69,6 +76,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 lightDir)
     
     // Shadow bias варьируется по углу (меньше bias для поверхностей, перпендикулярных свету)
     // Это предотвращает shadow acne без создания peter panning
+    // N and lightDir are in world-space (same space as lighting calculations)
     float NdotL = max(dot(N, lightDir), 0.0);
     float bias = max(0.005 * (1.0 - NdotL), 0.001);
     
@@ -129,20 +137,33 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+// Returns world-space normal
+// All inputs (fragTangent, fragBitangent, fragNormal) are in world-space from vertex shader
+// If normal map is not provided, normalStrength will be 0 and this function returns geometric normal
 vec3 calculateNormal()
 {
-    vec3 tangentNormal = texture(normalTexture, fragUV).xyz * 2.0 - 1.0;
-    tangentNormal.xy *= normalStrength;
-    
-    // Flip Y для совместимости OpenGL vs DirectX normal maps
-    #ifdef FLIP_NORMAL_Y
-    tangentNormal.y = -tangentNormal.y;
-    #endif
-    
-    tangentNormal = normalize(tangentNormal);
-    
-    mat3 TBN = mat3(fragTangent, fragBitangent, fragNormal);
-    return normalize(TBN * tangentNormal);
+    // If normal map is disabled/absent (normalStrength <= 0.001), use geometric normal
+    // This is the fast path and avoids TBN calculations and texture sampling
+    // CPU sets normalStrength = 0 when normal texture is not bound
+    if (normalStrength <= 0.001)
+        return normalize(fragNormal);                   // Geometric world-space normal (no normal map)
+
+    // Normal map is enabled - sample and transform to world-space
+    // This code path is only reached if normalStrength > 0.001 AND texture is bound
+    vec3 tangentNormal = texture(normalTexture, fragUV).xyz * 2.0 - 1.0; // Sample tangent-space normal
+    tangentNormal.xy *= normalStrength;                // Scale XY by strength
+#ifdef FLIP_NORMAL_Y
+    tangentNormal.y = -tangentNormal.y;                // Optional Y-flip for DirectX-style maps
+#endif
+    tangentNormal = normalize(tangentNormal);          // Normalize sampled normal
+
+    // Build TBN basis matrix from world-space vectors
+    // TBN transforms from tangent-space to world-space
+    // Note: In GLSL, mat3(vec3, vec3, vec3) creates a matrix with vectors as COLUMNS
+    // So mat3(T, B, N) means: column0=T, column1=B, column2=N
+    // This is correct for transforming tangent-space normal to world-space: worldNormal = TBN * tangentNormal
+    mat3 TBN = mat3(fragTangent, fragBitangent, fragNormal); // TBN basis in world-space
+    return normalize(TBN * tangentNormal);             // Transform to world-space and normalize
 }
 
 void main() 
@@ -162,27 +183,30 @@ void main()
     float rough = clamp(roughness * roughnessMetallic.g, 0.0, 1.0);
     float metal = metallic * roughnessMetallic.b;
     
-    // Calculate normal
-    vec3 N = calculateNormal();
+    // All lighting calculations are performed in world-space
+    // Calculate normal in world-space
+    vec3 N = calculateNormal(); // World-space normal
     
-    // View direction
-    vec3 V = normalize(position.xyz - fragWorldPos);
+    // View direction in world-space: from fragment to camera
+    vec3 V = normalize(position.xyz - fragWorldPos); // V in world-space
     
-    // Light direction (directional light)
-    vec3 L = normalize(-lightDirection.xyz);
+    // Light direction in world-space (directional light)
+    vec3 L = normalize(-lightDirection.xyz); // L in world-space: direction from light source to fragment
     
-    // Shadow calculation
+    // Shadow calculation (separate from lighting - uses light-space)
+    // Convert world-space fragment position to light-space for shadow mapping
     vec4 fragPosLightSpace = lightSpaceMatrix * vec4(fragWorldPos, 1.0);
     float shadow = ShadowCalculation(fragPosLightSpace, N, L);
     
-    // Half vector
-    vec3 H = normalize(V + L);
+    // Half vector in world-space (for BRDF calculations)
+    vec3 H = normalize(V + L); // H in world-space: halfway between V and L
     
     // Calculate F0 for fresnel
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo.rgb, metal);
     
-    // Cook-Torrance BRDF
+    // Cook-Torrance BRDF (all vectors in world-space: N, V, L, H)
+    // All dot products (N·L, N·V, H·V) are correct because all vectors are in the same space
     float NDF = DistributionGGX(N, H, rough);
     float G = GeometrySmith(N, V, L, rough);
     vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
@@ -198,51 +222,42 @@ void main()
     float NdotL = max(dot(N, L), 0.0);
     vec3 Lo = (kD * albedo.rgb / PI + specular) * lightColor.rgb * lightIntensity * NdotL * (1.0 - shadow);
     
-    // Point lights contribution
+    // Point lights contribution (all calculations in world-space)
     for (int i = 0; i < lightCount && i < 100; i++)
     {
-        vec3 toLight = pointPositions[i].xyz - fragWorldPos;
-        float distance = length(toLight);
-        vec3 lightDir = normalize(toLight); // Направление от фрагмента к источнику света (для diffuse/specular нужен вектор от источника к фрагменту)
+        vec3 lightPos = pointPositions[i].xyz;
+        float dist = length(lightPos - fragWorldPos);
         
-        // Улучшенное затухание с внутренним и внешним радиусом
-        float innerRadius = pointInnerRadii[i];
-        float outerRadius = pointOuterRadii[i];
-        float attenuation = 1.0;
+        // Light direction: from fragment to light source (consistent with directional light)
+        // This matches the standard PBR convention where L points from fragment to light
+        vec3 L = normalize(lightPos - fragWorldPos);
         
-        if (distance < innerRadius) {
-            // Полная интенсивность внутри внутреннего радиуса
-            attenuation = 1.0;
-        } else if (distance < outerRadius) {
-            // Плавное затухание между внутренним и внешним радиусом
-            float t = (distance - innerRadius) / max(outerRadius - innerRadius, 0.001);
-            attenuation = 1.0 - smoothstep(0.0, 1.0, t);
-        } else {
-            // Нет света за пределами внешнего радиуса
-            attenuation = 0.0;
-        }
+        // Physically correct inverse-square falloff with smooth outer fade
+        float attenuation = 1.0 / (dist * dist);
+        // Smooth fade: full intensity at innerRadius, fades to 0 at outerRadius
+        // smoothstep(outer, inner, dist) returns 1.0 when dist <= inner, 0.0 when dist >= outer
+        attenuation *= smoothstep(pointOuterRadii[i], pointInnerRadii[i], dist);
         
-        // Направление света - от источника к фрагменту (обратное lightDir)
-        vec3 L = -lightDir; // Направление от источника света к фрагменту
+        // Calculate NdotL: standard PBR convention (L points from fragment to light)
+        float NdotL = max(dot(N, L), 0.0);
+        if (NdotL <= 0.0) continue; // Early exit: no contribution from back-facing surfaces
         
-        // Half vector for point light
-        vec3 H_point = normalize(V + L);
+        // PBR lighting calculations (all vectors in world-space: N, V, L, H)
+        // Standard PBR: H is halfway between V (to camera) and L (to light)
+        vec3 H = normalize(V + L);
+        float NDF = DistributionGGX(N, H, rough);
+        float G = GeometrySmith(N, V, L, rough);
+        vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
         
-        // PBR calculation for point light
-        float NDF_point = DistributionGGX(N, H_point, rough);
-        float G_point = GeometrySmith(N, V, L, rough);
-        vec3 F_point = fresnelSchlick(max(dot(H_point, V), 0.0), F0);
+        vec3 kS = F;
+        vec3 kD = (1.0 - kS) * (1.0 - metal);
+        vec3 numerator = NDF * G * F;
+        float NdotV = max(dot(N, V), 0.0);
+        float denom = 4.0 * NdotV * NdotL + 0.001;
+        vec3 specular = numerator / denom;
         
-        vec3 kS_point = F_point;
-        vec3 kD_point = vec3(1.0) - kS_point;
-        kD_point *= 1.0 - metal;
-        
-        vec3 numerator_point = NDF_point * G_point * F_point;
-        float denominator_point = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-        vec3 specular_point = numerator_point / denominator_point;
-        
-        float NdotL_point = max(dot(N, L), 0.0);
-        vec3 Lo_point = (kD_point * albedo.rgb / PI + specular_point) * pointColors[i].rgb * pointIntensities[i] * NdotL_point * attenuation;
+        vec3 Lo_point = (kD * albedo.rgb / PI + specular)
+            * pointColors[i].rgb * pointIntensities[i] * NdotL * attenuation;
         
         Lo += Lo_point;
     }
@@ -252,11 +267,158 @@ void main()
     
     vec3 color = ambient + Lo;
     
-    // HDR tone mapping
-    color = color / (color + vec3(1.0));
+    // ============================================================
+    // DEBUG MODES: Visualize different aspects of the rendering pipeline
+    // Set debugMode uniform to switch between modes:
+    // 0 = normal rendering
+    // 1 = visualize normals (fragNormal - geometric normal only)
+    // 2 = visualize normal length (check unit length)
+    // 3 = visualize tangents
+    // 4 = visualize bitangents
+    // 5 = visualize TBN orthogonality
+    // 6 = visualize NdotL for point light (uses geometric normal)
+    // 7 = visualize NdotL for directional light (uses calculated normal with normal map)
+    // 8 = simplified diffuse (no specular, no normal map, no gamma/tone mapping)
+    // 9 = visualize attenuation
+    // 10 = visualize calculated normal (N from calculateNormal() - includes normal map)
+    // 11 = visualize NdotL with calculated normal (N from calculateNormal())
+    // ============================================================
     
-    // Gamma correction
-    color = pow(color, vec3(1.0/2.2));
+    if (debugMode == 1) {
+        // Debug mode 1: Visualize normals (fragNormal - geometric normal only)
+        // Different colors on different faces are NORMAL for a cube (each face has different normal direction)
+        // Should show smooth color transitions WITHIN each face if normals are correct
+        // If you see diagonal patterns or half-circles WITHIN a face, normals are not properly transformed to world-space
+        color = normalize(fragNormal) * 0.5 + 0.5;
+    }
+    else if (debugMode == 2) {
+        // Debug mode 2: Visualize normal length
+        // Should be ~1.0 everywhere (white) if normals are unit length after transformation
+        float normalLen = length(fragNormal);
+        // Green if length is correct (~1.0), red if too short, blue if too long
+        if (normalLen > 0.99 && normalLen < 1.01) {
+            color = vec3(0.0, 1.0, 0.0); // Green - correct
+        } else if (normalLen < 0.01) {
+            color = vec3(1.0, 0.0, 0.0); // Red - zero normal (error)
+        } else {
+            color = vec3(0.0, 0.0, 1.0); // Blue - incorrect length
+        }
+        // Also show as grayscale for magnitude visualization
+        color = vec3(normalLen);
+    }
+    else if (debugMode == 3) {
+        // Debug mode 3: Visualize tangents
+        // Should show smooth transitions, no diagonal breaks
+        color = normalize(fragTangent) * 0.5 + 0.5;
+    }
+    else if (debugMode == 4) {
+        // Debug mode 4: Visualize bitangents
+        // Should show smooth transitions, no diagonal breaks
+        color = normalize(fragBitangent) * 0.5 + 0.5;
+    }
+    else if (debugMode == 5) {
+        // Debug mode 5: Visualize TBN orthogonality
+        // Check if normal and tangent are orthogonal (should be white everywhere)
+        float dotNT = dot(fragNormal, fragTangent);
+        float dotNB = dot(fragNormal, fragBitangent);
+        float dotTB = dot(fragTangent, fragBitangent);
+        // White if orthogonal (dot product ~0), colored if not
+        float error = max(abs(dotNT), max(abs(dotNB), abs(dotTB)));
+        if (error < 0.01) {
+            color = vec3(1.0); // White - orthogonal
+        } else {
+            color = vec3(error * 10.0, 0.0, 0.0); // Red - not orthogonal
+        }
+    }
+    else if (debugMode == 6) {
+        // Debug mode 6: Visualize NdotL for point light (geometric normal only)
+        // Should show circular pattern, not diagonal cut
+        // Uses ONLY geometric normal (fragNormal) - same as mode 8
+        // If you see diagonal cuts here but mode 8 works, there's a difference in calculation
+        vec3 N_geom = normalize(fragNormal); // Geometric normal only (no normal map, no TBN)
+        if (lightCount > 0) {
+            vec3 lightPos = pointPositions[0].xyz;
+            // Light direction: from fragment to light (same as mode 8 and normal rendering)
+            vec3 L = normalize(lightPos - fragWorldPos);
+            float debugNdotL = dot(N_geom, L);
+            // Visualize NdotL directly (should be circular for point light)
+            color = vec3(max(debugNdotL, 0.0));
+        } else {
+            // Fallback to directional light if no point lights
+            vec3 L_dir = normalize(-lightDirection.xyz);
+            float debugNdotL = dot(N_geom, L_dir);
+            color = vec3(max(debugNdotL, 0.0));
+        }
+    }
+    else if (debugMode == 7) {
+        // Debug mode 7: Visualize NdotL for directional light (uses calculated normal with normal map)
+        // Compare with mode 6 to see if normal map causes issues
+        vec3 L_dir = normalize(-lightDirection.xyz);
+        float debugNdotL = dot(N, L_dir); // N from calculateNormal() - may include normal map
+        color = vec3(max(debugNdotL, 0.0));
+    }
+    else if (debugMode == 10) {
+        // Debug mode 10: Visualize calculated normal (N from calculateNormal() - includes normal map)
+        // Compare with mode 1 (geometric normal) to see differences
+        color = normalize(N) * 0.5 + 0.5;
+    }
+    else if (debugMode == 11) {
+        // Debug mode 11: Visualize NdotL with calculated normal (includes normal map)
+        // Compare with mode 6 (geometric normal) to see if normal map causes diagonal cuts
+        if (lightCount > 0) {
+            vec3 lightPos = pointPositions[0].xyz;
+            vec3 L = normalize(lightPos - fragWorldPos);
+            float debugNdotL = dot(N, L); // N from calculateNormal() - may include normal map
+            color = vec3(max(debugNdotL, 0.0));
+        } else {
+            vec3 L_dir = normalize(-lightDirection.xyz);
+            float debugNdotL = dot(N, L_dir);
+            color = vec3(max(debugNdotL, 0.0));
+        }
+    }
+    else if (debugMode == 8) {
+        // Debug mode 8: Simplified diffuse (no specular, no normal map, no gamma/tone mapping)
+        // Isolates the problem to basic geometry/normals
+        // IMPORTANT: This mode uses ONLY point lights, ignores directional light and ambient
+        vec3 N_simple = normalize(fragNormal); // Use geometric normal only (no normal map)
+        if (lightCount > 0) {
+            vec3 lightPos = pointPositions[0].xyz;
+            vec3 L = normalize(lightPos - fragWorldPos);
+            float NdotL = max(dot(N_simple, L), 0.0);
+            float dist = length(lightPos - fragWorldPos);
+            float attenuation = 1.0 / (dist * dist);
+            attenuation *= smoothstep(pointOuterRadii[0], pointInnerRadii[0], dist);
+            color = albedo.rgb * pointColors[0].rgb * pointIntensities[0] * NdotL * attenuation;
+        } else {
+            // No point lights - show black (ignore directional light and ambient in this debug mode)
+            // If you see lighting without point lights, it means directional light or ambient is active
+            color = vec3(0.0);
+        }
+        // No ambient, no directional light, no specular, no tone mapping, no gamma correction
+    }
+    else if (debugMode == 9) {
+        // Debug mode 9: Visualize attenuation
+        // Should show smooth falloff, no sudden cuts
+        if (lightCount > 0) {
+            vec3 lightPos = pointPositions[0].xyz;
+            float dist = length(lightPos - fragWorldPos);
+            float attenuation = 1.0 / (dist * dist);
+            attenuation *= smoothstep(pointOuterRadii[0], pointInnerRadii[0], dist);
+            color = vec3(attenuation);
+        } else {
+            color = vec3(0.0);
+        }
+    }
+    
+    // Apply tone mapping and gamma correction only in normal mode (debugMode == 0)
+    // Debug modes 1-9 skip post-processing for accurate visualization
+    if (debugMode == 0) {
+        // HDR tone mapping
+        color = color / (color + vec3(1.0));
+        
+        // Gamma correction
+        color = pow(color, vec3(1.0/2.2));
+    }
     
     outColor = vec4(color, albedo.a);
 }

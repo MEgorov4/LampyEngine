@@ -25,12 +25,6 @@ void EntityWorld::init()
                                 .set<PositionComponent>({0.f, 2.f, 5.f})
                                 .set<RotationComponent>({-15.f, 0.f, 0.f})
                                 .set<CameraComponent>({75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true});
-
-    m_world.entity("Room")
-        .set<PositionComponent>({0.f, 0.f, 0.f})
-        .set<RotationComponent>({0.f, 0.f, 0.f})
-        .set<ScaleComponent>({1.f, 1.f, 1.f})
-        .set<MeshComponent>({AssetID("Meshes/BaseGeometry/cube.obj"), AssetID(""), AssetID(""), AssetID("")});
 }
 
 void EntityWorld::reset()

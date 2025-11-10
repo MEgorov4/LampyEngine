@@ -9,3 +9,6 @@ add_executable(ProjectBrowser ${PROJECT_BROWSER_SOURCE})
 find_package(nlohmann_json)
 find_package(fltk)
 target_link_libraries(ProjectBrowser PRIVATE fltk::fltk nlohmann_json::nlohmann_json)
+
+# Copy Resources to build directory
+copy_resources_to_build(ProjectBrowser)

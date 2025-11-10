@@ -149,13 +149,20 @@ local function setup(world)
     end
 end
 
+-- Автоматически вызывается при загрузке скрипта
+local function onLoad()
+    log_debug("onLoad() called - initializing viewport camera script")
+    -- Пытаемся найти камеру при загрузке
+    setup(fetch_world(nil))
+end
+
 local function key_action(event)
     if not event then
         log_debug("key_action received nil event")
         return
     end
 
-    log_debug("key_action ")
+    log_debug("key_action triggered")
 
     if not (event.state == 1 or event.state == true or event.state == "down") then
         return
@@ -166,7 +173,6 @@ local function key_action(event)
         return
     end
 
-	
     local key = map_key(event)
     if not key then
         log_debug("unknown key in event")
@@ -239,5 +245,5 @@ return {
     setup = setup,
     key_action = key_action,
     mouse_action = mouse_action,
+    onLoad = onLoad, -- Автоматически вызывается при загрузке скрипта
 }
-

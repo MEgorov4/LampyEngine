@@ -36,15 +36,25 @@ RenderObject RenderObjectFactory::createFromState(EntityRenderState& state)
         auto rm = Core::Locator().tryGet<ResourceModule::ResourceManager>();
         if (rm)
         {
+            LT_LOGI("RenderObjectFactory", "Loading material: " + state.material.materialID.str());
             obj.material = rm->load<ResourceModule::RMaterial>(state.material.materialID);
             // Если есть материал, используем его текстуры
             if (obj.material)
             {
+                LT_LOGI("RenderObjectFactory", "Material loaded successfully: " + obj.material->name);
                 if (!obj.material->albedoTexture.empty())
                 {
                     obj.texture = RenderFactory::get().createTexture(obj.material->albedoTexture);
                 }
             }
+            else
+            {
+                LT_LOGW("RenderObjectFactory", "Failed to load material: " + state.material.materialID.str());
+            }
+        }
+        else
+        {
+            LT_LOGW("RenderObjectFactory", "ResourceManager not available");
         }
     }
     
@@ -75,31 +85,67 @@ void RenderObjectFactory::updateResources(RenderObject& obj, const EntityRenderS
     }
     
     // Обновляем material если есть
+    // ВАЖНО: Всегда перезагружаем материал, даже если materialID не изменился,
+    // так как материал может быть изменен в файле или в базе данных
     if (!state.material.materialID.empty())
     {
         auto rm = Core::Locator().tryGet<ResourceModule::ResourceManager>();
         if (rm)
         {
-            obj.material = rm->load<ResourceModule::RMaterial>(state.material.materialID);
-            // Используем текстуры из материала
-            if (obj.material && !obj.material->albedoTexture.empty())
+            // Проверяем, изменился ли materialID
+            bool materialChanged = !obj.material || 
+                                   (obj.material && obj.material->materialID != state.material.materialID);
+            
+            if (materialChanged)
             {
-                obj.texture = RenderFactory::get().createTexture(obj.material->albedoTexture);
+                LT_LOGI("RenderObjectFactory", "Material ID changed, reloading: " + state.material.materialID.str());
             }
-            else if (!state.mesh.textureID.empty())
+            
+            // Всегда перезагружаем материал (ResourceManager кэширует, но мы получаем актуальную версию)
+            obj.material = rm->load<ResourceModule::RMaterial>(state.material.materialID);
+            
+            if (obj.material)
             {
-                obj.texture = RenderFactory::get().createTexture(state.mesh.textureID);
+                LT_LOGI("RenderObjectFactory", "Material loaded: " + obj.material->name + " (ID: " + obj.material->materialID.str() + ")");
+                // Используем текстуры из материала
+                if (!obj.material->albedoTexture.empty())
+                {
+                    obj.texture = RenderFactory::get().createTexture(obj.material->albedoTexture);
+                }
+                else if (!state.mesh.textureID.empty())
+                {
+                    // Fallback на текстуру из MeshComponent
+                    obj.texture = RenderFactory::get().createTexture(state.mesh.textureID);
+                }
+                else
+                {
+                    obj.texture.reset();
+                }
             }
             else
             {
-                obj.texture.reset();
+                LT_LOGW("RenderObjectFactory", "Failed to load material: " + state.material.materialID.str());
+                // Если материал не загрузился, используем текстуру из MeshComponent
+                if (!state.mesh.textureID.empty())
+                {
+                    obj.texture = RenderFactory::get().createTexture(state.mesh.textureID);
+                }
+                else
+                {
+                    obj.texture.reset();
+                }
             }
+        }
+        else
+        {
+            LT_LOGW("RenderObjectFactory", "ResourceManager not available for material update");
         }
     }
     else
     {
+        // MaterialComponent пуст или отсутствует
         obj.material.reset();
-        // Обновляем texture если есть
+        // Используем текстуру из MeshComponent
         if (!state.mesh.textureID.empty())
         {
             obj.texture = RenderFactory::get().createTexture(state.mesh.textureID);

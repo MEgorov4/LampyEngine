@@ -43,12 +43,20 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
                 return nullptr;
             return &worldWrapper->get();
         });
+    // Регистрируем userdata type для AssetID
     state.new_usertype<AssetID>(
-        "AssetID",
-        sol::constructors<AssetID(), AssetID(const std::string&)>(),
+        "AssetIDType",
         "str", &AssetID::str,
         "empty", &AssetID::empty,
         "__tostring", [](const AssetID& id) { return id.str(); });
+    
+    // Регистрируем AssetID как таблицу с методом .new() для совместимости со скриптами
+    sol::table assetIDTable = state.create_table();
+    assetIDTable["new"] = sol::overload(
+        []() -> AssetID { return AssetID(); },
+        [](const std::string& str) -> AssetID { return AssetID(str); }
+    );
+    state["AssetID"] = assetIDTable;
 
     state.new_usertype<PositionComponent>(
         "PositionComponent",
@@ -59,9 +67,9 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
         "to_vec3", [](const PositionComponent& self) { return self.toGLMVec(); },
         "from_vec3", [](PositionComponent& self, const glm::vec3& v) { self.fromGLMVec(v); });
 
+    // Регистрируем userdata type для RotationComponent
     state.new_usertype<RotationComponent>(
-        "RotationComponent",
-        sol::constructors<RotationComponent()>(),
+        "RotationComponentType",
         "x", &RotationComponent::x,
         "y", &RotationComponent::y,
         "z", &RotationComponent::z,
@@ -71,6 +79,9 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
         "qw", &RotationComponent::qw,
         "to_euler", [](const RotationComponent& self) { return self.toEulerDegrees(); },
         "from_euler", [](RotationComponent& self, const glm::vec3& eulerDeg) { self.fromEulerDegrees(eulerDeg); });
+    
+    // Регистрируем RotationComponent как вызываемую функцию-конструктор
+    state.set_function("RotationComponent", []() -> RotationComponent { return RotationComponent(); });
 
     state.new_usertype<ScaleComponent>(
         "ScaleComponent",
@@ -98,23 +109,33 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
         "vert_shader_id", &MeshComponent::vertShaderID,
         "frag_shader_id", &MeshComponent::fragShaderID);
 
+    // Регистрируем userdata type для PointLightComponent
     state.new_usertype<PointLightComponent>(
-        "PointLightComponent",
-        sol::constructors<PointLightComponent()>(),
+        "PointLightComponentType",
         "inner_radius", &PointLightComponent::innerRadius,
         "outer_radius", &PointLightComponent::outerRadius,
         "intensity", &PointLightComponent::intencity,
         "color", &PointLightComponent::color);
+    
+    // Регистрируем PointLightComponent как таблицу с методом .new() для совместимости со скриптами
+    sol::table pointLightComponentTable = state.create_table();
+    pointLightComponentTable["new"] = []() -> PointLightComponent { return PointLightComponent(); };
+    state["PointLightComponent"] = pointLightComponentTable;
 
     state.new_usertype<DirectionalLightComponent>(
         "DirectionalLightComponent",
         sol::constructors<DirectionalLightComponent()>(),
         "intensity", &DirectionalLightComponent::intencity);
 
+    // Регистрируем userdata type для MaterialComponent
     state.new_usertype<MaterialComponent>(
-        "MaterialComponent",
-        sol::constructors<MaterialComponent()>(),
+        "MaterialComponentType",
         "material_id", &MaterialComponent::materialID);
+    
+    // Регистрируем MaterialComponent как таблицу с методом .new() для совместимости со скриптами
+    sol::table materialComponentTable = state.create_table();
+    materialComponentTable["new"] = []() -> MaterialComponent { return MaterialComponent(); };
+    state["MaterialComponent"] = materialComponentTable;
 
     state.new_usertype<EditorOnlyTag>("EditorOnlyTag");
     state.new_usertype<InvisibleTag>("InvisibleTag");
@@ -249,10 +270,65 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
             return sol::nullopt;
         },
         "set_mesh",
-        [](flecs::entity& e, const MeshComponent& mesh)
-        {
-            e.set<MeshComponent>(mesh);
-        },
+        sol::overload(
+            [](flecs::entity& e, const MeshComponent& mesh)
+            {
+                e.set<MeshComponent>(mesh);
+            },
+            [](flecs::entity& e, sol::table meshTable)
+            {
+                MeshComponent mesh{};
+                if (meshTable["mesh_id"].valid())
+                {
+                    sol::object meshIdObj = meshTable["mesh_id"];
+                    if (meshIdObj.is<std::string>())
+                    {
+                        mesh.meshID = AssetID(meshIdObj.as<std::string>());
+                    }
+                    else if (meshIdObj.is<AssetID>())
+                    {
+                        mesh.meshID = meshIdObj.as<AssetID>();
+                    }
+                }
+                if (meshTable["texture_id"].valid())
+                {
+                    sol::object textureIdObj = meshTable["texture_id"];
+                    if (textureIdObj.is<std::string>())
+                    {
+                        mesh.textureID = AssetID(textureIdObj.as<std::string>());
+                    }
+                    else if (textureIdObj.is<AssetID>())
+                    {
+                        mesh.textureID = textureIdObj.as<AssetID>();
+                    }
+                }
+                if (meshTable["vert_shader_id"].valid())
+                {
+                    sol::object vertShaderIdObj = meshTable["vert_shader_id"];
+                    if (vertShaderIdObj.is<std::string>())
+                    {
+                        mesh.vertShaderID = AssetID(vertShaderIdObj.as<std::string>());
+                    }
+                    else if (vertShaderIdObj.is<AssetID>())
+                    {
+                        mesh.vertShaderID = vertShaderIdObj.as<AssetID>();
+                    }
+                }
+                if (meshTable["frag_shader_id"].valid())
+                {
+                    sol::object fragShaderIdObj = meshTable["frag_shader_id"];
+                    if (fragShaderIdObj.is<std::string>())
+                    {
+                        mesh.fragShaderID = AssetID(fragShaderIdObj.as<std::string>());
+                    }
+                    else if (fragShaderIdObj.is<AssetID>())
+                    {
+                        mesh.fragShaderID = fragShaderIdObj.as<AssetID>();
+                    }
+                }
+                e.set<MeshComponent>(mesh);
+            }
+        ),
         "remove_mesh", [](flecs::entity& e) { removeComponentIfPresent<MeshComponent>(e); },
         "has_material", [](const flecs::entity& e) { return e.has<MaterialComponent>(); },
         "get_material",

@@ -15,6 +15,8 @@
 #include <Modules/ResourceModule/Asset/AssetManager.h>
 
 #include <format>
+#include <algorithm>
+#include <cctype>
 
 namespace ScriptModule
 {
@@ -35,6 +37,25 @@ void LuaScriptModule::startup()
     for (auto& reg : m_registers)
     {
         reg->registerTypes(*this, m_luaState);
+    }
+    
+    // Проверяем, что Vec3 зарегистрирован как вызываемый тип
+    // Это гарантирует, что скрипты смогут использовать Vec3() как функцию
+    try
+    {
+        sol::object vec3Obj = m_luaState["Vec3"];
+        if (vec3Obj.valid())
+        {
+            LT_LOGI("LuaScriptModule", "Vec3 is registered in global scope");
+        }
+        else
+        {
+            LT_LOGW("LuaScriptModule", "Vec3 is NOT registered in global scope!");
+        }
+    }
+    catch (...)
+    {
+        LT_LOGW("LuaScriptModule", "Failed to check Vec3 registration");
     }
 
     loadDevScriptsFromDatabase();
@@ -175,17 +196,18 @@ bool LuaScriptModule::loadDevScript(const ResourceModule::AssetID& id, std::stri
         return false;
     }
 
-    sol::load_result chunk = m_luaState.load(script->getSource());
-    if (!chunk.valid())
+    // РЕШЕНИЕ: Выполняем скрипт через load + call в глобальном scope
+    // Это гарантирует, что скрипт выполняется в правильном контексте
+    sol::load_result loaded = m_luaState.load(script->getSource());
+    if (!loaded.valid())
     {
-        sol::error err = chunk;
+        sol::error err = loaded;
         LT_LOGE("LuaScriptModule", std::format("Lua load error in dev script {}: {}", key, err.what()));
         return false;
     }
-
-    sol::environment env(m_luaState, sol::create, m_luaState.globals());
-    sol::protected_function func = chunk;
-    sol::protected_function_result exec = func(env);
+    
+    sol::protected_function chunk = loaded;
+    sol::protected_function_result exec = chunk();
     if (!exec.valid())
     {
         sol::error err = exec;
@@ -193,6 +215,7 @@ bool LuaScriptModule::loadDevScript(const ResourceModule::AssetID& id, std::stri
         return false;
     }
 
+    // Получаем возвращаемое значение (таблица exports или nil)
     sol::table exports;
     if (exec.return_count() > 0)
     {
@@ -203,10 +226,14 @@ bool LuaScriptModule::loadDevScript(const ResourceModule::AssetID& id, std::stri
         }
     }
 
+    // Если скрипт не вернул таблицу, создаем пустую таблицу для exports
     if (!exports.valid())
     {
-        exports = env;
+        exports = m_luaState.create_table();
     }
+
+    // Создаем пустой environment для совместимости (не используется, но нужен для структуры)
+    sol::environment env(m_luaState, sol::create);
 
     std::string keyStr{key};
     DevScriptInstance instance{
@@ -217,6 +244,43 @@ bool LuaScriptModule::loadDevScript(const ResourceModule::AssetID& id, std::stri
 
     m_devScripts[keyStr] = std::move(instance);
     LT_LOGI("LuaScriptModule", std::format("Loaded dev script: {}", key));
+    
+    // Автоматически вызываем функцию onLoad() или start() если она есть
+    // Скрипт выполнен в глобальном scope, поэтому функции имеют прямой доступ ко всем глобальным переменным
+    // Вызываем функцию напрямую через sol2 - она уже создана в правильном контексте
+    try
+    {
+        sol::object onLoadObj = exports.get<sol::object>("onLoad");
+        if (!onLoadObj.valid() || onLoadObj.get_type() != sol::type::function)
+        {
+            onLoadObj = exports.get<sol::object>("start");
+        }
+        
+        if (onLoadObj.valid() && onLoadObj.get_type() == sol::type::function)
+        {
+            sol::protected_function func = onLoadObj.as<sol::protected_function>();
+            // Функция создана в глобальном scope, поэтому имеет прямой доступ к Vec3, GetCurrentWorld, etc.
+            sol::protected_function_result result = func();
+            if (!result.valid())
+            {
+                sol::error err = result;
+                LT_LOGW("LuaScriptModule", std::format("Error calling onLoad/start in dev script {}: {}", key, err.what()));
+            }
+            else
+            {
+                LT_LOGI("LuaScriptModule", std::format("Auto-executed onLoad/start in dev script: {}", key));
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        LT_LOGW("LuaScriptModule", std::format("Exception while auto-executing onLoad/start in dev script {}: {}", key, e.what()));
+    }
+    catch (...)
+    {
+        LT_LOGW("LuaScriptModule", std::format("Unknown exception while auto-executing onLoad/start in dev script: {}", key));
+    }
+    
     return true;
 }
 

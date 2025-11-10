@@ -1,0 +1,14 @@
+{
+    "name": "Viking Room Material",
+    "guid": "Materials/viking_room_material.lmat",
+    "albedoColor": [1.0, 1.0, 1.0, 1.0],
+    "emissiveColor": [0.0, 0.0, 0.0],
+    "roughness": 0.5,
+    "metallic": 0.0,
+    "normalStrength": 1.0,
+    "albedoTexture": "Textures/viking_room.png",
+    "normalTexture": "",
+    "roughnessMetallicTexture": "",
+    "emissiveTexture": ""
+}
+

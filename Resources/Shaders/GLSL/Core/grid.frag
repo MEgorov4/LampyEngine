@@ -1,56 +1,60 @@
 #version 450 core
 
-in vec3 fragPos;
+in vec3 worldPos;
+in vec3 viewDir;
 
-layout(std140, binding = 1) uniform GridData {
-    float gridSize;
-    float gridStep;
-    float majorStep;
-    vec3 majorLineColor;
-    vec3 minorLineColor;
-    vec3 axisColorX;
-    vec3 axisColorZ;
+layout(std140, binding = 0) uniform CameraData {
+    mat4 view;
+    mat4 projection;
+    vec4 position;
 };
 
 out vec4 FragColor;
 
-void main()
+// базовые настройки
+const float baseStep = 1.0;
+const float majorStep = 10.0;
+const float fadeDistance = 200.0;
+const float lineThickness = 1.5;
+
+// цвета
+const vec3 colorMinor = vec3(0.25);
+const vec3 colorMajor = vec3(0.45);
+const vec3 colorAxisX = vec3(1.0, 0.2, 0.2);
+const vec3 colorAxisZ = vec3(0.2, 0.4, 1.0);
+
+float gridFactor(vec2 coord, float step, float thickness)
 {
-    vec3 pos = fragPos;
-    
-    // Определяем, на какой линии мы находимся
-    float x = pos.x;
-    float z = pos.z;
-    
-    // Определяем цвет в зависимости от того, на какой линии мы находимся
-    vec3 color = minorLineColor;
-    
-    // Проверяем, находится ли точка на оси или близко к ней
-    if (abs(x) < 0.01)
-    {
-        color = axisColorX;
-    }
-    else if (abs(z) < 0.01)
-    {
-        color = axisColorZ;
-    }
-    else
-    {
-        // Проверяем, является ли линия основной (кратна majorStep)
-        // Упрощённое вычисление с mod вместо floor (меньше ALU)
-        const float epsilon = 0.02;
-        float xMod = mod(abs(x), majorStep);
-        float zMod = mod(abs(z), majorStep);
-        
-        bool isMajorX = (xMod < epsilon || xMod > (majorStep - epsilon));
-        bool isMajorZ = (zMod < epsilon || zMod > (majorStep - epsilon));
-        
-        if (isMajorX || isMajorZ)
-        {
-            color = majorLineColor;
-        }
-    }
-    
-    FragColor = vec4(color, 1.0);
+    vec2 grid = abs(fract(coord / step - 0.5) - 0.5) / fwidth(coord / step);
+    float line = min(grid.x, grid.y);
+    return 1.0 - smoothstep(0.0, thickness, line);
 }
 
+void main()
+{
+    float dist = length(position.xyz - worldPos);
+
+    // динамический шаг
+    float step = baseStep * pow(2.0, floor(log2(dist * 0.1 + 1.0)));
+    float majorStepScaled = majorStep * step;
+
+    // anti-aliased grid lines
+    float minor = gridFactor(worldPos.xz, step, lineThickness);
+    float major = gridFactor(worldPos.xz, majorStepScaled, lineThickness * 1.5);
+
+    vec3 color = mix(colorMinor, colorMajor, major);
+
+    // оси
+    if (abs(worldPos.x) < step * 0.5) color = colorAxisZ;
+    if (abs(worldPos.z) < step * 0.5) color = colorAxisX;
+
+    // fade на дистанции
+    float fade = clamp(1.0 - dist / fadeDistance, 0.0, 1.0);
+    fade = smoothstep(0.0, 1.0, fade);
+
+    // fade по углу — чем ближе к горизонту, тем сильнее исчезает
+    float horizonFade = pow(1.0 - abs(viewDir.y), 4.0);
+    fade *= 1.0 - horizonFade;
+
+    FragColor = vec4(color * fade, fade);
+}

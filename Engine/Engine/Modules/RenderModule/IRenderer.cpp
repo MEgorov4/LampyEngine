@@ -42,9 +42,7 @@ void IRenderer::postInit()
     RenderGraphBuilder builder(m_renderGraph);
 
     builder        .addResource("shadow_pass_depth", 1920, 1080)
-        .addResource("light_pass_color", 1920, 1080)
         .addResource("texture_pass_color", 1920, 1080)
-        .addResource("texture_pass_depth", 1920, 1080)
         .addResource("grid_pass_color", 1920, 1080)
         .addResource("debug_pass_color", 1920, 1080)
         .addResource("final", 1920, 1080)
@@ -54,17 +52,10 @@ void IRenderer::postInit()
         .exec(RenderNodes::ShadowPass)
         .end()
 
-        .addPass("Light")
-        .read("shadow_pass_depth")
-        .write("light_pass_color")
-        .exec(RenderNodes::LightPass)
-        .end()
-
-        .addPass("Texture")
-        .read("light_pass_color")
+        .addPass("PBR")
         .read("shadow_pass_depth")
         .write("texture_pass_color")
-        .exec(RenderNodes::TexturePass)
+        .exec(RenderNodes::PBRPass)
         .end()
 
         .addPass("Grid")
@@ -501,6 +492,7 @@ void IRenderer::applyRenderDiff(const RenderDiff &diff)
             state.rotation = change.newState->rotation;
             state.scale = change.newState->scale;
             state.mesh = change.newState->mesh;
+            state.material = change.newState->material; // Копируем material
 
             RenderObject obj = RenderObjectFactory::createFromState(state);
             m_listManager.addObject(obj, change.entityId);
@@ -525,6 +517,7 @@ void IRenderer::applyRenderDiff(const RenderDiff &diff)
             state->rotation = change.newState->rotation;
             state->scale = change.newState->scale;
             state->mesh = change.newState->mesh;
+            state->material = change.newState->material; // Копируем material (важно для обновления материалов!)
 
             size_t *pIndex = m_listManager.getObjectIndex(change.entityId);
             if (!pIndex || !m_listManager.isValidIndex(*pIndex))
@@ -538,6 +531,10 @@ void IRenderer::applyRenderDiff(const RenderDiff &diff)
 
             LT_LOGI("Renderer",
                     "Applied diff: Updated entity " + std::to_string(change.entityId) + " (resources changed)");
+            if (!state->material.materialID.empty())
+            {
+                LT_LOGI("Renderer", "Material updated: " + state->material.materialID.str());
+            }
             break;
         }
 
@@ -782,6 +779,22 @@ void IRenderer::rebuildRenderList()
         state.rotation = rot;
         state.scale = scale;
         state.mesh = mesh;
+        
+        // Загружаем MaterialComponent если есть
+        const MaterialComponent* material = e.get<MaterialComponent>();
+        if (material)
+        {
+            state.material = *material;
+            if (!state.material.materialID.empty())
+            {
+                LT_LOGI("Renderer", "Entity " + std::to_string(e.id()) + " has material: " + state.material.materialID.str());
+            }
+        }
+        else
+        {
+            // Очищаем material если компонента нет
+            state.material = MaterialComponent{};
+        }
 
         // Создаем рендер-объект через фабрику
         RenderObject obj = RenderObjectFactory::createFromState(state);

@@ -18,10 +18,13 @@ namespace RenderModule::OpenGL
         void setBoxData(const glm::vec3& center, const glm::vec3& size);
         
         // Для сферы (wireframe, упрощенная)
-        void setSphereData(const glm::vec3& center, float radius, int segments = 16);
+        void setSphereData(const glm::vec3& center, float radius, int segments = 3);
         
         // Для инициализации mesh из массива вершин (для сетки)
         void setVerticesData(const float* vertices, size_t vertexCount);
+        
+        // Для создания простого quad в плоскости XZ (Y=0) для бесконечной сетки
+        void setQuadData();
 
         void bind() const override;
         void draw() const override;
@@ -30,6 +33,7 @@ namespace RenderModule::OpenGL
 
         void drawLines() const;
         void drawWireframe() const;
+        void drawTriangleStrip() const; // Для рендеринга quad как GL_TRIANGLE_STRIP
 
     private:
         unsigned int m_VAO = 0;
@@ -38,6 +42,7 @@ namespace RenderModule::OpenGL
         int m_vertexCount = 0;
         int m_indexCount = 0;
         bool m_hasIndices = false;
+        bool m_isTriangleStrip = false; // Флаг для GL_TRIANGLE_STRIP режима
 
         void createBuffers();
         void updateBuffers(const float* vertices, size_t vertexCount, const uint32_t* indices = nullptr, size_t indexCount = 0);

@@ -12,3 +12,6 @@ target_link_libraries(${RUNTIME_NAME}
         ${ENGINE_NAME}
 )
 
+# Copy Resources to build directory
+copy_resources_to_build(${RUNTIME_NAME})
+

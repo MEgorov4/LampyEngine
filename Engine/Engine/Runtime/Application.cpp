@@ -82,7 +82,7 @@ void Application::startupMajor()
 
     fs::path engineResources = fs::absolute(exeDir / "../Resources");
     if (!fs::exists(engineResources))
-        engineResources = fs::absolute(exeDir / "../../Resources");
+        engineResources = fs::absolute(exeDir / "../../Resources"); // TODO: FIX 
     LT_LOGE("Engine", "Exe path: " + exeDir.string());
 
     Fs::createDirectory(projectResources);
@@ -113,11 +113,11 @@ void Application::startupMajor()
     Core::Register(std::make_shared<InputModule::InputModule>(), 20);
     Core::Register(std::make_shared<WindowModule::WindowModule>(), 25);
     Core::Register(std::make_shared<AudioModule::AudioModule>(), 30);
-    Core::Register(std::make_shared<ScriptModule::LuaScriptModule>(), 35);
     Core::Register(std::make_shared<RenderModule::RenderModule>(), 40);
     Core::Register(std::make_shared<ImGUIModule::ImGUIModule>(), 45);
     Core::Register(std::make_shared<ECSModule::ECSModule>(), 50);
     Core::Register(std::make_shared<PhysicsModule::PhysicsModule>(), 55);
+    Core::Register(std::make_shared<ScriptModule::LuaScriptModule>(), 60);
     Core::StartupAll();
 
     onStartupMajor(m_contextLocator.get());

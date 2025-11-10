@@ -46,9 +46,13 @@ void MathRegister::registerTypes(LuaScriptModule&, sol::state& state)
                            return {v.x * cosA - v.y * sinA, v.x * sinA + v.y * cosA};
                        });
 
+    // Регистрируем userdata type для glm::vec3 с методами и операторами
+    // Используем внутреннее имя типа, чтобы не конфликтовать с функцией-конструктором
     state.new_usertype<glm::vec3>(
-        "Vec3", sol::constructors<glm::vec3(), glm::vec3(float, float, float)>(), "x", &glm::vec3::x, "y",
-        &glm::vec3::y, "z", &glm::vec3::z,
+        "Vec3Type",
+        "x", &glm::vec3::x,
+        "y", &glm::vec3::y,
+        "z", &glm::vec3::z,
         "length", [](const glm::vec3& v) -> float { return glm::length(v); },
         "normalize", [](glm::vec3& v) { v = glm::normalize(v); },
         "getNormalized", [](const glm::vec3& v) -> glm::vec3 { return glm::normalize(v); },
@@ -63,6 +67,14 @@ void MathRegister::registerTypes(LuaScriptModule&, sol::state& state)
         { return glm::dot(v1, glm::normalize(v2)) * glm::normalize(v2); },
         "reflect", [](const glm::vec3& v, const glm::vec3& normal) -> glm::vec3
         { return glm::reflect(v, glm::normalize(normal)); });
+    
+    // Регистрируем Vec3 как вызываемую функцию-конструктор
+    // Это гарантирует, что Vec3() работает как функция в любом контексте (включая замыкания)
+    state.set_function("Vec3", sol::overload(
+        []() -> glm::vec3 { return glm::vec3(0.0f, 0.0f, 0.0f); },
+        [](float x, float y, float z) -> glm::vec3 { return glm::vec3(x, y, z); },
+        [](float val) -> glm::vec3 { return glm::vec3(val, val, val); }
+    ));
 
     state.set_function("DotProduct3",
                        [](const glm::vec3& v1, const glm::vec3& v2) -> float { return glm::dot(v1, v2); });

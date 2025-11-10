@@ -9,3 +9,5 @@ target_link_libraries(
   PRIVATE 
   ${ENGINE_NAME}
 )
+
+copy_resources_to_build(${EDITOR_NAME})
