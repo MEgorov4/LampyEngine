@@ -24,10 +24,8 @@ void ImGUIModule::startup()
     LT_LOGI("ImGuiModule", "Startup");
 
     ImGui::CreateContext();
+
     auto window = m_windowModule->getWindow();
-
-    LT_LOGI("ImGuiModule", "Init dear ImGui");
-
     ImGui_ImplSDL3_InitForOpenGL(window->getSDLWindow(), window->getGLContext());
 
     ImGui_ImplOpenGL3_Init("#version 450");
@@ -143,6 +141,7 @@ void ImGUIModule::renderUI(float deltaTime) const
     {
         if (object)
         {
+            ZoneScopedN("ImGUIModule::GUIObject");
             object->render(deltaTime);
         }
     }

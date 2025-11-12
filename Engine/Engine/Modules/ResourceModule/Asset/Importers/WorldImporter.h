@@ -32,7 +32,6 @@ public:
         info.guid       = MakeDeterministicIDFromPath(std::filesystem::path(sourcePath).generic_string());
         LT_ASSERT_MSG(!info.guid.empty(), "Generated GUID is empty");
 
-        // читаем JSON-файл мира
         std::ifstream ifs(sourcePath);
         if (!ifs.is_open())
             throw std::runtime_error("Cannot open world file: " + sourcePath.string());
@@ -43,7 +42,6 @@ public:
         LT_ASSERT_MSG(!json.empty(), "World JSON file is empty");
         LT_ASSERT_MSG(json.size() < 100 * 1024 * 1024, "World JSON file is unreasonably large"); // 100MB limit
 
-        // создаём бинарь
         std::filesystem::path outDir = cacheRoot / "Worlds";
         std::filesystem::create_directories(outDir);
         LT_ASSERT_MSG(std::filesystem::exists(outDir), "Failed to create Worlds directory");

@@ -34,12 +34,11 @@ private:
     std::string getAssetFileName(const std::string& sourcePath) const;
 
     ResourceModule::AssetManager* m_assetManager;
-    std::vector<AssetEntry> m_allAssets;  // Все ресурсы
-    std::vector<AssetEntry> m_filteredAssets;  // Отфильтрованные ресурсы
+    std::vector<AssetEntry> m_allAssets;
+    std::vector<AssetEntry> m_filteredAssets;
     
-    // Фильтры
     char m_searchBuffer[256] = "";
-    int m_selectedTypeFilter = 0;  // 0 = All, 1+ = конкретный тип
+    int m_selectedTypeFilter = 0;
     
     bool m_needsRefresh = true;
     static constexpr const char* m_typeFilterOptions[] = {

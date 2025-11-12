@@ -13,6 +13,7 @@ GUIEditorScriptPanel::GUIEditorScriptPanel(const std::shared_ptr<FilesystemModul
 
 void GUIEditorScriptPanel::render(float deltaTime)
 {
+    ZoneScopedN("GUIObject::ScriptPanel");
     if (ImGui::Begin("ScriptComponent Panel"))
     {
         if (ImGui::BeginChild("Scripts"))

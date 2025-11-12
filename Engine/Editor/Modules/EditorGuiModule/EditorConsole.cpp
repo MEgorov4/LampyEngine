@@ -3,12 +3,13 @@
 #include <Modules/LuaScriptModule/LuaScriptModule.h>
 #include <imgui.h>
 
-GUIEditorConsole::GUIEditorConsole() : GUIObject(), m_luaScriptModule(GCM(ScriptModule::LuaScriptModule))
+GUIConsole::GUIConsole() : GUIObject(), m_luaScriptModule(GCM(ScriptModule::LuaScriptModule))
 {
 }
 
-void GUIEditorConsole::render(float deltaTime)
+void GUIConsole::render(float deltaTime)
 {
+    ZoneScopedN("GUIObject::Console");
     if (!isVisible())
         return;
 
@@ -34,7 +35,7 @@ void GUIEditorConsole::render(float deltaTime)
     ImGui::End();
 }
 
-void GUIEditorConsole::processCommand(const std::string& command) const
+void GUIConsole::processCommand(const std::string& command) const
 {
     m_luaScriptModule->processCommand(command);
 }

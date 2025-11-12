@@ -6,11 +6,9 @@ namespace ResourceModule
 {
 RMaterial::RMaterial(const std::string& filePath) : BaseResource(filePath)
 {
-    // Читаем JSON файл материала
     std::ifstream file(filePath);
     if (!file.is_open())
     {
-        // Если файл не открылся, используем значения по умолчанию
         return;
     }
 
@@ -18,7 +16,6 @@ RMaterial::RMaterial(const std::string& filePath) : BaseResource(filePath)
     file >> j;
     file.close();
 
-    // Загружаем параметры из JSON
     if (j.contains("albedoColor"))
     {
         auto& albedo = j["albedoColor"];
@@ -49,7 +46,6 @@ RMaterial::RMaterial(const std::string& filePath) : BaseResource(filePath)
     if (j.contains("name"))
         name = j["name"].get<std::string>();
 
-    // Загружаем AssetID для текстур
     if (j.contains("albedoTexture"))
     {
         std::string texID = j["albedoTexture"].get<std::string>();

@@ -15,6 +15,16 @@ class RWorld final : public BaseResource
         return m_jsonData;
     }
 
+    bool isValid() const noexcept
+    {
+        return !m_jsonData.empty();
+    }
+
+    bool isEmpty() const noexcept
+    {
+        return m_jsonData.empty();
+    }
+
   private:
     std::string m_jsonData;
 };

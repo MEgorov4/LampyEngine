@@ -2,6 +2,9 @@
 
 #include <EngineMinimal.h>
 #include "../../../Foundation/Event/Event.h"
+#include "../../../Core/CoreGlobal.h"
+#include "../../../Foundation/JobSystem/JobSystem.h"
+#include "../../../Foundation/Memory/ResourceAllocator.h"
 #include "AssetDatabase.h"
 #include "AssetID.h"
 #include "AssetImporterHub.h"
@@ -11,6 +14,8 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+
+using EngineCore::Foundation::ResourceAllocator;
 
 namespace ResourceModule
 {
@@ -24,6 +29,8 @@ class AssetManager : public IModule
     void scanAndImportAll();
     void processFileChanges();
     void saveDatabase();
+    
+    EngineCore::Foundation::JobHandle scheduleRescanJob();
 
     void registerDefaultImporters();
     void watchDirectory(const std::string& path);
@@ -63,7 +70,7 @@ class AssetManager : public IModule
     std::unique_ptr<efsw::FileWatchListener> m_listener;
     std::unique_ptr<std::thread> m_watchThread;
     std::mutex m_queueMutex;
-    std::vector<std::string, ProfileAllocator<std::string>> m_changedFiles;
+    std::vector<std::string, ResourceAllocator<std::string>> m_changedFiles;
 
     AssetImporterHub m_importers;
     AssetDatabase m_database;

@@ -1,10 +1,13 @@
 #pragma once
 
-#include "Foundation/Profiler/ProfileAllocator.h"
+#include "Foundation/Memory/ResourceAllocator.h"
 
 #include <EngineMinimal.h>
 #include <GL/glew.h>
 #include <vector>
+
+using EngineCore::Foundation::ResourceAllocator;
+
 namespace ResourceModule
 {
 class MeshVertex;
@@ -15,7 +18,7 @@ class OpenGLVertexBuffer
 {
   public:
     OpenGLVertexBuffer(
-        const std::vector<ResourceModule::MeshVertex, ProfileAllocator<ResourceModule::MeshVertex>>& vertices);
+        const std::vector<ResourceModule::MeshVertex, ResourceAllocator<ResourceModule::MeshVertex>>& vertices);
     ~OpenGLVertexBuffer();
 
     void bind() const;

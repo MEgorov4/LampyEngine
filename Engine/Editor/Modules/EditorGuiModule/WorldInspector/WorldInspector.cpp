@@ -63,6 +63,7 @@ GUIWorldInspector::GUIWorldInspector() :
 
 void GUIWorldInspector::render(float deltaTime)
 {
+    ZoneScopedN("GUIObject::WorldInspector");
     // Handle ESC key to deselect entity
     if (ImGui::IsKeyPressed(ImGuiKey_Escape))
     {

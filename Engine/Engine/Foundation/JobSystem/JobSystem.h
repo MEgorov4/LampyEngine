@@ -7,6 +7,7 @@
 #include <vector>
 #include <functional>
 #include <atomic>
+#include <memory>
 #include <random>
 #include <chrono>
 
@@ -18,36 +19,48 @@ namespace EngineCore::Foundation
 {
     struct JobHandle
     {
-        std::atomic<uint32_t> counter;
+        std::shared_ptr<std::atomic<uint32_t>> counter;
         
         // Default constructor - explicitly initialize counter
-        JobHandle() noexcept : counter(0) {}
+        JobHandle() noexcept : counter(std::make_shared<std::atomic<uint32_t>>(0)) {}
         
         // Delete copy constructor/assignment (handles should not be copied)
         JobHandle(const JobHandle&) = delete;
         JobHandle& operator=(const JobHandle&) = delete;
         
-        // Allow move (copy the atomic value)
+        // Allow move (share the counter)
         JobHandle(JobHandle&& other) noexcept 
-            : counter(other.counter.load())
+            : counter(std::move(other.counter))
         {
-            other.counter.store(0);
+            if (!counter)
+            {
+                counter = std::make_shared<std::atomic<uint32_t>>(0);
+            }
+            // Ensure moved-from handle has valid counter with zero value
+            other.counter = std::make_shared<std::atomic<uint32_t>>(0);
         }
         
         JobHandle& operator=(JobHandle&& other) noexcept
         {
             if (this != &other)
             {
-                counter.store(other.counter.load());
-                other.counter.store(0);
+                counter = std::move(other.counter);
+                if (!counter)
+                {
+                    counter = std::make_shared<std::atomic<uint32_t>>(0);
+                }
+                // Ensure moved-from handle has valid counter with zero value
+                other.counter = std::make_shared<std::atomic<uint32_t>>(0);
             }
             return *this;
         }
         
         void wait() const noexcept
         {
+            if (!counter)
+                return;
             // Active wait (workers continue stealing)
-            while (counter.load(std::memory_order_acquire) > 0)
+            while (counter->load(std::memory_order_acquire) > 0)
             {
                 std::this_thread::yield();
             }
@@ -65,9 +78,15 @@ namespace EngineCore::Foundation
 
         // Submit single job
         JobHandle submit(std::function<void()> job);
+        
+        // Submit single job with name for profiling
+        JobHandle submit(std::function<void()> job, const char* jobName);
 
         // Submit with shared handle (to compose parallel tasks)
         void submit(std::function<void()> job, JobHandle& handle);
+        
+        // Submit with shared handle and name for profiling
+        void submit(std::function<void()> job, JobHandle& handle, const char* jobName);
 
         // Wait for completion
         void wait(const JobHandle& handle);

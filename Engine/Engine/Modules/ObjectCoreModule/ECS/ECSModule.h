@@ -11,7 +11,6 @@ namespace ECSModule
         void shutdown() override;
         void ecsTick(float dt);
 
-        // управление мирами
         EntityWorld* getCurrentWorld();
         EntityWorld& createWorld(const std::string& name);
         void openBasicWorld();
@@ -20,14 +19,12 @@ namespace ECSModule
         void simulate(bool state);
         bool isSimulate() const { return m_inSimulate; }
     private:
-        /// Зарегистрировать все доступные компоненты в реестре
         void registerComponents();
         
-        /// Эмитить данные для рендеринга кадра через EventBus
         void emitRenderFrameData();
         
         std::unique_ptr<WorldManager> m_worldManager;
-        ModuleEventBinder m_binder;          ///< подключение к глобальной шине событий
+        ModuleEventBinder m_binder;
         bool m_inSimulate = false;
     };
 }

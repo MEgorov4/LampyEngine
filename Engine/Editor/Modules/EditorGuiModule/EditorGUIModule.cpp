@@ -21,8 +21,8 @@ void EditorGUIModule::startup()
     ZoneScopedN("EditorGUIModule::startup");
     m_imGuiModule = GCXM(ImGUIModule::ImGUIModule);
 
-    LT_LOG(LogVerbosity::Info, "EditorGUIModule", "Startup");
-    LT_LOG(LogVerbosity::Info, "EditorGUIModule", "Create GUI objects");
+    LT_LOGI("EditorGUIModule", "Startup");
+    LT_LOGI("EditorGUIModule", "Create GUI objects");
 
     // Register windows with their names
     auto toolPanel = m_imGuiModule->addObject(new GUIEditorToolPanel());
@@ -63,7 +63,7 @@ void EditorGUIModule::startup()
         m_windowNames.push_back("Viewport");
     }
 
-    auto console = m_imGuiModule->addObject(new GUIEditorConsole());
+    auto console = m_imGuiModule->addObject(new GUIConsole());
     if (auto ptr = console.lock()) {
         ptr->setWindowName("Console");
         m_windowObjects.push_back(console);
@@ -81,7 +81,7 @@ void EditorGUIModule::startup()
 void EditorGUIModule::shutdown()
 {
     ZoneScopedN("EditorGUIModule::shutdown");
-    LT_LOG(LogVerbosity::Info, "EditorGUIModule", "Shutdown");
+    LT_LOGI("EditorGUIModule", "Shutdown");
 }
 
 void EditorGUIModule::render(float deltaTime) const

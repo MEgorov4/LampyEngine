@@ -32,7 +32,7 @@ struct RenderObject
     std::shared_ptr<IMesh> mesh;
     std::shared_ptr<ITexture> texture;
     std::shared_ptr<IShader> shader;
-    std::shared_ptr<ResourceModule::RMaterial> material; // Material для PBR рендеринга
+    std::shared_ptr<ResourceModule::RMaterial> material;
 };
 
 enum RenderPassType

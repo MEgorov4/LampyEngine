@@ -1,8 +1,8 @@
 #include "ShaderLoader.h"
 #include "Foundation/Assert/Assert.h"
-
-#include "Foundation/Profiler/ProfileAllocator.h"
 #include "fstream"
+
+using EngineCore::Foundation::ResourceAllocator;
 
 #include <iosfwd>
 #include <stddef.h>
@@ -11,7 +11,7 @@
 #include <type_traits>
 #include <utility>
 
-std::vector<char, ProfileAllocator<char>> ShaderLoader::readShaderFile(const std::string& filename)
+std::vector<char, ResourceAllocator<char>> ShaderLoader::readShaderFile(const std::string& filename)
 {
     LT_ASSERT_MSG(!filename.empty(), "Shader filename cannot be empty");
     
@@ -26,7 +26,7 @@ std::vector<char, ProfileAllocator<char>> ShaderLoader::readShaderFile(const std
     LT_ASSERT_MSG(fileSize > 0, "Shader file is empty");
     LT_ASSERT_MSG(fileSize < 10 * 1024 * 1024, "Shader file is unreasonably large"); // 10MB limit
     
-    std::vector<char, ProfileAllocator<char>> buffer(fileSize);
+    std::vector<char, ResourceAllocator<char>> buffer(fileSize);
     
     LT_ASSERT_MSG(buffer.size() == fileSize, "Buffer size mismatch");
 

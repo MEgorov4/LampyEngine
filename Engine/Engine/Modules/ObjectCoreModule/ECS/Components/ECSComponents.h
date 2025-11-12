@@ -36,7 +36,6 @@ struct RotationComponent {
 
     glm::quat toQuat() const noexcept {
         if (qx==0 && qy==0 && qz==0 && qw==1) {
-            // если quat ещё пустой → собираем из старых Эйлеров
 		glm::quat qy_ = glm::angleAxis(glm::radians(y), glm::vec3(0.f, 1.f, 0.f));
 		glm::quat qx_ = glm::angleAxis(glm::radians(x), glm::vec3(1.f, 0.f, 0.f));
 		glm::quat qz_ = glm::angleAxis(glm::radians(z), glm::vec3(0.f, 0.f, 1.f));
@@ -62,7 +61,7 @@ struct RotationComponent {
 
     void fromEulerDegrees(const glm::vec3& eulerDeg) noexcept {
         glm::vec3 rad = glm::radians(eulerDeg);
-        glm::quat q(rad); // glm::quat от XYZ
+        glm::quat q(rad);
         fromQuat(q);
     }
 };

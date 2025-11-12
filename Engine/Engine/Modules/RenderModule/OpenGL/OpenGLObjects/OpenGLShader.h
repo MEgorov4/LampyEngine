@@ -40,13 +40,11 @@ namespace RenderModule::OpenGL
 
         void bindTextures(const std::unordered_map<std::string, TextureHandle>& textures) override;
         
-        // Методы для установки обычных uniform (не UBO) для per-object данных
         void setUniformMatrix4(const std::string& name, const glm::mat4& matrix) override;
         void setUniformMatrix3(const std::string& name, const glm::mat3& matrix) override;
         void setUniformVec4(const std::string& name, const glm::vec4& vec) override;
         void setUniformFloat(const std::string& name, float value) override;
         void setUniformInt(const std::string& name, int value) override;
-        // Методы для массивов uniform
         void setUniformVec4Array(const std::string& name, const glm::vec4* values, int count) override;
         void setUniformFloatArray(const std::string& name, const float* values, int count) override;
 

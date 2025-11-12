@@ -43,14 +43,12 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
                 return nullptr;
             return &worldWrapper->get();
         });
-    // Регистрируем userdata type для AssetID
     state.new_usertype<AssetID>(
         "AssetIDType",
         "str", &AssetID::str,
         "empty", &AssetID::empty,
         "__tostring", [](const AssetID& id) { return id.str(); });
     
-    // Регистрируем AssetID как таблицу с методом .new() для совместимости со скриптами
     sol::table assetIDTable = state.create_table();
     assetIDTable["new"] = sol::overload(
         []() -> AssetID { return AssetID(); },
@@ -67,7 +65,6 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
         "to_vec3", [](const PositionComponent& self) { return self.toGLMVec(); },
         "from_vec3", [](PositionComponent& self, const glm::vec3& v) { self.fromGLMVec(v); });
 
-    // Регистрируем userdata type для RotationComponent
     state.new_usertype<RotationComponent>(
         "RotationComponentType",
         "x", &RotationComponent::x,
@@ -80,7 +77,6 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
         "to_euler", [](const RotationComponent& self) { return self.toEulerDegrees(); },
         "from_euler", [](RotationComponent& self, const glm::vec3& eulerDeg) { self.fromEulerDegrees(eulerDeg); });
     
-    // Регистрируем RotationComponent как вызываемую функцию-конструктор
     state.set_function("RotationComponent", []() -> RotationComponent { return RotationComponent(); });
 
     state.new_usertype<ScaleComponent>(
@@ -109,7 +105,6 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
         "vert_shader_id", &MeshComponent::vertShaderID,
         "frag_shader_id", &MeshComponent::fragShaderID);
 
-    // Регистрируем userdata type для PointLightComponent
     state.new_usertype<PointLightComponent>(
         "PointLightComponentType",
         "inner_radius", &PointLightComponent::innerRadius,
@@ -117,7 +112,6 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
         "intensity", &PointLightComponent::intencity,
         "color", &PointLightComponent::color);
     
-    // Регистрируем PointLightComponent как таблицу с методом .new() для совместимости со скриптами
     sol::table pointLightComponentTable = state.create_table();
     pointLightComponentTable["new"] = []() -> PointLightComponent { return PointLightComponent(); };
     state["PointLightComponent"] = pointLightComponentTable;
@@ -127,12 +121,10 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
         sol::constructors<DirectionalLightComponent()>(),
         "intensity", &DirectionalLightComponent::intencity);
 
-    // Регистрируем userdata type для MaterialComponent
     state.new_usertype<MaterialComponent>(
         "MaterialComponentType",
         "material_id", &MaterialComponent::materialID);
     
-    // Регистрируем MaterialComponent как таблицу с методом .new() для совместимости со скриптами
     sol::table materialComponentTable = state.create_table();
     materialComponentTable["new"] = []() -> MaterialComponent { return MaterialComponent(); };
     state["MaterialComponent"] = materialComponentTable;

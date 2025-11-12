@@ -1,7 +1,6 @@
 #pragma once
 #include "../IAssetImporter.h"
 #include "../../Material.h"
-#include "Foundation/Profiler/ProfileAllocator.h"
 #include <Foundation/Assert/Assert.h>
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -31,7 +30,6 @@ namespace ResourceModule
             info.guid       = MakeDeterministicIDFromPath(std::filesystem::path(sourcePath).generic_string());
             LT_ASSERT_MSG(!info.guid.empty(), "Generated GUID is empty");
 
-            // Читаем JSON файл материала
             std::ifstream file(sourcePath);
             if (!file.is_open())
             {
@@ -42,7 +40,6 @@ namespace ResourceModule
             file >> j;
             file.close();
 
-            // Создаем Material из JSON
             RMaterial mat{};
             if (j.contains("albedoColor"))
             {
@@ -74,7 +71,6 @@ namespace ResourceModule
             if (j.contains("name"))
                 mat.name = j["name"].get<std::string>();
 
-            // Загружаем AssetID для текстур
             if (j.contains("albedoTexture"))
             {
                 std::string texID = j["albedoTexture"].get<std::string>();
@@ -102,7 +98,6 @@ namespace ResourceModule
 
             mat.materialID = info.guid;
 
-            // Сохраняем Material в cache как JSON (для простоты пока используем JSON, можно позже оптимизировать)
             std::filesystem::path cachePath = cacheRoot / "Materials" / (info.guid.str() + ".lmat");
             std::filesystem::create_directories(cachePath.parent_path());
 
@@ -130,8 +125,11 @@ namespace ResourceModule
             info.importedPath = cachePath.string();
             info.sourceTimestamp = std::filesystem::last_write_time(sourcePath).time_since_epoch().count();
             info.importedTimestamp = std::filesystem::last_write_time(cachePath).time_since_epoch().count();
+            info.sourceFileSize = std::filesystem::file_size(sourcePath);
+            info.importedFileSize = std::filesystem::file_size(cachePath);
+            
+            LT_ASSERT_MSG(info.importedFileSize > 0, "Imported file size is zero");
 
-            // Добавляем зависимости от текстур
             if (!mat.albedoTexture.empty())
                 info.dependencies.push_back(mat.albedoTexture.str());
             if (!mat.normalTexture.empty())

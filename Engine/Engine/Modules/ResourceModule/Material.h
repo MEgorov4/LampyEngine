@@ -8,33 +8,26 @@
 
 namespace ResourceModule
 {
-/// Material resource - содержит параметры материала для PBR рендеринга
 class RMaterial : public BaseResource
 {
   public:
-    // Цвета
-    glm::vec4 albedoColor{1.0f, 1.0f, 1.0f, 1.0f};      // Базовый цвет альбедо
-    glm::vec3 emissiveColor{0.0f, 0.0f, 0.0f};            // Эмиссивный цвет (свечение)
+    glm::vec4 albedoColor{1.0f, 1.0f, 1.0f, 1.0f};
+    glm::vec3 emissiveColor{0.0f, 0.0f, 0.0f};
 
-    // PBR параметры
-    float roughness = 0.5f;   // Шероховатость (0 = зеркало, 1 = матовая поверхность)
-    float metallic = 0.0f;     // Металличность (0 = диэлектрик, 1 = металл)
-    float normalStrength = 1.0f; // Сила нормальной карты
+    float roughness = 0.5f;
+    float metallic = 0.0f;
+    float normalStrength = 1.0f;
 
-    // Текстуры
-    AssetID albedoTexture{};           // Альбедо текстура
-    AssetID normalTexture{};           // Нормальная карта
-    AssetID roughnessMetallicTexture{}; // Roughness/Metallic карта
-    AssetID emissiveTexture{};         // Эмиссивная текстура
+    AssetID albedoTexture{};
+    AssetID normalTexture{};
+    AssetID roughnessMetallicTexture{};
+    AssetID emissiveTexture{};
 
-    // Метаданные
     std::string name{"DefaultMaterial"};
-    AssetID materialID{}; // ID этого материала
+    AssetID materialID{};
 
-    // Конструктор по умолчанию (пустой материал)
     RMaterial() : BaseResource("") {}
     
-    // Конструктор для загрузки из файла (для ResourceManager)
     explicit RMaterial(const std::string& filePath);
     
     ~RMaterial() noexcept = default;

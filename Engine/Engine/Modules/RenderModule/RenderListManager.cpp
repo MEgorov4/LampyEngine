@@ -61,11 +61,8 @@ bool RenderListManager::removeObject(uint64_t entityId)
         return false;
     }
     
-    // Удаляем объект из списка
     objects.erase(objects.begin() + objIndex);
     
-    // Обновляем маппинг для всех объектов после удаленного
-    // Все индексы после удаленного объекта сдвигаются на -1
     for (auto& [id, index] : m_entityToObjectIndex)
     {
         if (index > objIndex)
@@ -74,7 +71,6 @@ bool RenderListManager::removeObject(uint64_t entityId)
         }
     }
     
-    // Удаляем из маппинга
     m_entityToObjectIndex.erase(it);
     
     return true;

@@ -13,7 +13,7 @@ void EditorApplication::startup()
 
 void EditorApplication::onStartupMinor(ContextLocator* locator)
 {
-    LT_LOG(LogVerbosity::Info, "Editor", "initMinor");
+    LT_LOGI("Editor", "initMinor");
     locator->registerMinor(std::make_shared<ProjectModule::ProjectModule>(), 0);
     locator->startupMinor();
 }
@@ -21,7 +21,7 @@ void EditorApplication::onStartupMinor(ContextLocator* locator)
 
 void EditorApplication::onStartupMajor(ContextLocator* locator)
 {
-    LT_LOG(LogVerbosity::Info, "Editor", "initMajor");
+    LT_LOGI("Editor", "initMajor");
     locator->registerMajor(std::make_shared<EditorGUIModule>(), 10);
     locator->startupMajor();
 }

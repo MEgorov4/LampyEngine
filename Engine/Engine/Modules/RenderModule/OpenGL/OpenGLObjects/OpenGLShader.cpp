@@ -205,7 +205,6 @@ bool OpenGLShader::hasUniformBlock(const std::string &blockName)
 
 GLuint OpenGLShader::getOrCreateUBO(const std::string &blockName, size_t dataSize)
 {
-    // Проверяем, существует ли UBO и правильного ли он размера
     if (m_ubos.find(blockName) != m_ubos.end())
     {
         GLuint existingUbo = m_ubos[blockName];
@@ -214,18 +213,15 @@ GLuint OpenGLShader::getOrCreateUBO(const std::string &blockName, size_t dataSiz
         glGetBufferParameteriv(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE, &bufferSize);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
         
-        // Если размер совпадает, возвращаем существующий буфер
         if (static_cast<size_t>(bufferSize) == dataSize)
         {
             return existingUbo;
         }
         
-        // Размер не совпадает - удаляем старый буфер и создадим новый
         glDeleteBuffers(1, &existingUbo);
         m_ubos.erase(blockName);
     }
     
-    // Создаем новый UBO
     GLuint ubo;
     glGenBuffers(1, &ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);

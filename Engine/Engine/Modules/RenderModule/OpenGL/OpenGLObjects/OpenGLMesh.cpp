@@ -1,5 +1,8 @@
 #include "OpenGLMesh.h"
 #include <GL/glew.h>
+#include "Foundation/Memory/ResourceAllocator.h"
+
+using EngineCore::Foundation::ResourceAllocator;
 
 namespace RenderModule::OpenGL
 {
@@ -9,9 +12,10 @@ OpenGLMesh::OpenGLMesh(const std::shared_ptr<ResourceModule::RMesh> &mesh)
     LT_ASSERT_MSG(mesh, "Mesh resource is null");
     
     LT_LOGI("RenderModule::OpenGLMesh", "Contruct");
-    std::vector<uint32_t, ProfileAllocator<uint32_t>> indices = mesh->getMeshData().indices;
-    std::vector<ResourceModule::MeshVertex, ProfileAllocator<ResourceModule::MeshVertex>> vertices =
-        mesh->getMeshData().vertices;
+    // Get references to the mesh data - no need to copy, just use the data directly
+    const auto& meshData = mesh->getMeshData();
+    const auto& indices = meshData.indices;
+    const auto& vertices = meshData.vertices;
 
     LT_ASSERT_MSG(!vertices.empty(), "Mesh has no vertices");
     LT_ASSERT_MSG(!indices.empty(), "Mesh has no indices");

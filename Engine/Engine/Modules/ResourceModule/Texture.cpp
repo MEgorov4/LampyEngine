@@ -22,7 +22,7 @@ RTexture::RTexture(const std::string& path) : BaseResource(path)
 
     LT_ASSERT_MSG(m_info.width > 0, "Texture width must be positive");
     LT_ASSERT_MSG(m_info.height > 0, "Texture height must be positive");
-    LT_ASSERT_MSG(m_info.width <= 16384, "Texture width is unreasonably large"); // Защита от переполнения
+    LT_ASSERT_MSG(m_info.width <= 16384, "Texture width is unreasonably large");
     LT_ASSERT_MSG(m_info.height <= 16384, "Texture height is unreasonably large");
     LT_ASSERT_MSG(m_info.channels > 0 && m_info.channels <= 4, "Invalid texture channel count");
 

@@ -9,7 +9,6 @@
 
 namespace ECSModule
 {
-    /// Интерфейс для фабрики компонентов
     class IComponentFactory
     {
     public:
@@ -21,7 +20,6 @@ namespace ECSModule
         virtual std::string getDisplayName() const = 0;
     };
 
-    /// Реестр компонентов ECS
     class ComponentRegistry
     {
     public:
@@ -31,14 +29,12 @@ namespace ECSModule
             return instance;
         }
 
-        /// Зарегистрировать компонент
         void registerComponent(std::unique_ptr<IComponentFactory> factory)
         {
             std::string typeName = factory->getTypeName();
             m_factories[typeName] = std::move(factory);
         }
 
-        /// Получить список всех зарегистрированных компонентов
         std::vector<std::pair<std::string, std::string>> getAvailableComponents() const
         {
             std::vector<std::pair<std::string, std::string>> result;
@@ -50,7 +46,6 @@ namespace ECSModule
             return result;
         }
 
-        /// Добавить компонент к entity по имени типа
         bool addComponent(flecs::entity& entity, const std::string& componentTypeName) const
         {
             auto it = m_factories.find(componentTypeName);
@@ -65,7 +60,6 @@ namespace ECSModule
             return false;
         }
 
-        /// Проверить наличие компонента у entity
         bool hasComponent(flecs::entity& entity, const std::string& componentTypeName) const
         {
             auto it = m_factories.find(componentTypeName);
@@ -76,13 +70,11 @@ namespace ECSModule
             return false;
         }
 
-        /// Проверить, зарегистрирован ли компонент
         bool isRegistered(const std::string& componentTypeName) const
         {
             return m_factories.find(componentTypeName) != m_factories.end();
         }
 
-        /// Удалить компонент из entity
         bool removeComponent(flecs::entity& entity, const std::string& componentTypeName) const
         {
             auto it = m_factories.find(componentTypeName);
@@ -94,7 +86,6 @@ namespace ECSModule
             return false;
         }
 
-        /// Сбросить компонент к дефолтным значениям
         bool resetComponent(flecs::entity& entity, const std::string& componentTypeName) const
         {
             auto it = m_factories.find(componentTypeName);
@@ -111,7 +102,6 @@ namespace ECSModule
         std::unordered_map<std::string, std::unique_ptr<IComponentFactory>> m_factories;
     };
 
-    /// Простая фабрика для компонентов (не шаблонная, чтобы избежать проблем с инстанцированием)
     class ComponentFactory : public IComponentFactory
     {
     public:

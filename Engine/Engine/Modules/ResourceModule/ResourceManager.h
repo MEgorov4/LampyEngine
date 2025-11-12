@@ -7,8 +7,12 @@
 #include "ResourceCache.h"
 #include "ResourceRegistry.h"
 #include "Foundation/Assert/Assert.h"
+#include "Foundation/Memory/MemoryMacros.h"
+#include "../../Core/CoreGlobal.h"
+#include "../../Foundation/JobSystem/JobSystem.h"
 
 #include <EngineMinimal.h>
+#include <functional>
 
 namespace ResourceModule
 {
@@ -33,12 +37,13 @@ class AssetRegistryAccessor
 
 class ResourceManager : public IModule
 {
-    std::unique_ptr<PakReader> m_pakReader;
+    std::unique_ptr<PakReader, std::function<void(PakReader*)>> m_pakReader;
     ResourceRegistry m_registry;
     AssetDatabase *m_assetDatabase = nullptr;
     std::filesystem::path m_engineResourcesRoot;
     std::filesystem::path m_projectResourcesRoot;
     bool m_usePak = false;
+    bool m_periodicCleanupEnabled = false;
 
     template <typename T> ResourceCache<T> &getCache()
     {
@@ -53,8 +58,10 @@ class ResourceManager : public IModule
     void mountPak(const std::string &mountPak);
     void unload(const AssetID &id);
     void clearAll();
+    void cleanupExpiredCacheEntries();
+    
+    EngineCore::Foundation::JobHandle scheduleCleanupExpiredJob();
 
-    // 🔧 Новые методы для связи
     void setDatabase(AssetDatabase *db) noexcept
     {
         LT_ASSERT_MSG(db, "Cannot set null AssetDatabase");
@@ -89,7 +96,6 @@ namespace ResourceModule
 {
 template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id)
 {
-    // Пустой AssetID допустим для опциональных ресурсов - возвращаем nullptr
     if (id.empty())
         return nullptr;
     
@@ -100,13 +106,19 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
         return cached;
     }
 
-    LT_ASSERT_MSG(m_assetDatabase, "AssetDatabase not set! Call setDatabase() first");
+    if (!m_assetDatabase)
+    {
+        LT_LOGE("ResourceManager", "AssetDatabase not set! Call setDatabase() first");
+        return nullptr;
+    }
+    
     LT_LOGI("ResourceManager", std::format("Loading resource [{}]...", id.str()));
     
     auto infoOpt = m_assetDatabase->get(id);
     if (!infoOpt)
     {
-        LT_LOGE("ResourceManager", "AssetInfo not found for GUID: " + id.str());
+        LT_LOGW("ResourceManager", "AssetInfo not found for GUID: " + id.str() + ", trying fallback search by path");
+        
         return nullptr;
     }
 
@@ -123,15 +135,33 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
             return nullptr;
         }
         
-        LT_ASSERT_MSG(!data->empty(), "PAK data is empty for asset: " + id.str());
+        if (data->empty())
+        {
+            LT_LOGE("ResourceManager", "PAK data is empty for asset: " + id.str());
+            return nullptr;
+        }
+        
         LT_LOGI("ResourceManager", std::format("Read {} bytes from PAK for [{}]", data->size(), id.str()));
 
-        // временный файл
         std::filesystem::path tmp = std::filesystem::temp_directory_path() / (id.str() + ".tmp");
         std::ofstream ofs(tmp, std::ios::binary);
-        LT_ASSERT_MSG(ofs.is_open(), "Failed to create temporary file for PAK asset");
+        if (!ofs.is_open())
+        {
+            LT_LOGE("ResourceManager", "Failed to create temporary file for PAK asset: " + tmp.string());
+            return nullptr;
+        }
         
         ofs.write(reinterpret_cast<const char *>(data->data()), data->size());
+        if (ofs.fail())
+        {
+            LT_LOGE("ResourceManager", "Failed to write temporary file for PAK asset: " + tmp.string());
+            ofs.close();
+            std::error_code ec;
+            std::filesystem::remove(tmp, ec);
+            if (ec)
+                LT_LOGW("ResourceManager", "Failed to remove temporary file after write error: " + ec.message());
+            return nullptr;
+        }
         ofs.close();
 
         sourcePath = tmp;
@@ -147,24 +177,87 @@ template <typename T> std::shared_ptr<T> ResourceManager::load(const AssetID &id
         LT_LOGI("ResourceManager", std::format("Loading resource [{}] from filesystem: {}", id.str(), sourcePath.string()));
     }
 
-    // 🔧 Создаём ресурс через его конструктор(path)
     std::shared_ptr<T> resource;
+    bool isTempFile = (sourcePath.extension() == ".tmp");
     try
     {
-        resource = std::make_shared<T>(sourcePath.string());
-        LT_ASSERT_MSG(resource, "Failed to create resource instance");
+        using namespace EngineCore::Foundation;
+        // Allocate memory for resource using MemorySystem
+        void* resourceMemory = AllocateMemory(sizeof(T), alignof(T), MemoryTag::Resource);
+        if (!resourceMemory)
+        {
+            LT_LOGE("ResourceManager", "Failed to allocate memory for resource: " + id.str());
+            if (isTempFile)
+            {
+                std::error_code ec;
+                std::filesystem::remove(sourcePath, ec);
+                if (ec)
+                    LT_LOGW("ResourceManager", "Failed to remove temporary file: " + ec.message());
+            }
+            return nullptr;
+        }
+        
+        // Construct resource using placement new
+        T* resourcePtr = nullptr;
+        try
+        {
+            resourcePtr = new(resourceMemory) T(sourcePath.string());
+        }
+        catch (...)
+        {
+            // If construction fails, deallocate memory and rethrow
+            DeallocateMemory(resourceMemory, MemoryTag::Resource);
+            throw;
+        }
+        
+        // Create shared_ptr with custom deleter
+        resource = std::shared_ptr<T>(resourcePtr, [](T* p) {
+            if (p)
+            {
+                p->~T();
+                DeallocateMemory(p, MemoryTag::Resource);
+            }
+        });
+        
         LT_LOGI("ResourceManager", std::format("Resource [{}] created successfully", id.str()));
     }
     catch (const std::exception &e)
     {
         LT_LOGE("ResourceManager", std::string("Failed to construct resource: ") + e.what());
-        if (sourcePath.extension() == ".tmp")
-            std::filesystem::remove(sourcePath);
+        if (isTempFile)
+        {
+            std::error_code ec;
+            std::filesystem::remove(sourcePath, ec);
+            if (ec)
+                LT_LOGW("ResourceManager", "Failed to remove temporary file after exception: " + ec.message());
+        }
+        return nullptr;
+    }
+    catch (...)
+    {
+        LT_LOGE("ResourceManager", "Unknown exception while constructing resource: " + id.str());
+        if (isTempFile)
+        {
+            std::error_code ec;
+            std::filesystem::remove(sourcePath, ec);
+            if (ec)
+                LT_LOGW("ResourceManager", "Failed to remove temporary file after unknown exception: " + ec.message());
+        }
         return nullptr;
     }
 
-    if (sourcePath.extension() == ".tmp")
-        std::filesystem::remove(sourcePath);
+    // Удаляем временный файл после успешной загрузки ресурса
+    // Ресурс уже прочитал все данные в память
+    if (isTempFile)
+    {
+        std::error_code ec;
+        std::filesystem::remove(sourcePath, ec);
+        if (ec)
+        {
+            LT_LOGW("ResourceManager", "Failed to remove temporary file after loading: " + ec.message() + 
+                     " (file: " + sourcePath.string() + ")");
+        }
+    }
 
     cache.put(id, resource);
     m_registry.registerResource(id, resource);
@@ -185,8 +278,6 @@ template <typename T> std::shared_ptr<T> ResourceManager::loadBySource(const std
         return nullptr;
     }
 
-    // После поиска по sourcePath GUID должен быть валидным
-    // Если GUID пустой - это ошибка в базе данных
     LT_ASSERT_MSG(!infoOpt->guid.empty(), "Found AssetInfo has empty GUID");
     LT_LOGI("ResourceManager", std::format("Found AssetID [{}] for source path: {}", infoOpt->guid.str(), path));
     return load<T>(infoOpt->guid);

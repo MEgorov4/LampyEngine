@@ -16,6 +16,7 @@ GUIMainMenuBar::~GUIMainMenuBar()
 
 void GUIMainMenuBar::render(float deltaTime)
 {
+    ZoneScopedN("GUIObject::MainMenuBar");
     if (ImGui::BeginMainMenuBar()) 
     {
         if (ImGui::BeginMenu("File")) 

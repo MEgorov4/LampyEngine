@@ -17,6 +17,8 @@ GUIAssetBrowser::GUIAssetBrowser() :
 
 void GUIAssetBrowser::render(float deltaTime)
 {
+
+    ZoneScopedN("GUIObject::AssetBrowser");
     if (!isVisible())
         return;
 

@@ -15,6 +15,7 @@ GUIEditorToolPanel::GUIEditorToolPanel() :
 
 void GUIEditorToolPanel::render(float deltaTime)
 {
+    ZoneScopedN("GUIObject::ToolPanel");
     if (!isVisible())
         return;
 

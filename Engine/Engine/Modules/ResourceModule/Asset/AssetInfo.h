@@ -1,10 +1,12 @@
 #pragma once
 #include "AssetID.h"
-#include "Foundation/Profiler/ProfileAllocator.h"
+#include "Foundation/Memory/ResourceAllocator.h"
 #include <Foundation/Assert/Assert.h>
 #include "nlohmann/json.hpp"
 
 #include <EngineMinimal.h>
+
+using EngineCore::Foundation::ResourceAllocator;
 
 namespace ResourceModule
 {
@@ -34,7 +36,7 @@ struct AssetInfo
 
     std::string sourcePath;
     std::string importedPath;
-    std::vector<std::string, ProfileAllocator<std::string>> dependencies;
+    std::vector<std::string, ResourceAllocator<std::string>> dependencies;
 
     uint64_t sourceTimestamp{0};
     uint64_t importedTimestamp{0};
@@ -44,7 +46,6 @@ struct AssetInfo
 
 inline void to_json(nlohmann::json& j, const AssetInfo& a)
 {
-    // При сериализации в JSON GUID и sourcePath должны быть валидными для записей в базе
     LT_ASSERT_MSG(!a.guid.empty(), "AssetInfo GUID is empty");
     LT_ASSERT_MSG(!a.sourcePath.empty(), "AssetInfo source path is empty");
     
@@ -68,8 +69,6 @@ inline void from_json(const nlohmann::json& j, AssetInfo& a)
     std::string guidStr;
     j.at("guid").get_to(guidStr);
     
-    // Пустая строка GUID допустима при десериализации (для опциональных ресурсов)
-    // но для записей в базе GUID должен быть валидным
     a.guid = AssetID(guidStr);
 
     int typeInt = 0;

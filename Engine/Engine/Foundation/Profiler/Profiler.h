@@ -11,7 +11,6 @@ class Profiler
     static void MarkText(const char *text) noexcept;
     static void BeginZone(const char *name) noexcept;
 
-    // ?? новые методы для трекинга памяти
     static void Alloc(const void *ptr, std::size_t size, const char *name = nullptr) noexcept;
     static void Free(const void *ptr, const char *name = nullptr) noexcept;
 };

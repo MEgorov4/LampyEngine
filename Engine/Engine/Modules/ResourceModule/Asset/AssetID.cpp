@@ -18,14 +18,11 @@ AssetID::AssetID() noexcept = default;
 
 AssetID::AssetID(const std::string& str)
 {
-    // Пустая строка создает пустой AssetID (для опциональных ресурсов)
     if (str.empty())
     {
-        // m_bytes уже инициализирован нулями конструктором по умолчанию
         return;
     }
     
-    // Если это UUID (36 символов с дефисами) в стандартном формате
     if (str.size() == 36 && str[8] == '-' && str[13] == '-' && str[18] == '-' && str[23] == '-') {
         try {
             boost::uuids::string_generator gen;
@@ -37,9 +34,16 @@ AssetID::AssetID(const std::string& str)
         }
     }
 
-    // Если это путь, то делаем детерминированный GUID
     try {
-        std::filesystem::path p = std::filesystem::weakly_canonical(str);
+        std::filesystem::path p(str);
+        
+        if (p.is_absolute()) {
+            try {
+                p = std::filesystem::weakly_canonical(p);
+            } catch (...) {
+            }
+        }
+        
         *this = MakeDeterministicIDFromPath(p.generic_string());
     } catch (...) {
         *this = MakeDeterministicIDFromPath(str);
@@ -77,11 +81,9 @@ size_t AssetID::Hasher::operator()(const AssetID& id) const noexcept
 }
 
 // --------------------------------------------------------
-// Генерация: детерминированный GUID от пути
 // --------------------------------------------------------
 AssetID ResourceModule::MakeDeterministicIDFromPath(const std::string& absPath)
 {
-    // Пустой путь создает пустой AssetID (для опциональных ресурсов)
     if (absPath.empty())
     {
         return AssetID{};
@@ -90,7 +92,6 @@ AssetID ResourceModule::MakeDeterministicIDFromPath(const std::string& absPath)
     static const auto LampyNamespaceUUID =
         boost::uuids::string_generator()("123e4567-e89b-12d3-a456-426655440000");
 
-    // --- Нормализация пути ---
     std::string norm = absPath;
     for (auto& c : norm)
     {

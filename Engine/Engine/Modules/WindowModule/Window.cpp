@@ -14,23 +14,7 @@ Window::Window(int width, int height, const char *title) : m_inputModule(GCM(Inp
     LT_LOGI("WindowModule_Window", "Window: Start create window: width = " + std::format("{}", width) + ", height = " +
                                        std::format("{}", height) + ", title = " + std::format("{}", title));
 
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS))
-    {
-        const char *sdlError = SDL_GetError();
-        std::string errorMessage = "Failed to initialise SDL: ";
-        if (sdlError)
-        {
-            errorMessage += sdlError;
-        }
-        else
-        {
-            errorMessage += "Unknown error.";
-        }
-
-        LT_LOGI("WindowModule_Window", errorMessage);
-
-        throw std::runtime_error(errorMessage);
-    }
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS);
 
     SDL_GL_ResetAttributes();
 
@@ -40,17 +24,14 @@ Window::Window(int width, int height, const char *title) : m_inputModule(GCM(Inp
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
     m_performanceFrequency = SDL_GetPerformanceFrequency();
-    // Создание окна
     m_window = SDL_CreateWindow(title, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!m_window)
     {
         throw std::runtime_error("Failed to create SDL window");
     }
 
-    // Максимизация окна (разворачивание на весь экран, но оставаясь окном)
     SDL_MaximizeWindow(m_window);
 
-    // Создание контекста
     m_glContext = SDL_GL_CreateContext(m_window);
     if (!m_glContext)
     {
@@ -58,7 +39,6 @@ Window::Window(int width, int height, const char *title) : m_inputModule(GCM(Inp
         throw std::runtime_error("Failed to create OpenGL context: " + std::string(error ? error : "Unknown error"));
     }
 
-    // Установка текущего контекста
     if (!SDL_GL_MakeCurrent(m_window, m_glContext))
     {
         const char *error = SDL_GetError();
@@ -74,14 +54,15 @@ Window::~Window()
     {
         LT_LOGI("WindowModule_Window", "Destroy context");
         SDL_GL_DestroyContext(m_glContext);
+        m_glContext = nullptr;
     }
     if (m_window)
     {
         LT_LOGI("WindowModule_Window", "Destroy window");
         SDL_DestroyWindow(m_window);
+        m_window = nullptr;
     }
 
-    LT_LOGI("WindowModule_Window", "SDL quit");
     SDL_Quit();
 }
 

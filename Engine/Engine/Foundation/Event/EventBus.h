@@ -58,7 +58,6 @@ class EventBus
     EventBus()  = default;
     ~EventBus() = default;
 
-    /// Подписка на события типа T
     template <typename T>
     [[nodiscard]]
     Subscription<T> subscribe(Handler<T> handler)
@@ -70,7 +69,6 @@ class EventBus
         return Subscription<T>(this, id);
     }
 
-    /// Отписка
     template <typename T> void unsubscribe(size_t id)
     {
         std::scoped_lock lock(m_mutex);
@@ -81,7 +79,6 @@ class EventBus
         list.erase(std::remove_if(list.begin(), list.end(), [id](auto& ptr) { return ptr->id == id; }), list.end());
     }
 
-    /// Отправка события (синхронная)
     template <typename T> void emit(const T& event)
     {
         std::vector<std::shared_ptr<BaseWrapper>, ProfileAllocator<std::shared_ptr<BaseWrapper>>> snapshot;
@@ -96,7 +93,6 @@ class EventBus
             static_cast<Wrapper<T>*>(ptr.get())->fn(event);
     }
 
-    /// Очистка всех подписок
     void clear()
     {
         std::scoped_lock lock(m_mutex);

@@ -21,8 +21,6 @@ namespace RenderModule
         }
     };
     
-    // Глобальные функции для отладочного рендеринга
-    // Можно вызывать из любого места в коде
     inline void DebugDrawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color = glm::vec3(1.0f, 0.0f, 0.0f))
     {
         auto* ctx = RenderLocator::Get();

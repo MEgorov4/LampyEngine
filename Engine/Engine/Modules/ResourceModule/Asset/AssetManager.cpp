@@ -1,7 +1,10 @@
 #include "AssetManager.h"
 #include <Foundation/Assert/Assert.h>
+#include <Core/CoreGlobal.h>
+#include <Foundation/JobSystem/JobSystem.h>
+#include "Foundation/Memory/MemoryMacros.h"
+#include "Foundation/Memory/ResourceAllocator.h"
 
-#include "Foundation/Profiler/ProfileAllocator.h"
 #include "Importers/MeshImporter.h"
 #include "Importers/ShaderImporter.h"
 #include "Importers/TextureImporter.h"
@@ -56,7 +59,6 @@ void AssetManager::startup()
         return;
     }
 
-    // Загружаем базу ассетов
     LT_LOGI("AssetManager", "Loading asset database from: " + m_dbPath.string());
     bool loaded = m_database.load(m_dbPath.string());
     if (!loaded)
@@ -68,7 +70,6 @@ void AssetManager::startup()
         LT_LOGI("AssetManager", "Asset database loaded successfully");
     }
 
-    // Настраиваем file watcher
     m_watcher  = std::make_unique<efsw::FileWatcher>();
     LT_ASSERT_MSG(m_watcher, "Failed to create FileWatcher");
     
@@ -77,7 +78,6 @@ void AssetManager::startup()
 
     registerDefaultImporters();
 
-    // Следим за обоими каталогами
     LT_ASSERT_MSG(std::filesystem::exists(m_engineResourcesRoot), "Engine resources root does not exist");
     LT_ASSERT_MSG(std::filesystem::exists(m_projectResourcesRoot), "Project resources root does not exist");
     
@@ -86,7 +86,6 @@ void AssetManager::startup()
     watchDirectory(m_projectResourcesRoot.string());
     LT_LOGI("AssetManager", "File watchers started");
 
-    // Импортируем ресурсы
     LT_LOGI("AssetManager", "Scanning engine resources...");
     scanAndImportAllIn(m_engineResourcesRoot);
 
@@ -105,45 +104,250 @@ void AssetManager::shutdown()
     LT_LOGI("AssetManager", "Shutting down AssetManager...");
     saveDatabase();
 
+    // Stop file watcher before joining thread
+    if (m_watcher)
+    {
+        // Remove all watches to allow watch() to exit
+        // Note: efsw doesn't have explicit stop method, but removing watches should help
+        m_watcher.reset();
+    }
+
+    // Wait for watch thread to finish
     if (m_watchThread && m_watchThread->joinable())
+    {
+        // Give the thread a moment to exit after watcher is destroyed
+        // If it doesn't exit, we'll timeout and detach (not ideal but prevents hang)
         m_watchThread->join();
+    }
+    
+    m_listener.reset();
 }
 
 // --------------------------------------------------------
+
+namespace
+{
+    using namespace EngineCore::Foundation;
+    using namespace ResourceModule;
+    
+    // Helper deleter for TextureImporter
+    void deleteTextureImporter(IAssetImporter* p)
+    {
+        if (p)
+        {
+            static_cast<TextureImporter*>(p)->~TextureImporter();
+            DeallocateMemory(p, MemoryTag::Resource);
+        }
+    }
+    
+    // Helper deleter for ShaderImporter
+    void deleteShaderImporter(IAssetImporter* p)
+    {
+        if (p)
+        {
+            static_cast<ShaderImporter*>(p)->~ShaderImporter();
+            DeallocateMemory(p, MemoryTag::Resource);
+        }
+    }
+    
+    // Helper deleter for MeshImporter
+    void deleteMeshImporter(IAssetImporter* p)
+    {
+        if (p)
+        {
+            static_cast<MeshImporter*>(p)->~MeshImporter();
+            DeallocateMemory(p, MemoryTag::Resource);
+        }
+    }
+    
+    // Helper deleter for WorldImporter
+    void deleteWorldImporter(IAssetImporter* p)
+    {
+        if (p)
+        {
+            static_cast<WorldImporter*>(p)->~WorldImporter();
+            DeallocateMemory(p, MemoryTag::Resource);
+        }
+    }
+    
+    // Helper deleter for MaterialImporter
+    void deleteMaterialImporter(IAssetImporter* p)
+    {
+        if (p)
+        {
+            static_cast<MaterialImporter*>(p)->~MaterialImporter();
+            DeallocateMemory(p, MemoryTag::Resource);
+        }
+    }
+    
+    // Helper deleter for ScriptImporter
+    void deleteScriptImporter(IAssetImporter* p)
+    {
+        if (p)
+        {
+            static_cast<ScriptImporter*>(p)->~ScriptImporter();
+            DeallocateMemory(p, MemoryTag::Resource);
+        }
+    }
+}
 
 void AssetManager::registerDefaultImporters()
 {
     ZoneScopedN("AssetManager::registerDefaultImporters");
     LT_LOGI("AssetManager", "Registering default asset importers...");
     
-    auto textureImporter = std::make_unique<TextureImporter>();
-    LT_ASSERT_MSG(textureImporter, "Failed to create TextureImporter");
-    m_importers.registerImporter(std::move(textureImporter));
-    LT_LOGI("AssetManager", "Registered TextureImporter");
+    using namespace EngineCore::Foundation;
     
-    auto shaderImporter = std::make_unique<ShaderImporter>();
-    LT_ASSERT_MSG(shaderImporter, "Failed to create ShaderImporter");
-    m_importers.registerImporter(std::move(shaderImporter));
-    LT_LOGI("AssetManager", "Registered ShaderImporter");
+    // Allocate and create TextureImporter using MemorySystem
+    void* textureImporterMemory = AllocateMemory(sizeof(TextureImporter), alignof(TextureImporter), MemoryTag::Resource);
+    if (textureImporterMemory)
+    {
+        TextureImporter* textureImporter = nullptr;
+        try
+        {
+            textureImporter = new(textureImporterMemory) TextureImporter();
+            using DeleterType = void(*)(IAssetImporter*);
+            DeleterType deleter = deleteTextureImporter;
+            std::unique_ptr<IAssetImporter, DeleterType> importer(textureImporter, deleter);
+            m_importers.registerImporter(std::move(importer));
+            LT_LOGI("AssetManager", "Registered TextureImporter");
+        }
+        catch (...)
+        {
+            DeallocateMemory(textureImporterMemory, MemoryTag::Resource);
+            LT_LOGE("AssetManager", "Failed to create TextureImporter: constructor threw exception");
+        }
+    }
+    else
+    {
+        LT_LOGE("AssetManager", "Failed to allocate memory for TextureImporter");
+    }
     
-    auto meshImporter = std::make_unique<MeshImporter>();
-    LT_ASSERT_MSG(meshImporter, "Failed to create MeshImporter");
-    m_importers.registerImporter(std::move(meshImporter));
-    LT_LOGI("AssetManager", "Registered MeshImporter");
+    // Allocate and create ShaderImporter using MemorySystem
+    void* shaderImporterMemory = AllocateMemory(sizeof(ShaderImporter), alignof(ShaderImporter), MemoryTag::Resource);
+    if (shaderImporterMemory)
+    {
+        ShaderImporter* shaderImporter = nullptr;
+        try
+        {
+            shaderImporter = new(shaderImporterMemory) ShaderImporter();
+            using DeleterType = void(*)(IAssetImporter*);
+            DeleterType deleter = deleteShaderImporter;
+            std::unique_ptr<IAssetImporter, DeleterType> importer(shaderImporter, deleter);
+            m_importers.registerImporter(std::move(importer));
+            LT_LOGI("AssetManager", "Registered ShaderImporter");
+        }
+        catch (...)
+        {
+            DeallocateMemory(shaderImporterMemory, MemoryTag::Resource);
+            LT_LOGE("AssetManager", "Failed to create ShaderImporter: constructor threw exception");
+        }
+    }
+    else
+    {
+        LT_LOGE("AssetManager", "Failed to allocate memory for ShaderImporter");
+    }
     
-    auto worldImporter = std::make_unique<WorldImporter>();
-    LT_ASSERT_MSG(worldImporter, "Failed to create WorldImporter");
-    m_importers.registerImporter(std::move(worldImporter));
-    LT_LOGI("AssetManager", "Registered WorldImporter");
+    // Allocate and create MeshImporter using MemorySystem
+    void* meshImporterMemory = AllocateMemory(sizeof(MeshImporter), alignof(MeshImporter), MemoryTag::Resource);
+    if (meshImporterMemory)
+    {
+        MeshImporter* meshImporter = nullptr;
+        try
+        {
+            meshImporter = new(meshImporterMemory) MeshImporter();
+            using DeleterType = void(*)(IAssetImporter*);
+            DeleterType deleter = deleteMeshImporter;
+            std::unique_ptr<IAssetImporter, DeleterType> importer(meshImporter, deleter);
+            m_importers.registerImporter(std::move(importer));
+            LT_LOGI("AssetManager", "Registered MeshImporter");
+        }
+        catch (...)
+        {
+            DeallocateMemory(meshImporterMemory, MemoryTag::Resource);
+            LT_LOGE("AssetManager", "Failed to create MeshImporter: constructor threw exception");
+        }
+    }
+    else
+    {
+        LT_LOGE("AssetManager", "Failed to allocate memory for MeshImporter");
+    }
     
-    auto materialImporter = std::make_unique<MaterialImporter>();
-    LT_ASSERT_MSG(materialImporter, "Failed to create MaterialImporter");
-    m_importers.registerImporter(std::move(materialImporter));
-    LT_LOGI("AssetManager", "Registered MaterialImporter");
+    // Allocate and create WorldImporter using MemorySystem
+    void* worldImporterMemory = AllocateMemory(sizeof(WorldImporter), alignof(WorldImporter), MemoryTag::Resource);
+    if (worldImporterMemory)
+    {
+        WorldImporter* worldImporter = nullptr;
+        try
+        {
+            worldImporter = new(worldImporterMemory) WorldImporter();
+            using DeleterType = void(*)(IAssetImporter*);
+            DeleterType deleter = deleteWorldImporter;
+            std::unique_ptr<IAssetImporter, DeleterType> importer(worldImporter, deleter);
+            m_importers.registerImporter(std::move(importer));
+            LT_LOGI("AssetManager", "Registered WorldImporter");
+        }
+        catch (...)
+        {
+            DeallocateMemory(worldImporterMemory, MemoryTag::Resource);
+            LT_LOGE("AssetManager", "Failed to create WorldImporter: constructor threw exception");
+        }
+    }
+    else
+    {
+        LT_LOGE("AssetManager", "Failed to allocate memory for WorldImporter");
+    }
     
-    auto scriptImporter = std::make_unique<ScriptImporter>();
-    m_importers.registerImporter(std::move(scriptImporter));
-    LT_LOGI("AssetManager", "Registered ScriptImporter");
+    // Allocate and create MaterialImporter using MemorySystem
+    void* materialImporterMemory = AllocateMemory(sizeof(MaterialImporter), alignof(MaterialImporter), MemoryTag::Resource);
+    if (materialImporterMemory)
+    {
+        MaterialImporter* materialImporter = nullptr;
+        try
+        {
+            materialImporter = new(materialImporterMemory) MaterialImporter();
+            using DeleterType = void(*)(IAssetImporter*);
+            DeleterType deleter = deleteMaterialImporter;
+            std::unique_ptr<IAssetImporter, DeleterType> importer(materialImporter, deleter);
+            m_importers.registerImporter(std::move(importer));
+            LT_LOGI("AssetManager", "Registered MaterialImporter");
+        }
+        catch (...)
+        {
+            DeallocateMemory(materialImporterMemory, MemoryTag::Resource);
+            LT_LOGE("AssetManager", "Failed to create MaterialImporter: constructor threw exception");
+        }
+    }
+    else
+    {
+        LT_LOGE("AssetManager", "Failed to allocate memory for MaterialImporter");
+    }
+    
+    // Allocate and create ScriptImporter using MemorySystem
+    void* scriptImporterMemory = AllocateMemory(sizeof(ScriptImporter), alignof(ScriptImporter), MemoryTag::Resource);
+    if (scriptImporterMemory)
+    {
+        ScriptImporter* scriptImporter = nullptr;
+        try
+        {
+            scriptImporter = new(scriptImporterMemory) ScriptImporter();
+            using DeleterType = void(*)(IAssetImporter*);
+            DeleterType deleter = deleteScriptImporter;
+            std::unique_ptr<IAssetImporter, DeleterType> importer(scriptImporter, deleter);
+            m_importers.registerImporter(std::move(importer));
+            LT_LOGI("AssetManager", "Registered ScriptImporter");
+        }
+        catch (...)
+        {
+            DeallocateMemory(scriptImporterMemory, MemoryTag::Resource);
+            LT_LOGE("AssetManager", "Failed to create ScriptImporter: constructor threw exception");
+        }
+    }
+    else
+    {
+        LT_LOGE("AssetManager", "Failed to allocate memory for ScriptImporter");
+    }
+    
     LT_LOGI("AssetManager", "All default importers registered");
 }
 
@@ -185,7 +389,7 @@ void AssetManager::handleFileAction(const std::string& fullPath, efsw::Action ac
 void AssetManager::processFileChanges()
 {
     ZoneScopedN("AssetManager::processFileChanges");
-    std::vector<std::string, ProfileAllocator<std::string>> files;
+    std::vector<std::string, ResourceAllocator<std::string>> files;
     {
         std::scoped_lock lock(m_queueMutex);
         files.swap(m_changedFiles);
@@ -276,7 +480,6 @@ void AssetManager::scanAndImportAllIn(const std::filesystem::path& root)
         LT_ASSERT_MSG(importer, "Found importer is null");
         filesFound++;
         
-        // --- Добавляем нормализацию пути ---
         std::filesystem::path abs = std::filesystem::weakly_canonical(entry.path());
         LT_ASSERT_MSG(std::filesystem::exists(abs), "Canonical path does not exist");
         
@@ -298,14 +501,11 @@ void AssetManager::scanAndImportAllIn(const std::filesystem::path& root)
             rel = abs.filename();
         }
 
-        // --- Вычисляем ожидаемый GUID ДО импорта ---
         AssetID expectedGuid = MakeDeterministicIDFromPath(rel.generic_string());
         LT_ASSERT_MSG(!expectedGuid.empty(), "Generated GUID is empty");
         
-        // --- Проверяем, существует ли ассет в базе ---
         auto existingInfoOpt = m_database.get(expectedGuid);
         
-        // Получаем timestamp и размер файла для сравнения
         auto fileTime = std::filesystem::last_write_time(abs);
         auto fileTimeCount = fileTime.time_since_epoch().count();
         uint64_t currentFileSize = 0;
@@ -318,10 +518,8 @@ void AssetManager::scanAndImportAllIn(const std::filesystem::path& root)
         }
         catch (...)
         {
-            // Игнорируем ошибки получения размера файла
         }
         
-        // Если ассет уже существует в базе и файл не изменился, пропускаем импорт
         if (existingInfoOpt)
         {
             const auto& existing = *existingInfoOpt;
@@ -341,19 +539,15 @@ void AssetManager::scanAndImportAllIn(const std::filesystem::path& root)
                 existing.sourceTimestamp, static_cast<uint64_t>(fileTimeCount)));
         }
 
-        // --- Импорт (только если нужно) ---
         LT_ASSERT_MSG(!m_cacheRoot.empty(), "Cache root is not set");
         auto info = importer->import(abs, m_cacheRoot);
         
-        // После импорта GUID должен быть валидным (импортировали реальный файл)
         LT_ASSERT_MSG(!info.guid.empty(), "Imported asset has empty GUID");
 
-        // --- Перезаписываем корректные поля ---
         info.sourcePath = rel.generic_string();
-        info.guid       = expectedGuid;  // Используем предвычисленный GUID для консистентности
+        info.guid       = expectedGuid;
         info.origin     = origin;
         
-        // Убеждаемся, что timestamp установлен (если импортер его не установил)
         if (info.sourceTimestamp == 0)
         {
             info.sourceTimestamp = static_cast<uint64_t>(fileTimeCount);
@@ -363,7 +557,6 @@ void AssetManager::scanAndImportAllIn(const std::filesystem::path& root)
             info.sourceFileSize = currentFileSize;
         }
         
-        // После генерации из пути GUID должен быть валидным
         LT_ASSERT_MSG(!info.guid.empty(), "Generated GUID is empty after path determinization");
         LT_ASSERT_MSG(!info.sourcePath.empty(), "Source path is empty");
 
@@ -407,4 +600,27 @@ void AssetManager::saveDatabase()
     {
         LT_LOGI("AssetManager", "Asset database saved successfully");
     }
+}
+
+// --------------------------------------------------------
+
+EngineCore::Foundation::JobHandle AssetManager::scheduleRescanJob()
+{
+    using namespace EngineCore::Foundation;
+    
+    auto* jobSystem = GCM(JobSystem);
+    if (!jobSystem)
+    {
+        LT_LOGW("AssetManager", "JobSystem not available, running rescan synchronously");
+        scanAndImportAll();
+        return JobHandle();
+    }
+    
+    LT_LOGI("AssetManager", "Scheduling rescan job");
+    return jobSystem->submit([this]() {
+        LT_LOGI("AssetManager", "Running rescan job");
+        scanAndImportAll();
+        saveDatabase();
+        LT_LOGI("AssetManager", "Rescan job completed");
+    }, "AssetManager::Rescan");
 }

@@ -30,16 +30,13 @@ namespace TimeModule
         if (!m_initialized || m_freq == 0)
             return;
 
-        // Если deltaTime не передан или равен 0, вычисляем автоматически
         if (deltaTime <= 0.0f)
         {
             Uint64 currentCounter = SDL_GetPerformanceCounter();
             Uint64 elapsed = currentCounter - m_prevCounter;
 
-            // Вычисляем дельта-время в секундах
             double rawDeltaTime = static_cast<double>(elapsed) / static_cast<double>(m_freq);
 
-            // Ограничиваем дельта-время для предотвращения больших скачков
             rawDeltaTime = std::clamp(rawDeltaTime, 1e-6, 0.25);
 
             m_deltaTime = static_cast<float>(rawDeltaTime);
@@ -47,20 +44,15 @@ namespace TimeModule
         }
         else
         {
-            // Используем переданное deltaTime
             m_deltaTime = deltaTime;
         }
 
-        // Применяем масштаб времени
         float scaledDeltaTime = m_deltaTime * m_timeScale;
 
-        // Обновляем общее время (используем масштабированное время для elapsed)
         m_elapsedSeconds += static_cast<double>(scaledDeltaTime);
 
-        // Обрабатываем запланированные события из TimeScheduler
         m_scheduler.update(m_elapsedSeconds);
 
-        // Обрабатываем простые запланированные события
         for (size_t i = 0; i < m_scheduled.size();)
         {
             if (m_elapsedSeconds >= m_scheduled[i].invokeTime)
@@ -71,7 +63,6 @@ namespace TimeModule
                 }
                 catch (...)
                 {
-                    // Игнорируем исключения в колбэках
                 }
 
                 m_scheduled.erase(m_scheduled.begin() + static_cast<std::ptrdiff_t>(i));

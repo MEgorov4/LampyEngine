@@ -78,7 +78,6 @@ namespace RenderModule::OpenGL
         glm::vec3 min = center - halfSize;
         glm::vec3 max = center + halfSize;
 
-        // Вершины бокса (8 вершин)
         float vertices[] = {
             min.x, min.y, min.z, // 0
             max.x, min.y, min.z, // 1
@@ -90,13 +89,9 @@ namespace RenderModule::OpenGL
             min.x, max.y, max.z  // 7
         };
 
-        // Индексы для wireframe (12 линий)
         uint32_t indices[] = {
-            // Передняя грань
             0, 1, 1, 2, 2, 3, 3, 0,
-            // Задняя грань
             4, 5, 5, 6, 6, 7, 7, 4,
-            // Соединяющие линии
             0, 4, 1, 5, 2, 6, 3, 7
         };
 
@@ -105,11 +100,9 @@ namespace RenderModule::OpenGL
 
     void OpenGLDebugMesh::setSphereData(const glm::vec3& center, float radius, int segments)
     {
-        // Простая wireframe сфера через линии долготы и широты
         std::vector<float> vertices;
         std::vector<uint32_t> indices;
 
-        // Генерируем вершины сферы
         for (int i = 0; i <= segments; ++i)
         {
             float theta = static_cast<float>(i) * 3.14159265f / static_cast<float>(segments);
@@ -126,7 +119,6 @@ namespace RenderModule::OpenGL
             }
         }
 
-        // Генерируем индексы для линий долготы
         for (int i = 0; i <= segments; ++i)
         {
             for (int j = 0; j < segments; ++j)
@@ -138,7 +130,6 @@ namespace RenderModule::OpenGL
             }
         }
 
-        // Генерируем индексы для линий широты
         for (int i = 0; i < segments; ++i)
         {
             for (int j = 0; j <= segments; ++j)
@@ -220,8 +211,6 @@ namespace RenderModule::OpenGL
     
     void OpenGLDebugMesh::setQuadData()
     {
-        // Простой quad 2×2 в плоскости XZ (Y=0)
-        // Вершины для GL_TRIANGLE_STRIP: (-1,0,-1), (-1,0,1), (1,0,-1), (1,0,1)
         float vertices[] = {
             -1.0f, 0.0f, -1.0f,  // 0
             -1.0f, 0.0f,  1.0f,  // 1

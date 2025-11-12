@@ -41,12 +41,9 @@ bool AssetCooker::writeRuntimeDatabase() const noexcept
 {
     LT_ASSERT_MSG(!m_contentDir.empty(), "Content directory path is empty");
     
-    // Пишем облегченную базу для Runtime в Content/
     nlohmann::json j = nlohmann::json::object();
     m_db.forEach([&](const AssetID& guid, const AssetInfo& info)
     {
-        // Пропускаем записи с пустым GUID при создании runtime базы
-        // (пустые GUID допустимы для опциональных ресурсов, но не нужны в runtime базе)
         if (guid.empty() || info.sourcePath.empty())
             return;
         
@@ -77,7 +74,6 @@ bool AssetCooker::copyLooseFiles() const noexcept
     m_db.forEachByOrigin(AssetOrigin::Project,
                          [&](const AssetID& guid, const AssetInfo& info)
                          {
-                             // Пропускаем записи с пустым GUID
                              if (guid.empty())
                                  return;
                              
@@ -103,7 +99,6 @@ bool AssetCooker::copyLooseFiles() const noexcept
             AssetOrigin::Engine,
             [&](const AssetID& guid, const AssetInfo& info)
             {
-                // Пропускаем записи с пустым GUID
                 if (guid.empty())
                     return;
                 

@@ -57,7 +57,6 @@ void ConsoleSink::write(LogVerbosity level, const std::string& category, const s
     char timeBuf[32];
     std::strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", &tm);
 
-    // ===== Цвет в зависимости от уровня =====
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     WORD color      = 7; // default grey

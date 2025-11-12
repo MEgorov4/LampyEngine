@@ -1,11 +1,13 @@
 #pragma once
 #include "AssetInfo.h"
-#include "Foundation/Profiler/ProfileAllocator.h"
+#include "Foundation/Memory/ResourceAllocator.h"
 
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <shared_mutex>
 #include <unordered_map>
+
+using EngineCore::Foundation::ResourceAllocator;
 
 namespace ResourceModule
 {
@@ -24,7 +26,7 @@ class AssetDatabase
     std::optional<AssetInfo> get(const AssetID& guid) const;
     std::optional<AssetInfo> findBySource(const std::string& srcPath) const;
 
-    std::vector<AssetInfo, ProfileAllocator<AssetInfo>> getByOrigin(AssetOrigin origin) const;
+    std::vector<AssetInfo, ResourceAllocator<AssetInfo>> getByOrigin(AssetOrigin origin) const;
 
     void clear();
     size_t size() const;

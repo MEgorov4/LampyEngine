@@ -29,6 +29,7 @@ void GUIContentBrowser::updateContent()
 
 void GUIContentBrowser::render(float deltaTime)
 {
+    ZoneScopedN("GUIObject::ContentBrowser");
     if (!isVisible())
         return;
 

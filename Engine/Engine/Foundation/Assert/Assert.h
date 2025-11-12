@@ -6,7 +6,6 @@
 
 namespace EngineCore::Foundation
 {
-    /// ќтчЄт о неудачном assert'е.
     void ReportAssert(
         std::string_view expr,
         std::string_view message = "",
@@ -16,7 +15,6 @@ namespace EngineCore::Foundation
 #if defined(LT_DEBUG)
 
     #if defined(_WIN32)
-        // чтобы windows.h не ломал glm и std::min/max
         #ifndef NOMINMAX
         #define NOMINMAX
         #endif
@@ -29,7 +27,6 @@ namespace EngineCore::Foundation
         do { \
             if (!(expr)) { \
                 ::EngineCore::Foundation::ReportAssert(#expr, "", std::source_location::current()); \
-                __debugbreak(); \
             } \
         } while (false)
 
@@ -37,7 +34,6 @@ namespace EngineCore::Foundation
         do { \
             if (!(expr)) { \
                 ::EngineCore::Foundation::ReportAssert(#expr, msg, std::source_location::current()); \
-                __debugbreak(); \
             } \
         } while (false)
 

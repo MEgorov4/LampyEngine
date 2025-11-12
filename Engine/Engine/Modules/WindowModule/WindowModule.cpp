@@ -3,15 +3,15 @@
 #include "Window.h"
 
 #include <Modules/InputModule/InputModule.h>
+#include <SDL3/SDL.h>
 
 namespace WindowModule
 {
 void WindowModule::startup()
 {
     ZoneScopedN("WindowModule::startup");
-    m_window = std::make_unique<Window>(800, 600, "Lampy Engine");
-
     LT_LOGI("WindowModule", "Startup");
+    m_window = std::make_unique<Window>(800, 600, "Lampy Engine");
 }
 
 /// <summary>

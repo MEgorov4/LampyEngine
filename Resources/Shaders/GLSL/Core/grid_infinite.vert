@@ -17,48 +17,57 @@ void main()
     vec3 camPos = position.xyz;
     
     // Quad координаты: inPosition.xz от -1 до 1
-    // Используем их как экранные координаты (NDC)
+    // Используем их как NDC координаты для создания луча из камеры
+    
+    // Получаем NDC координаты из quad
     vec2 ndc = inPosition.xz;
     
-    // Создаем луч из камеры через эту точку экрана
-    // Используем подход из старого grid.vert
+    // Создаем луч в clip space
+    // Используем координаты quad как экранные координаты
     vec4 rayClip = vec4(ndc.x, ndc.y, 1.0, 1.0);
     
-    // Обратная проекция: clip -> view space
-    mat4 invProj = inverse(projection);
-    mat4 invView = inverse(view);
-    
-    vec4 rayEye = invProj * rayClip;
+    // Обратная проекция для получения точки в view space
+    vec4 rayEye = inverse(projection) * rayClip;
     rayEye.xyz /= rayEye.w;
     
-    // Преобразуем в world space
-    vec4 worldRay = invView * vec4(rayEye.xyz, 0.0);
-    worldRay.xyz = normalize(worldRay.xyz);
+    // Направление луча в view space (нормализованное)
+    vec3 rayDirView = normalize(rayEye.xyz);
+    
+    // Преобразуем направление в world space
+    mat4 invView = inverse(view);
+    vec3 rayDir = normalize((invView * vec4(rayDirView, 0.0)).xyz);
     
     // Пересекаем луч с плоскостью Y=0
-    // Уравнение: camPos.y + t * worldRay.y = 0
+    // Уравнение плоскости: y = 0
+    // Уравнение луча: P = camPos + t * rayDir
+    // Для пересечения: camPos.y + t * rayDir.y = 0
+    // t = -camPos.y / rayDir.y
+    
     float t = 0.0;
-    if (abs(worldRay.y) > 1e-6)
+    if (abs(rayDir.y) > 0.0001)
     {
-        t = -camPos.y / worldRay.y;
-        if (t <= 0.0)
+        t = -camPos.y / rayDir.y;
+        
+        // Если t отрицательное, камера под плоскостью - используем большую дистанцию
+        if (t < 0.0)
         {
-            t = 100000.0; // Камера под плоскостью
+            t = 100000.0;
         }
     }
     else
     {
-        t = 100000.0; // Горизонтальный взгляд
+        // Камера смотрит горизонтально (rayDir.y близко к 0)
+        t = 100000.0;
     }
     
     // Вычисляем world position на плоскости Y=0
-    worldPos = camPos + worldRay.xyz * t;
+    worldPos = camPos + rayDir * t;
     
-    // Направление взгляда
+    // Направление взгляда (от точки на плоскости к камере)
     viewDir = normalize(camPos - worldPos);
     
-    // Quad всегда покрывает весь экран
-    // Используем NDC координаты напрямую
-    gl_Position = vec4(ndc, 0.0, 1.0);
+    // Трансформируем в clip space для правильного рендеринга
+    vec4 clipPos = projection * view * vec4(worldPos, 1.0);
+    gl_Position = clipPos;
 }
 

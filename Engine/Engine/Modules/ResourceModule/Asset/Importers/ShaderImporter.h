@@ -37,7 +37,6 @@ namespace ResourceModule
             std::filesystem::path outFile = outDir / sourcePath.filename();
             LT_ASSERT_MSG(!outFile.empty(), "Output file path is empty");
 
-            // просто копируем исходник в Cache/
             std::error_code ec;
             std::filesystem::copy_file(sourcePath, outFile,
                 std::filesystem::copy_options::overwrite_existing, ec);

@@ -35,6 +35,7 @@ GUIOutputLog::~GUIOutputLog()
 
 void GUIOutputLog::render(float deltaTime)
 {
+    ZoneScopedN("GUIObject::OutputLog");
     if (!isVisible())
         return;
 

@@ -9,7 +9,6 @@
 
 namespace RenderModule
 {
-/// Обновление данных камеры в сцене
 class CameraUpdater
 {
 private:
@@ -18,14 +17,11 @@ private:
 public:
     explicit CameraUpdater(RenderContext* context);
     
-    /// Обновить камеру из данных события RenderFrameData
     void updateFromEvent(const Events::ECS::CameraRenderData& cameraData);
     
 private:
-    /// Вычислить aspect ratio из viewport
     float computeAspectRatio() const;
     
-    /// Вычислить векторы направления камеры из quaternion
     void computeCameraVectors(const glm::quat& rotation, 
                                glm::vec3& forward, 
                                glm::vec3& up) const;

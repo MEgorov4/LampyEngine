@@ -39,8 +39,6 @@ void LuaScriptModule::startup()
         reg->registerTypes(*this, m_luaState);
     }
     
-    // Проверяем, что Vec3 зарегистрирован как вызываемый тип
-    // Это гарантирует, что скрипты смогут использовать Vec3() как функцию
     try
     {
         sol::object vec3Obj = m_luaState["Vec3"];
@@ -86,10 +84,6 @@ void LuaScriptModule::shutdown()
     clearDevScripts();
     m_assetImportedSubscription.unsubscribe();
     m_registers.clear();
-    // Не вызываем lua_close() вручную - sol::state сам управляет Lua state
-    // и корректно закроет его в деструкторе, освободив все ссылки перед закрытием
-    // Вызов lua_close() здесь приводит к тому, что деструктор sol::state пытается
-    // освободить уже закрытый Lua state, что вызывает краш
 }
 
 void LuaScriptModule::processCommand(const std::string& command)
@@ -196,8 +190,6 @@ bool LuaScriptModule::loadDevScript(const ResourceModule::AssetID& id, std::stri
         return false;
     }
 
-    // РЕШЕНИЕ: Выполняем скрипт через load + call в глобальном scope
-    // Это гарантирует, что скрипт выполняется в правильном контексте
     sol::load_result loaded = m_luaState.load(script->getSource());
     if (!loaded.valid())
     {
@@ -215,7 +207,6 @@ bool LuaScriptModule::loadDevScript(const ResourceModule::AssetID& id, std::stri
         return false;
     }
 
-    // Получаем возвращаемое значение (таблица exports или nil)
     sol::table exports;
     if (exec.return_count() > 0)
     {
@@ -226,13 +217,11 @@ bool LuaScriptModule::loadDevScript(const ResourceModule::AssetID& id, std::stri
         }
     }
 
-    // Если скрипт не вернул таблицу, создаем пустую таблицу для exports
     if (!exports.valid())
     {
         exports = m_luaState.create_table();
     }
 
-    // Создаем пустой environment для совместимости (не используется, но нужен для структуры)
     sol::environment env(m_luaState, sol::create);
 
     std::string keyStr{key};
@@ -245,9 +234,6 @@ bool LuaScriptModule::loadDevScript(const ResourceModule::AssetID& id, std::stri
     m_devScripts[keyStr] = std::move(instance);
     LT_LOGI("LuaScriptModule", std::format("Loaded dev script: {}", key));
     
-    // Автоматически вызываем функцию onLoad() или start() если она есть
-    // Скрипт выполнен в глобальном scope, поэтому функции имеют прямой доступ ко всем глобальным переменным
-    // Вызываем функцию напрямую через sol2 - она уже создана в правильном контексте
     try
     {
         sol::object onLoadObj = exports.get<sol::object>("onLoad");
@@ -259,7 +245,6 @@ bool LuaScriptModule::loadDevScript(const ResourceModule::AssetID& id, std::stri
         if (onLoadObj.valid() && onLoadObj.get_type() == sol::type::function)
         {
             sol::protected_function func = onLoadObj.as<sol::protected_function>();
-            // Функция создана в глобальном scope, поэтому имеет прямой доступ к Vec3, GetCurrentWorld, etc.
             sol::protected_function_result result = func();
             if (!result.valid())
             {

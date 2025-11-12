@@ -201,7 +201,6 @@ class RotationRenderer : public IComponentRenderer
 
                 if (ImGui::DragFloat3("##RotationComponent", rotation, 5.f))
                 {
-                    // Правильно устанавливаем RotationComponent с обновлением quaternion
                     RotationComponent newRot;
                     newRot.fromEulerDegrees(glm::vec3(rotation[0], rotation[1], rotation[2]));
                     entity.set<RotationComponent>(newRot);
@@ -297,7 +296,6 @@ class MeshComponentRenderer : public IComponentRenderer
                         {
                             meshComponentMut->meshID = assetID;
                             entity.modified<MeshComponent>();
-                            // Эмитим событие для синхронизации с рендер-системой
                             GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                         }
                     }
@@ -345,7 +343,6 @@ class MeshComponentRenderer : public IComponentRenderer
                                 
                                 meshComponentMut->meshID = ResourceModule::AssetID(relativePath.generic_string());
                                 entity.modified<MeshComponent>();
-                                // Эмитим событие для синхронизации с рендер-системой
                                 GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                             }
                         }
@@ -374,7 +371,6 @@ class MeshComponentRenderer : public IComponentRenderer
                         {
                             meshComponentMut->textureID = assetID;
                             entity.modified<MeshComponent>();
-                            // Эмитим событие для синхронизации с рендер-системой
                             GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                         }
                     }
@@ -422,7 +418,6 @@ class MeshComponentRenderer : public IComponentRenderer
                                 
                                 meshComponentMut->textureID = ResourceModule::AssetID(relativePath.generic_string());
                                 entity.modified<MeshComponent>();
-                                // Эмитим событие для синхронизации с рендер-системой
                                 GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                             }
                         }
@@ -451,7 +446,6 @@ class MeshComponentRenderer : public IComponentRenderer
                         {
                             meshComponentMut->vertShaderID = assetID;
                             entity.modified<MeshComponent>();
-                            // Эмитим событие для синхронизации с рендер-системой
                             GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                         }
                     }
@@ -497,7 +491,6 @@ class MeshComponentRenderer : public IComponentRenderer
                                 
                                 meshComponentMut->vertShaderID = ResourceModule::AssetID(relativePath.generic_string());
                                 entity.modified<MeshComponent>();
-                                // Эмитим событие для синхронизации с рендер-системой
                                 GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                             }
                         }
@@ -526,7 +519,6 @@ class MeshComponentRenderer : public IComponentRenderer
                         {
                             meshComponentMut->fragShaderID = assetID;
                             entity.modified<MeshComponent>();
-                            // Эмитим событие для синхронизации с рендер-системой
                             GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                         }
                     }
@@ -573,7 +565,6 @@ class MeshComponentRenderer : public IComponentRenderer
                                 
                                 meshComponentMut->fragShaderID = ResourceModule::AssetID(relativePath.generic_string());
                                 entity.modified<MeshComponent>();
-                                // Эмитим событие для синхронизации с рендер-системой
                                 GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                             }
                         }
@@ -742,7 +733,6 @@ class PointLightRenderer : public IComponentRenderer
                         if (comp)
                         {
                             comp->innerRadius = innerRadius;
-                            // Убеждаемся, что innerRadius не больше outerRadius
                             if (comp->innerRadius > comp->outerRadius)
                                 comp->innerRadius = comp->outerRadius;
                             entity.modified<PointLightComponent>();
@@ -758,7 +748,6 @@ class PointLightRenderer : public IComponentRenderer
                         if (comp)
                         {
                             comp->outerRadius = outerRadius;
-                            // Убеждаемся, что outerRadius не меньше innerRadius
                             if (comp->outerRadius < comp->innerRadius)
                                 comp->outerRadius = comp->innerRadius;
                             entity.modified<PointLightComponent>();

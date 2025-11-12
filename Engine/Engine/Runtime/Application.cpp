@@ -1,5 +1,12 @@
 #include "Application.h"
 
+// Enable global memory tracking for leak detection
+#ifdef TRACY_ENABLE
+#define ENABLE_GLOBAL_MEMORY_TRACKING
+#include <Foundation/Profiler/GlobalMemoryTracking.h>
+#endif
+
+#include <Foundation/Memory/MemorySystem.h>
 
 #include <Editor/Editor.h>
 #include <Modules/AudioModule/AudioModule.h>
@@ -36,7 +43,10 @@ void Application::startupMinor()
     ZoneScopedN("Engine::startupMinor");
 
     LT_LOG(LogVerbosity::Info, "Engine", "StartupMinor");
-    Core::StartupAll();
+
+    // Initialize memory system first, before anything else
+    using namespace EngineCore::Foundation;
+    MemorySystem::startup(1024 * 1024 * 1024);
 
     m_contextLocator = std::make_unique<ContextLocator>(Core::Locator());
     Context::SetLocator(m_contextLocator.get());
@@ -130,6 +140,10 @@ void Application::shutdown()
     LT_LOG(LogVerbosity::Info, "Engine", "Shutdown");
     m_contextLocator->shutdownAll();
     Core::ShutdownAll();
+    
+    // Shutdown memory system last
+    using namespace EngineCore::Foundation;
+    MemorySystem::shutdown();
 }
 
 void Application::engineTick()
@@ -194,7 +208,11 @@ void Application::engineTick()
                 ZoneScopedN("Tick/ContextRender");
                 render();
             }
+            
             m_windowModule->getWindow()->swapWindow();
+
+            // Reset frame allocator at end of frame
+            MemorySystem::resetFrameAllocator();
 
             TracyMessage("EFrame", 6);
         }

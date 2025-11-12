@@ -18,18 +18,13 @@ void CameraUpdater::updateFromEvent(const Events::ECS::CameraRenderData& cameraD
     auto& scene = m_context->scene();
     const float aspect = computeAspectRatio();
     
-    // Конвертируем данные камеры
     const glm::vec3 camPos(cameraData.posX, cameraData.posY, cameraData.posZ);
     const glm::quat camRot(cameraData.rotQW, cameraData.rotQX, cameraData.rotQY, cameraData.rotQZ);
     const glm::quat normalizedRot = glm::normalize(camRot);
     
-    // Вычисляем векторы направления
     glm::vec3 forward, up;
     computeCameraVectors(normalizedRot, forward, up);
     
-    // Обновляем данные камеры
-    // position хранится в world-space (без преобразований через view matrix)
-    // Это важно для корректных вычислений в PBR шейдере, где все векторы (V, L, N) должны быть в world-space
     scene.camera.position = glm::vec4(camPos, 1.f);
     scene.camera.view = glm::lookAt(camPos, camPos + forward, up);
     scene.camera.projection = glm::perspective(

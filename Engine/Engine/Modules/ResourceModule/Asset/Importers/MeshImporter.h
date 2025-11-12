@@ -1,10 +1,12 @@
 #pragma once
 #include "../IAssetImporter.h"
-#include "Foundation/Profiler/ProfileAllocator.h"
+#include "Foundation/Memory/ResourceAllocator.h"
 #include <Foundation/Assert/Assert.h>
 
 #include <fstream>
 #include <tiny_obj_loader.h>
+
+using EngineCore::Foundation::ResourceAllocator;
 
 namespace ResourceModule
 {
@@ -63,10 +65,10 @@ class MeshImporter final : public IAssetImporter
         };
 
         std::unordered_map<VertexKey, uint32_t, HashKey> vertexMap;
-        std::vector<float, ProfileAllocator<float>> vertices;
-        std::vector<float, ProfileAllocator<float>> normals;
-        std::vector<float, ProfileAllocator<float>> texcoords;
-        std::vector<uint32_t, ProfileAllocator<uint32_t>> indices;
+        std::vector<float, ResourceAllocator<float>> vertices;
+        std::vector<float, ResourceAllocator<float>> normals;
+        std::vector<float, ResourceAllocator<float>> texcoords;
+        std::vector<uint32_t, ResourceAllocator<uint32_t>> indices;
 
         for (const auto& shape : shapes)
         {
@@ -118,7 +120,6 @@ class MeshImporter final : public IAssetImporter
         LT_ASSERT_MSG(normals.size() % 3 == 0, "Normal count is not multiple of 3");
         LT_ASSERT_MSG(texcoords.size() % 2 == 0, "Texture coordinate count is not multiple of 2");
 
-        // ---- Запись в meshbin ----
         std::filesystem::path outDir = cacheRoot / "Meshes";
         std::filesystem::create_directories(outDir);
         LT_ASSERT_MSG(std::filesystem::exists(outDir), "Failed to create output directory");

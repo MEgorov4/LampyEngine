@@ -1,10 +1,12 @@
 #pragma once
 #include "EntityWorld.h"
-#include "Foundation/Profiler/ProfileAllocator.h"
+#include "Foundation/Memory/ResourceAllocator.h"
 
 #include <memory>
 #include <string>
 #include <unordered_map>
+
+using EngineCore::Foundation::ResourceAllocator;
 
 namespace ECSModule
 {
@@ -29,7 +31,7 @@ class WorldManager
     void tickActive(float dt);
     void clear();
 
-    std::vector<std::string, ProfileAllocator<std::string>> getLoadedWorlds() const;
+    std::vector<std::string, ResourceAllocator<std::string>> getLoadedWorlds() const;
 
   private:
     std::unordered_map<std::string, WorldPtr> m_worlds;

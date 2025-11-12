@@ -30,7 +30,6 @@ struct ComponentChanged
     std::string componentName;
 };
 
-/// Данные трансформации объекта для рендеринга
 struct ObjectTransformData
 {
     uint64_t entityId;
@@ -39,7 +38,6 @@ struct ObjectTransformData
     float scaleX, scaleY, scaleZ;
 };
 
-/// Данные камеры для рендеринга
 struct CameraRenderData
 {
     float posX, posY, posZ;
@@ -50,8 +48,6 @@ struct CameraRenderData
     float farClip;
 };
 
-/// Событие обновления данных для рендеринга кадра
-/// Эмитится каждый кадр ECSModule с данными для рендеринга
 struct RenderFrameData
 {
     std::vector<ObjectTransformData> objectsTransforms;

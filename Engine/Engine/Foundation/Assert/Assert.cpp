@@ -32,16 +32,10 @@ void ReportAssert(std::string_view expr, std::string_view message,
         loc.line(),
         message.empty() ? "(none)" : message.data());
 
-    // Запись в движковый лог
     LTLogger::Instance().log(LogVerbosity::Error, formatted, "Assert");
 
 #if defined(_WIN32)
     OutputDebugStringA(formatted.c_str());
 #endif
-
-    std::cerr << formatted << std::endl;
-
-    // Просто стоп в отладчике — без MessageBox
-    __debugbreak();
 }
 } // namespace EngineCore::Foundation

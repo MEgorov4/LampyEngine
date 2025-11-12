@@ -37,7 +37,6 @@ void JobSystem::startup()
     {
         m_workers[i].thread = std::thread([this, i]() {
 #ifdef TRACY_ENABLE
-            // Name worker thread in Tracy
             char name[64];
             std::snprintf(name, sizeof(name), "JobWorker %zu", i);
             tracy::SetThreadName(name);
@@ -71,17 +70,29 @@ void JobSystem::shutdown()
             w.thread.join();
     }
 
+    m_workers.clear();
+
     LT_LOGI("JobSystem", "Shutdown complete");
 }
 
 JobHandle JobSystem::submit(std::function<void()> job)
 {
+    return submit(std::move(job), nullptr);
+}
+
+JobHandle JobSystem::submit(std::function<void()> job, const char* jobName)
+{
     JobHandle handle;
-    submit(std::move(job), handle);
-    return std::move(handle);  // Explicit move to avoid copy attempt
+    submit(std::move(job), handle, jobName);
+    return handle;
 }
 
 void JobSystem::submit(std::function<void()> job, JobHandle& handle)
+{
+    submit(std::move(job), handle, nullptr);
+}
+
+void JobSystem::submit(std::function<void()> job, JobHandle& handle, const char* jobName)
 {
     if (m_workers.empty())
     {
@@ -90,7 +101,12 @@ void JobSystem::submit(std::function<void()> job, JobHandle& handle)
         return;
     }
 
-    handle.counter.fetch_add(1, std::memory_order_relaxed);
+    if (!handle.counter)
+    {
+        handle.counter = std::make_shared<std::atomic<uint32_t>>(0);
+    }
+    
+    handle.counter->fetch_add(1, std::memory_order_relaxed);
 
     // Round-robin distribution
     static std::atomic<size_t> next{0};
@@ -98,13 +114,19 @@ void JobSystem::submit(std::function<void()> job, JobHandle& handle)
 
     {
         std::lock_guard lock(m_workers[idx].queueMutex);
-        m_workers[idx].queue.emplace_back([job = std::move(job), &handle]() {
+        
+        // Capture shared_ptr to counter to avoid lifetime issues with handle
+        std::shared_ptr<std::atomic<uint32_t>> counterPtr = handle.counter;
+        m_workers[idx].queue.emplace_back([job = std::move(job), counterPtr]() {
 #ifdef TRACY_ENABLE
             ZoneScopedN("JobExecute");
 #endif
-            job();
-
-            handle.counter.fetch_sub(1, std::memory_order_release);
+            try {
+                job();
+            } catch (...) {
+                // Swallow exceptions to prevent crashes
+            }
+            counterPtr->fetch_sub(1, std::memory_order_release);
         });
     }
 
@@ -118,39 +140,50 @@ void JobSystem::wait(const JobHandle& handle)
 
 void JobSystem::workerLoop(size_t index)
 {
-#ifdef TRACY_ENABLE
-    ZoneScopedN("JobSystem::workerLoop");
-#endif
-
     while (true)
     {
+#ifdef TRACY_ENABLE
+        FrameMark;
+#endif
+
         std::function<void()> job;
+        bool hasJob = false;
 
         {
             std::unique_lock lock(m_workers[index].queueMutex);
-
+            
             if (!m_workers[index].queue.empty())
             {
                 job = std::move(m_workers[index].queue.front());
                 m_workers[index].queue.pop_front();
-            }
-            else if (!stealJob(index, job))
-            {
-                m_cv.wait_for(lock, std::chrono::milliseconds(2));
-
-                if (!m_running && m_workers[index].queue.empty())
-                    return;
-
-                continue;
+                hasJob = true;
             }
         }
 
-        if (job)
+        if (!hasJob)
         {
-#ifdef TRACY_ENABLE
-            ZoneScopedN("JobSystem::Invoke");
-#endif
+            if (stealJob(index, job))
+            {
+                hasJob = true;
+            }
+        }
+
+        if (hasJob && job)
+        {
             job();
+            continue;
+        }
+
+        {
+            std::unique_lock lock(m_workers[index].queueMutex);
+            
+            if (!m_workers[index].queue.empty())
+                continue;
+
+            m_cv.wait_for(lock, std::chrono::milliseconds(2));
+
+            if (!m_running && m_workers[index].queue.empty())
+                return;
         }
     }
 }
@@ -170,13 +203,15 @@ bool JobSystem::stealJob(size_t thiefIndex, std::function<void()>& job)
 
         auto& q = m_workers[victim];
 
-        std::lock_guard lock(q.queueMutex);
-
-        if (!q.queue.empty())
         {
-            job = std::move(q.queue.back());
-            q.queue.pop_back();
-            return true;
+            std::lock_guard lock(q.queueMutex);
+
+            if (!q.queue.empty())
+            {
+                job = std::move(q.queue.back());
+                q.queue.pop_back();
+                return true;
+            }
         }
     }
 

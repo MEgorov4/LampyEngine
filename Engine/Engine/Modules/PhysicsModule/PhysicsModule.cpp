@@ -67,7 +67,6 @@ void PhysicsModule::registrateBodies()
     //	{
     //		if (!rigidbody.body.has_value())
     //		{
-    //			const glm::vec3& AABB = mesh.meshResource.value()->getMeshData().aabbMax; // TODO: должнен быть aabbSize
     //			btCollisionShape* shape = new btBoxShape(btVector3(AABB.x, AABB.z, AABB.y) * 0.5f);
 
     //			btTransform startTransform;

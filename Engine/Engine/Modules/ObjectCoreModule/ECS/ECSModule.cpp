@@ -182,7 +182,6 @@ void ECSModule::ecsTick(float dt)
     if (m_inSimulate)
         m_worldManager->tickActive(dt);
 
-    // Эмитим данные для рендеринга каждый кадр через EventBus
     emitRenderFrameData();
 }
 
@@ -212,7 +211,6 @@ void ECSModule::emitRenderFrameData()
     auto &world = worldPtr->get();
     Events::ECS::RenderFrameData frameData;
 
-    // Собираем данные камеры
     auto qCam = world.query<PositionComponent, RotationComponent, CameraComponent>();
     qCam.each(
         [&](flecs::entity, const PositionComponent &pos, const RotationComponent &rot, const CameraComponent &cam) {
@@ -222,8 +220,6 @@ void ECSModule::emitRenderFrameData()
             frameData.camera.rotX = rot.x;
             frameData.camera.rotY = rot.y;
             frameData.camera.rotZ = rot.z;
-            // Используем toQuat() для получения правильного quaternion (обрабатывает случай, когда quat не
-            // инициализирован)
             const glm::quat quat = rot.toQuat();
             frameData.camera.rotQX = quat.x;
             frameData.camera.rotQY = quat.y;
@@ -235,7 +231,6 @@ void ECSModule::emitRenderFrameData()
             frameData.camera.farClip = cam.farClip;
         });
 
-    // Собираем данные трансформаций объектов
     auto qMesh = world.query<PositionComponent, RotationComponent, ScaleComponent, MeshComponent>();
     qMesh.each([&](flecs::entity e, const PositionComponent &pos, const RotationComponent &rot,
                    const ScaleComponent &scale, const MeshComponent &) {
@@ -264,7 +259,6 @@ void ECSModule::emitRenderFrameData()
         frameData.objectsTransforms.push_back(transform);
     });
 
-    // Эмитим событие через EventBus
     GCEB().emit(frameData);
 }
 

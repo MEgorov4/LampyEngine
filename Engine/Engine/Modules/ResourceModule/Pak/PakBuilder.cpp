@@ -1,7 +1,6 @@
 // PakBuilder.cpp
 #include "PakBuilder.h"
 
-#include "Foundation/Profiler/ProfileAllocator.h"
 #include "PakEntry.h"
 
 #include <EngineMinimal.h>
@@ -9,6 +8,7 @@
 #include <nlohmann/json.hpp>
 
 using namespace ResourceModule;
+using EngineCore::Foundation::ResourceAllocator;
 
 bool PakBuilder::BuildPak(const AssetDatabase& db, const std::filesystem::path& cacheDir,
                           const std::filesystem::path& outPakPath)
@@ -25,11 +25,9 @@ bool PakBuilder::BuildPak(const AssetDatabase& db, const std::filesystem::path& 
         return false;
     }
 
-    // Резерв под заголовок
     ofs.write(reinterpret_cast<const char*>(&header), sizeof(header));
     uint64_t offset = sizeof(PakHeader);
 
-    // Пишем ассеты подряд, формируем индекс
     db.forEach(
         [&](const AssetID& guid, const AssetInfo& info)
         {
@@ -48,7 +46,7 @@ bool PakBuilder::BuildPak(const AssetDatabase& db, const std::filesystem::path& 
             const uint64_t size = static_cast<uint64_t>(in.tellg());
             in.seekg(0, std::ios::beg);
 
-            std::vector<char, ProfileAllocator<char>> buffer(size);
+            std::vector<char, ResourceAllocator<char>> buffer(size);
             if (size)
                 in.read(buffer.data(), size);
 
@@ -58,20 +56,18 @@ bool PakBuilder::BuildPak(const AssetDatabase& db, const std::filesystem::path& 
             e["offset"] = offset;
             e["size"]   = size;
             e["type"]   = static_cast<int>(info.type);
-            e["path"]   = imported; // опционально (для отладки)
+            e["path"]   = imported;
 
             indexJson[guid.str()] = std::move(e);
             offset += size;
         });
 
-    // Пишем JSON-индекс в конец
     const std::string indexStr = indexJson.dump();
     const uint64_t indexOffset = offset;
     const uint64_t indexSize   = static_cast<uint64_t>(indexStr.size());
 
     ofs.write(indexStr.data(), indexSize);
 
-    // Финализируем заголовок
     PakHeader finalHeader{};
     finalHeader.indexOffset = indexOffset;
     finalHeader.indexSize   = indexSize;

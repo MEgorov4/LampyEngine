@@ -17,11 +17,11 @@ const float majorStep = 10.0;
 const float fadeDistance = 200.0;
 const float lineThickness = 1.5;
 
-// Цвета (увеличиваем яркость для видимости)
-const vec3 colorMinor = vec3(0.8); // Очень яркие минорные линии
-const vec3 colorMajor = vec3(1.0); // Белые мажорные линии
-const vec3 colorAxisX = vec3(1.0, 0.5, 0.5); // Ярко-красная ось X
-const vec3 colorAxisZ = vec3(0.5, 0.5, 1.0); // Ярко-синяя ось Z
+// Цвета
+const vec3 colorMinor = vec3(0.25);
+const vec3 colorMajor = vec3(0.45);
+const vec3 colorAxisX = vec3(1.0, 0.2, 0.2);
+const vec3 colorAxisZ = vec3(0.2, 0.4, 1.0);
 
 // Функция для вычисления антиалиасинга линий сетки
 float gridFactor(vec2 coord, float step, float thickness)
@@ -33,17 +33,16 @@ float gridFactor(vec2 coord, float step, float thickness)
 
 void main()
 {
-    // ПРОСТОЙ ТЕСТ: рисуем яркий зеленый цвет для проверки видимости quad
-    // Если этот цвет виден, значит quad рендерится и проблема в вычислениях сетки
-    FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Ярко-зеленый
+    // Простой тест - рисуем красный цвет чтобы увидеть, рендерится ли quad вообще
+    FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Красный для максимальной видимости
     
-    // Если зеленый виден, раскомментируйте код ниже для сетки
+    // Если это работает, раскомментируем код сетки ниже
     /*
     float dist = length(position.xyz - worldPos);
     
-    // Динамический шаг сетки в зависимости от расстояния
-    float step = baseStep * pow(2.0, floor(log2(max(dist * 0.1, 1.0))));
-    float majorStepScaled = majorStep * step;
+    // Упрощенный шаг для отладки - фиксированный размер
+    float step = baseStep;
+    float majorStepScaled = majorStep;
     
     // Anti-aliased grid lines
     float minor = gridFactor(worldPos.xz, step, lineThickness);
@@ -51,23 +50,18 @@ void main()
     
     vec3 color = mix(colorMinor, colorMajor, major);
     
-    // Оси X и Z
+    // Оси X и Z (более широкие для видимости)
     if (abs(worldPos.x) < step * 2.0) color = colorAxisZ;
     if (abs(worldPos.z) < step * 2.0) color = colorAxisX;
     
-    // Убираем fade полностью для максимальной видимости
+    // Упрощенный fade - убираем для отладки
     float fade = 1.0;
     
-    // Минимальный fade только на очень больших дистанциях
-    if (dist > fadeDistance * 3.0)
-    {
-        fade = 0.8;
-    }
+    // Яркие цвета для отладки
+    color *= 3.0;
     
-    // Максимальная яркость
-    color *= 2.0;
-    
-    FragColor = vec4(color * fade, 1.0);
+    // Полная непрозрачность
+    FragColor = vec4(color, 1.0);
     */
 }
 

@@ -1,16 +1,18 @@
 #pragma once
 #include "../Abstract/ITexture.h"
-#include "Foundation/Profiler/ProfileAllocator.h"
+#include "Foundation/Memory/ResourceAllocator.h"
 #include "RenderGraphTypes.h"
 
 #include <unordered_map>
 #include <vector>
 
+using EngineCore::Foundation::ResourceAllocator;
+
 namespace RenderModule
 {
 class RenderGraph
 {
-    std::vector<RenderGraphPass, ProfileAllocator<RenderGraphPass>> m_passes;
+    std::vector<RenderGraphPass, ResourceAllocator<RenderGraphPass>> m_passes;
     std::unordered_map<std::string, RenderGraphResource> m_resources;
 
   public:
@@ -42,11 +44,11 @@ class RenderGraph
             ZoneScoped;
             ZoneText(pass.name.c_str(), pass.name.size());
             
-            std::vector<RenderGraphResource, ProfileAllocator<RenderGraphResource>> inputs;
+            std::vector<RenderGraphResource, ResourceAllocator<RenderGraphResource>> inputs;
             for (auto& name : pass.reads)
                 inputs.push_back(m_resources.at(name));
 
-            std::vector<RenderGraphResource, ProfileAllocator<RenderGraphResource>> outputs;
+            std::vector<RenderGraphResource, ResourceAllocator<RenderGraphResource>> outputs;
             for (auto& name : pass.writes)
                 outputs.push_back(m_resources.at(name));
 

@@ -1,12 +1,11 @@
 #include "AssetDatabase.h"
 #include <Foundation/Assert/Assert.h>
 
-#include "Foundation/Profiler/ProfileAllocator.h"
-
 #include <filesystem>
 #include <fstream>
 
 using namespace ResourceModule;
+using EngineCore::Foundation::ResourceAllocator;
 
 static std::string NormalizePath(std::string path)
 {
@@ -26,10 +25,10 @@ static std::string NormalizePath(std::string path)
     return path;
 }
 
-std::vector<AssetInfo, ProfileAllocator<AssetInfo>> AssetDatabase::getByOrigin(AssetOrigin origin) const
+std::vector<AssetInfo, ResourceAllocator<AssetInfo>> AssetDatabase::getByOrigin(AssetOrigin origin) const
 {
     std::shared_lock lock(m_mutex);
-    std::vector<AssetInfo, ProfileAllocator<AssetInfo>> result;
+    std::vector<AssetInfo, ResourceAllocator<AssetInfo>> result;
     result.reserve(m_assets.size());
     for (const auto& [_, info] : m_assets)
         if (info.origin == origin)
@@ -73,8 +72,6 @@ bool AssetDatabase::load(const std::string& path)
             continue;
         }
         
-        // После загрузки из JSON GUID должен быть валидным для записей в базе
-        // sourcePath также должен быть не пустым для валидных ассетов
         if (info.guid.empty() || info.sourcePath.empty())
         {
             LT_LOGW("AssetDatabase", "Skipping invalid asset entry with empty GUID or source path");
@@ -96,8 +93,6 @@ bool AssetDatabase::save(const std::string& path) const
         std::shared_lock lock(m_mutex);
         for (const auto& [guid, info] : m_assets)
         {
-            // При сохранении пропускаем записи с пустым GUID или sourcePath
-            // (они не должны быть в базе, но на всякий случай проверяем)
             if (guid.empty() || info.sourcePath.empty())
             {
                 LT_LOGW("AssetDatabase", "Skipping invalid asset with empty GUID or source path when saving");
@@ -107,7 +102,6 @@ bool AssetDatabase::save(const std::string& path) const
         }
     }
 
-    // Создаём директорию для файла базы данных
     std::filesystem::path dbPath(path);
     std::filesystem::create_directories(dbPath.parent_path());
 
@@ -124,15 +118,12 @@ bool AssetDatabase::save(const std::string& path) const
 
 void AssetDatabase::upsert(const AssetInfo& info)
 {
-    // Пустой GUID недопустим при добавлении ассета в базу (ассет должен иметь валидный GUID)
-    // sourcePath также должен быть не пустым для валидных ассетов
     LT_ASSERT_MSG(!info.guid.empty(), "Cannot upsert asset with empty GUID");
     LT_ASSERT_MSG(!info.sourcePath.empty(), "Cannot upsert asset with empty source path");
     
     std::unique_lock lock(m_mutex);
     m_assets[info.guid] = info;
     
-    // Обновляем индекс source->guid только если sourcePath не пустой
     if (!info.sourcePath.empty())
     {
         m_sourceToGuid[NormalizePath(info.sourcePath)] = info.guid;
@@ -141,7 +132,6 @@ void AssetDatabase::upsert(const AssetInfo& info)
 
 bool AssetDatabase::remove(const AssetID& guid)
 {
-    // Пустой GUID допустим - просто возвращаем false
     if (guid.empty())
         return false;
     
@@ -150,7 +140,6 @@ bool AssetDatabase::remove(const AssetID& guid)
     if (it == m_assets.end())
         return false;
     
-    // Удаляем из индекса source->guid только если sourcePath не пустой
     if (!it->second.sourcePath.empty())
     {
         m_sourceToGuid.erase(NormalizePath(it->second.sourcePath));
@@ -161,7 +150,6 @@ bool AssetDatabase::remove(const AssetID& guid)
 
 std::optional<AssetInfo> AssetDatabase::get(const AssetID& guid) const
 {
-    // Пустой AssetID допустим для опциональных ресурсов - возвращаем nullopt
     if (guid.empty())
         return std::nullopt;
     

@@ -19,6 +19,16 @@ namespace ResourceModule
 
         const ShaderInfo& getShaderInfo() const noexcept { return m_info; }
 
+        bool isValid() const noexcept
+        {
+            return m_info.totalSize > 0 && (!m_info.vertexText.empty() || !m_info.fragmentText.empty());
+        }
+
+        bool isEmpty() const noexcept
+        {
+            return m_info.vertexText.empty() && m_info.fragmentText.empty();
+        }
+
     private:
         ShaderInfo m_info;
     };

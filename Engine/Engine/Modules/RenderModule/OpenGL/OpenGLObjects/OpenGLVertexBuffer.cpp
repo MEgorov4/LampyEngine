@@ -1,11 +1,14 @@
 #include "OpenGLVertexBuffer.h"
 
 #include "../../../ResourceModule/Mesh.h"
+#include "Foundation/Memory/ResourceAllocator.h"
+
+using EngineCore::Foundation::ResourceAllocator;
 
 namespace RenderModule::OpenGL
 {
 OpenGLVertexBuffer::OpenGLVertexBuffer(
-    const std::vector<ResourceModule::MeshVertex, ProfileAllocator<ResourceModule::MeshVertex>> &vertices)
+    const std::vector<ResourceModule::MeshVertex, ResourceAllocator<ResourceModule::MeshVertex>> &vertices)
 {
     LT_LOGI("RenderModule::OpenGLVertexBuffer", "Construct");
     m_vertexCount = vertices.size();

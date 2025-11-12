@@ -9,23 +9,19 @@
 
 namespace RenderModule
 {
-/// Состояние сущности в рендер-листе
 struct EntityRenderState
 {
     uint64_t entityId = 0;
     bool isValid = false;
 
-    // Компоненты, необходимые для рендеринга
     PositionComponent position{};
     RotationComponent rotation{};
     ScaleComponent scale{};
     MeshComponent mesh{};
-    MaterialComponent material{}; // Material для PBR
+    MaterialComponent material{};
 
-    // Рендер-объект, созданный из компонентов
     std::unique_ptr<RenderObject> renderObject;
 
-    // Проверка, изменились ли компоненты трансформации
     bool hasTransformChanged(const PositionComponent &pos, const RotationComponent &rot,
                              const ScaleComponent &scl) const
     {
@@ -35,14 +31,12 @@ struct EntityRenderState
                scale.z != scl.z;
     }
 
-    // Проверка, изменился ли mesh
     bool hasMeshChanged(const MeshComponent &m) const
     {
         return mesh.meshID != m.meshID || mesh.vertShaderID != m.vertShaderID || mesh.fragShaderID != m.fragShaderID ||
                mesh.textureID != m.textureID;
     }
 
-    // Обновить матрицу модели
     void updateModelMatrix()
     {
         if (!renderObject)
@@ -58,7 +52,6 @@ struct EntityRenderState
     }
 };
 
-/// Дифф изменения для рендер-листа
 struct RenderDiff
 {
     struct EntityChange
@@ -86,19 +79,15 @@ struct RenderDiff
     }
 };
 
-/// Трекер состояния сущностей для рендеринга
-/// Отслеживает изменения и строит diff для инкрементальных обновлений
 class RenderEntityTracker
 {
   private:
-    // Карта состояний сущностей по их ID
     std::unordered_map<uint64_t, EntityRenderState> m_entityStates;
 
   public:
     RenderEntityTracker() = default;
     ~RenderEntityTracker() = default;
 
-    /// Получить состояние сущности (создать если не существует)
     EntityRenderState &getOrCreateState(uint64_t entityId)
     {
         auto it = m_entityStates.find(entityId);
@@ -111,7 +100,6 @@ class RenderEntityTracker
         return it->second;
     }
 
-    /// Получить состояние сущности (nullptr если не существует)
     EntityRenderState *getState(uint64_t entityId)
     {
         auto it = m_entityStates.find(entityId);
@@ -120,19 +108,16 @@ class RenderEntityTracker
         return &it->second;
     }
 
-    /// Удалить состояние сущности
     void removeState(uint64_t entityId)
     {
         m_entityStates.erase(entityId);
     }
 
-    /// Очистить все состояния
     void clear()
     {
         m_entityStates.clear();
     }
 
-    /// Получить все состояния
     const std::unordered_map<uint64_t, EntityRenderState> &getStates() const
     {
         return m_entityStates;

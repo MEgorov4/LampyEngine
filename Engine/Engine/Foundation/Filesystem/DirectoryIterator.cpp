@@ -92,8 +92,7 @@ bool DirectoryIterator::isCurrentDirChanged()
     if (!m_dirLastEditTime)
     {
         m_dirLastEditTime = last;
-        return true; // первый вызов — считаем "изменением", чтобы инициировать
-                     // обновление UI
+        return true;
     }
 
     if (*m_dirLastEditTime != last || *m_dirLastEditTime == 0)

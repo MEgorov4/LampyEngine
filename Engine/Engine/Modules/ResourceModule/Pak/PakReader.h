@@ -2,6 +2,7 @@
 #include "../Asset/AssetID.h"
 #include "PakEntry.h"
 #include "PakHeader.h"
+#include "Foundation/Memory/ResourceAllocator.h"
 
 #include <EngineMinimal.h>
 #include <fstream>
@@ -10,6 +11,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+using EngineCore::Foundation::ResourceAllocator;
 
 namespace ResourceModule
 {
@@ -22,13 +25,10 @@ class PakReader
         return m_stream.is_open();
     }
 
-    /// Читает бинарные данные ассета по GUID
-    std::optional<std::vector<uint8_t, ProfileAllocator<uint8_t>>> readAsset(const AssetID& guid);
+    std::optional<std::vector<uint8_t, ResourceAllocator<uint8_t>>> readAsset(const AssetID& guid);
 
-    /// Проверяет наличие ассета
     bool exists(const AssetID& guid) const noexcept;
 
-    /// Возвращает список всех ассетов
     std::vector<AssetID> listAll() const;
 
   private:

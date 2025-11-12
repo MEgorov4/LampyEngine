@@ -16,19 +16,16 @@ class DirectoryIterator final
   public:
     DirectoryIterator(const std::string &rootPath, const std::string &currentPath = {});
 
-    // Навигация
     FsResult stepIntoRoot();
     FsResult stepIntoParent();
     FsResult stepIntoFolder(const std::string &folderName);
 
-    // Доступ к состоянию
     std::string currentDirName() const;
     std::string currentDir() const;
     std::string currentDirAppend(const std::string &appendName) const;
     std::vector<std::string, ProfileAllocator<std::string>> list(const SearchFilter &filter) const;
 
     bool isRoot() const;
-    bool isCurrentDirChanged(); // true при первом вызове или при изменении
-                                // времени папки
+    bool isCurrentDirChanged();
 };
 } // namespace EngineCore::Foundation

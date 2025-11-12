@@ -13,7 +13,9 @@
 #include "../RenderContext.h"
 #include "../RenderLocator.h"
 #include "RenderGraphTypes.h"
-#include "Foundation/Profiler/ProfileAllocator.h"
+#include "Foundation/Memory/ResourceAllocator.h"
+
+using EngineCore::Foundation::ResourceAllocator;
 
 #ifdef TRACY_ENABLE
 #include <tracy/Tracy.hpp>
@@ -50,8 +52,8 @@ using namespace OpenGL;
 // ---------------------------------------------------------
 // 1️⃣ Shadow Pass
 // ---------------------------------------------------------
-inline void ShadowPass(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
-                       std::vector<Resource, ProfileAllocator<Resource>> &outputs)
+inline void ShadowPass(const std::vector<Resource, ResourceAllocator<Resource>> &inputs,
+                       std::vector<Resource, ResourceAllocator<Resource>> &outputs)
 {
     ZoneScopedN("RenderNodes::ShadowPass");
     LT_TRACY_GPU_ZONE("ShadowPass");
@@ -114,8 +116,8 @@ inline void ShadowPass(const std::vector<Resource, ProfileAllocator<Resource>> &
 // LightPass удалён - всё освещение теперь выполняется в PBRPass
 // Оставлено закомментированным для справки
 /*
-inline void LightPass(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
-                      std::vector<Resource, ProfileAllocator<Resource>> &outputs)
+inline void LightPass(const std::vector<Resource, ResourceAllocator<Resource>> &inputs,
+                      std::vector<Resource, ResourceAllocator<Resource>> &outputs)
 {
     ZoneScopedN("RenderNodes::LightPass");
     LT_TRACY_GPU_ZONE("LightPass");
@@ -218,8 +220,8 @@ inline void LightPass(const std::vector<Resource, ProfileAllocator<Resource>> &i
 // Глобальная переменная для хранения framebuffer из PBRPass (для копирования depth)
 static std::shared_ptr<IFramebuffer> g_pbrPassFB = nullptr;
 
-inline void PBRPass(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
-                    std::vector<Resource, ProfileAllocator<Resource>> &outputs)
+inline void PBRPass(const std::vector<Resource, ResourceAllocator<Resource>> &inputs,
+                    std::vector<Resource, ResourceAllocator<Resource>> &outputs)
 {
     ZoneScopedN("RenderNodes::PBRPass");
     LT_TRACY_GPU_ZONE("PBRPass");
@@ -395,9 +397,9 @@ inline void PBRPass(const std::vector<Resource, ProfileAllocator<Resource>> &inp
             float transformedLen = glm::length(transformedNormal);
             // Allow some tolerance for non-uniform scales (normal may not be exactly unit after transformation)
             // But it should not be zero or extremely large
-            if (transformedLen < 0.001f || transformedLen > 1000.0f) {
-                LT_LOGW("PBRPass", "normalMatrix produces extremely scaled normals (length: {}) - check model matrix scaling", transformedLen);
-            }
+            //if (transformedLen < 0.001f || transformedLen > 1000.0f) {
+            //    LT_LOGW("PBRPass", "normalMatrix produces extremely scaled normals (length: {})" + std::to_string(trasformedLen) + "- check model matrix scaling");
+            //}
         }
         #endif
         
@@ -505,8 +507,8 @@ inline void PBRPass(const std::vector<Resource, ProfileAllocator<Resource>> &inp
 // Глобальная переменная для хранения framebuffer из TexturePass (для копирования depth)
 static std::shared_ptr<IFramebuffer> g_texturePassFB = nullptr;
 
-inline void TexturePass(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
-                        std::vector<Resource, ProfileAllocator<Resource>> &outputs)
+inline void TexturePass(const std::vector<Resource, ResourceAllocator<Resource>> &inputs,
+                        std::vector<Resource, ResourceAllocator<Resource>> &outputs)
 {
     ZoneScopedN("RenderNodes::TexturePass");
     LT_TRACY_GPU_ZONE("TexturePass");
@@ -781,8 +783,8 @@ inline void TexturePass(const std::vector<Resource, ProfileAllocator<Resource>> 
 // ---------------------------------------------------------
 // 4️⃣ Final Pass
 // ---------------------------------------------------------
-inline void FinalCompose(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
-                         std::vector<Resource, ProfileAllocator<Resource>> &outputs)
+inline void FinalCompose(const std::vector<Resource, ResourceAllocator<Resource>> &inputs,
+                         std::vector<Resource, ResourceAllocator<Resource>> &outputs)
 {
     ZoneScopedN("RenderNodes::FinalCompose");
     LT_TRACY_GPU_ZONE("FinalCompose");
@@ -847,8 +849,8 @@ inline void FinalCompose(const std::vector<Resource, ProfileAllocator<Resource>>
 // ---------------------------------------------------------
 // 5️⃣ Debug Pass
 // ---------------------------------------------------------
-inline void DebugPass(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
-                      std::vector<Resource, ProfileAllocator<Resource>> &outputs)
+inline void DebugPass(const std::vector<Resource, ResourceAllocator<Resource>> &inputs,
+                      std::vector<Resource, ResourceAllocator<Resource>> &outputs)
 {
     ZoneScopedN("RenderNodes::DebugPass");
     LT_TRACY_GPU_ZONE("DebugPass");
@@ -1040,8 +1042,8 @@ inline void DebugPass(const std::vector<Resource, ProfileAllocator<Resource>> &i
 // ---------------------------------------------------------
 // 6️⃣ Grid Pass
 // ---------------------------------------------------------
-inline void GridPass(const std::vector<Resource, ProfileAllocator<Resource>> &inputs,
-                     std::vector<Resource, ProfileAllocator<Resource>> &outputs)
+inline void GridPass(const std::vector<Resource, ResourceAllocator<Resource>> &inputs,
+                     std::vector<Resource, ResourceAllocator<Resource>> &outputs)
 {
     ZoneScopedN("RenderNodes::GridPass");
     LT_TRACY_GPU_ZONE("GridPass");

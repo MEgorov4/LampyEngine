@@ -1,6 +1,5 @@
 #pragma once
 #include "../IAssetImporter.h"
-#include "Foundation/Profiler/ProfileAllocator.h"
 #include <Foundation/Assert/Assert.h>
 #include <stb_image.h>
 #include <fstream>

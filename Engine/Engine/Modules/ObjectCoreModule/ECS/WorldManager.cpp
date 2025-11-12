@@ -1,7 +1,9 @@
 #include "WorldManager.h"
 
 #include "Events.h"
-#include "Foundation/Profiler/ProfileAllocator.h"
+#include "Foundation/Memory/ResourceAllocator.h"
+
+using EngineCore::Foundation::ResourceAllocator;
 
 #include <EngineMinimal.h>
 
@@ -69,13 +71,14 @@ void WorldManager::tickActive(float dt)
 
 void WorldManager::clear()
 {
-    m_worlds.clear();
     m_activeWorld.clear();
+    
+    m_worlds.clear();
 }
 
-std::vector<std::string, ProfileAllocator<std::string>> WorldManager::getLoadedWorlds() const
+std::vector<std::string, ResourceAllocator<std::string>> WorldManager::getLoadedWorlds() const
 {
-    std::vector<std::string, ProfileAllocator<std::string>> names;
+    std::vector<std::string, ResourceAllocator<std::string>> names;
     names.reserve(m_worlds.size());
     for (auto &[n, _] : m_worlds)
         names.push_back(n);

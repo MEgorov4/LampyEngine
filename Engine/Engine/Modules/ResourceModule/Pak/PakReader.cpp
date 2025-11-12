@@ -1,10 +1,9 @@
 #include "PakReader.h"
 
-#include "Foundation/Profiler/ProfileAllocator.h"
-
 #include <EngineMinimal.h>
 
 using namespace ResourceModule;
+using EngineCore::Foundation::ResourceAllocator;
 
 PakReader::PakReader(const std::string& pakPath)
 {
@@ -32,7 +31,7 @@ void PakReader::loadIndex()
         return;
 
     m_stream.seekg(m_header.indexOffset, std::ios::beg);
-    std::vector<char, ProfileAllocator<char>> buffer(m_header.indexSize);
+    std::vector<char, ResourceAllocator<char>> buffer(m_header.indexSize);
     m_stream.read(buffer.data(), m_header.indexSize);
 
     nlohmann::json j = nlohmann::json::parse(buffer.begin(), buffer.end());
@@ -56,7 +55,7 @@ bool PakReader::exists(const AssetID& guid) const noexcept
     return m_index.find(guid) != m_index.end();
 }
 
-std::optional<std::vector<uint8_t, ProfileAllocator<uint8_t>>> PakReader::readAsset(const AssetID& guid)
+std::optional<std::vector<uint8_t, ResourceAllocator<uint8_t>>> PakReader::readAsset(const AssetID& guid)
 {
     if (!isOpen())
         return std::nullopt;
@@ -68,7 +67,7 @@ std::optional<std::vector<uint8_t, ProfileAllocator<uint8_t>>> PakReader::readAs
     const PakEntry& e = it->second;
     m_stream.seekg(e.offset, std::ios::beg);
 
-    std::vector<uint8_t, ProfileAllocator<uint8_t>> data(e.size);
+    std::vector<uint8_t, ResourceAllocator<uint8_t>> data(e.size);
     m_stream.read(reinterpret_cast<char*>(data.data()), e.size);
     return data;
 }

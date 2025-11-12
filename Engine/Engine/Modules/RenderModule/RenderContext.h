@@ -4,7 +4,9 @@
 #include "Modules/ObjectCoreModule/ECS/Components/ECSComponents.h"
 #include "Modules/ResourceModule/ResourceManager.h"
 #include "Abstract/RenderObject.h"
-#include "Foundation/Profiler/ProfileAllocator.h"
+#include "Foundation/Memory/ResourceAllocator.h"
+
+using EngineCore::Foundation::ResourceAllocator;
 
 #ifdef TRACY_ENABLE
 #include <tracy/Tracy.hpp>
@@ -29,7 +31,6 @@
 
 namespace RenderModule
 {
-/// Камера для шейдеров
 struct CameraRenderData
 {
     glm::mat4 view{1.f};
@@ -37,7 +38,6 @@ struct CameraRenderData
     glm::vec4 position{0.f};
 };
 
-/// Источник света
 struct DirectionalLightRenderData
 {
     glm::vec4 direction{0.f, -1.f, 0.f, 0.f};
@@ -52,11 +52,10 @@ struct PointLightRenderData
     glm::vec4 position{0.f};
     glm::vec4 color{1.f};
     float intensity = 1.f;
-    float innerRadius = 0.0f;  // Внутренний радиус (полная интенсивность)
-    float outerRadius = 10.0f; // Внешний радиус (затухание до 0)
+    float innerRadius = 0.0f;
+    float outerRadius = 10.0f;
 };
 
-/// Отладочный примитив - линия
 struct DebugLine
 {
     glm::vec3 from;
@@ -64,7 +63,6 @@ struct DebugLine
     glm::vec3 color;
 };
 
-/// Отладочный примитив - бокс (AABB)
 struct DebugBox
 {
     glm::vec3 center;
@@ -72,7 +70,6 @@ struct DebugBox
     glm::vec3 color;
 };
 
-/// Отладочный примитив - сфера
 struct DebugSphere
 {
     glm::vec3 center;
@@ -80,42 +77,34 @@ struct DebugSphere
     glm::vec3 color;
 };
 
-/// Собранная сцена для GPU
 struct RenderScene
 {
-    std::vector<RenderObject, ProfileAllocator<RenderObject>> objects;
+    std::vector<RenderObject, ResourceAllocator<RenderObject>> objects;
     CameraRenderData camera;
     DirectionalLightRenderData sun;
-    std::vector<PointLightRenderData, ProfileAllocator<PointLightRenderData>> pointLights;
+    std::vector<PointLightRenderData, ResourceAllocator<PointLightRenderData>> pointLights;
 
-    // Отладочные примитивы
-    std::vector<DebugLine, ProfileAllocator<DebugLine>> debugLines;
-    std::vector<DebugBox, ProfileAllocator<DebugBox>> debugBoxes;
-    std::vector<DebugSphere, ProfileAllocator<DebugSphere>> debugSpheres;
+    std::vector<DebugLine, ResourceAllocator<DebugLine>> debugLines;
+    std::vector<DebugBox, ResourceAllocator<DebugBox>> debugBoxes;
+    std::vector<DebugSphere, ResourceAllocator<DebugSphere>> debugSpheres;
 
     void clear()
     {
         objects.clear();
         pointLights.clear();
-        // Отладочные примитивы НЕ очищаем здесь - они управляются через flushDebugPrimitives()
-        // и очищаются в начале каждого кадра перед переносом из буфера ожидания
     }
 };
 
-/// Контекст, используемый RenderGraph
 class RenderContext
 {
     std::shared_ptr<ResourceModule::ResourceManager> m_resourceManager;
     RenderScene m_scene;
     std::pair<int, int> m_viewportSize{1920, 1080};
 
-    // Двухбуферная система для отладочных примитивов
-    // Эти буферы можно заполнять из любого потока в любое время
-    std::vector<DebugLine, ProfileAllocator<DebugLine>> m_pendingDebugLines;
-    std::vector<DebugBox, ProfileAllocator<DebugBox>> m_pendingDebugBoxes;
-    std::vector<DebugSphere, ProfileAllocator<DebugSphere>> m_pendingDebugSpheres;
+    std::vector<DebugLine, ResourceAllocator<DebugLine>> m_pendingDebugLines;
+    std::vector<DebugBox, ResourceAllocator<DebugBox>> m_pendingDebugBoxes;
+    std::vector<DebugSphere, ResourceAllocator<DebugSphere>> m_pendingDebugSpheres;
 
-    // Мьютекс для потокобезопасности (если нужно будет использовать из разных потоков)
     // std::mutex m_debugMutex;
 
 #ifdef TRACY_ENABLE
@@ -128,7 +117,6 @@ class RenderContext
   public:
     RenderContext()
     {
-        // Получаем shared_ptr напрямую из CoreLocator, чтобы не создавать отдельный счётчик ссылок
         auto shared = Core::Locator().tryGet<ResourceModule::ResourceManager>();
         LT_ASSERT_MSG(shared, "ResourceManager not found in CoreLocator");
         m_resourceManager = shared;
@@ -236,7 +224,6 @@ class RenderContext
         m_scene.clear();
     }
 
-    // Методы для добавления отладочных примитивов (можно вызывать из любого места)
     void addDebugLine(const DebugLine &line)
     {
         m_pendingDebugLines.push_back(line);
@@ -252,11 +239,8 @@ class RenderContext
         m_pendingDebugSpheres.push_back(sphere);
     }
 
-    // Переносит отладочные примитивы из буфера ожидания в сцену
-    // Вызывается в начале render() перед использованием
     void flushDebugPrimitives()
     {
-        // Переносим примитивы из буферов ожидания в сцену
         m_scene.debugLines.clear();
         m_scene.debugLines.insert(m_scene.debugLines.end(), m_pendingDebugLines.begin(), m_pendingDebugLines.end());
 
@@ -267,13 +251,11 @@ class RenderContext
         m_scene.debugSpheres.insert(m_scene.debugSpheres.end(), m_pendingDebugSpheres.begin(),
                                     m_pendingDebugSpheres.end());
 
-        // Очищаем буферы ожидания для следующего кадра
         m_pendingDebugLines.clear();
         m_pendingDebugBoxes.clear();
         m_pendingDebugSpheres.clear();
     }
 
-    // Явное освобождение shared_ptr на ResourceManager перед уничтожением
     void releaseResourceManager()
     {
         m_resourceManager.reset();

@@ -279,7 +279,6 @@ void IRenderer::updateRenderList()
     }
 
     // ============================================================
-    // 3️⃣ DirectionalLight (если есть)
     // ============================================================
     //{
     //    if (world.component<ECSModule::DirectionalLightComponent>().is_valid())
@@ -302,7 +301,6 @@ void IRenderer::updateRenderList()
     //}
 
     //// ============================================================
-    //// 4️⃣ PointLight (если есть)
     //// ============================================================
     //{
     //    if (world.component<ECSModule::PointLightComponent>().is_valid())
@@ -319,7 +317,6 @@ void IRenderer::updateRenderList()
     //            });
     //    }
 
-    // Обновляем источники света из ECS
     updateLightsFromECS();
 }
 
@@ -492,7 +489,7 @@ void IRenderer::applyRenderDiff(const RenderDiff &diff)
             state.rotation = change.newState->rotation;
             state.scale = change.newState->scale;
             state.mesh = change.newState->mesh;
-            state.material = change.newState->material; // Копируем material
+            state.material = change.newState->material;
 
             RenderObject obj = RenderObjectFactory::createFromState(state);
             m_listManager.addObject(obj, change.entityId);
@@ -517,7 +514,7 @@ void IRenderer::applyRenderDiff(const RenderDiff &diff)
             state->rotation = change.newState->rotation;
             state->scale = change.newState->scale;
             state->mesh = change.newState->mesh;
-            state->material = change.newState->material; // Копируем material (важно для обновления материалов!)
+            state->material = change.newState->material;
 
             size_t *pIndex = m_listManager.getObjectIndex(change.entityId);
             if (!pIndex || !m_listManager.isValidIndex(*pIndex))
@@ -567,11 +564,9 @@ void IRenderer::updateLightsFromECS()
     auto &scene = RenderLocator::Get()->scene();
     auto *ctxPtr = RenderLocator::Get();
 
-    // Очищаем point lights для нового кадра
     scene.pointLights.clear();
 
     // ============================================================
-    // DirectionalLight (если есть)
     // ============================================================
     {
         if (world.component<DirectionalLightComponent>().is_valid())
@@ -584,56 +579,42 @@ void IRenderer::updateLightsFromECS()
                 {
                     foundLight = true;
                     
-                    // Получаем direction из RotationComponent
                     glm::quat rotation = rot.toQuat();
-                    // Направление света - вперед по локальной оси -Z (стандарт для directional light)
                     glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);
                     glm::vec3 direction = rotation * forward;
                     
-                    // Направление передаём как есть, инверсия выполняется в шейдере
                     scene.sun.direction = glm::vec4(glm::normalize(direction), 0.0f);
                     scene.sun.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // Default white
                     scene.sun.intensity = light.intencity;
                     
-                    // Вычисляем view и projection матрицы для источника света
-                    // Позиция источника света (для view matrix)
                     glm::vec3 lightPos = pos.toGLMVec();
                     
-                    // View matrix - смотрим в направлении света
                     glm::vec3 lightDir = glm::normalize(direction);
-                    // Целевая точка - немного ниже по направлению света для стабильности
                     glm::vec3 target = lightPos + lightDir * 100.0f;
                     scene.sun.lightViewMatrix = glm::lookAt(lightPos, target, glm::vec3(0.0f, 1.0f, 0.0f));
                     
-                    // Orthographic projection для directional light
-                    // Охватываем большую область сцены
-                    const float orthoSize = 100.0f; // Размер области теней
+                    const float orthoSize = 100.0f;
                     scene.sun.lightProjectionMatrix = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 0.1f, 500.0f);
                     
-                    // Debug визуализация направления DirectionalLight
                     if (ctxPtr)
                     {
                         glm::vec3 lightPos = pos.toGLMVec();
-                        // Визуализируем направление, в котором светит свет (в шейдере используется -lightDirection)
                         glm::vec3 lightDir = -glm::normalize(direction);
-                        float arrowLength = 10.0f; // Длина стрелки
+                        float arrowLength = 10.0f;
                         glm::vec3 arrowEnd = lightPos + lightDir * arrowLength;
                         
-                        // Основная линия направления
                         DebugLine dirLine;
                         dirLine.from = lightPos;
                         dirLine.to = arrowEnd;
-                        dirLine.color = glm::vec3(1.0f, 1.0f, 0.0f); // Желтый цвет
+                        dirLine.color = glm::vec3(1.0f, 1.0f, 0.0f);
                         ctxPtr->addDebugLine(dirLine);
                         
-                        // Стрелка на конце (конус)
                         float arrowHeadSize = 1.0f;
                         glm::vec3 perpendicular1 = glm::normalize(glm::cross(lightDir, glm::vec3(0.0f, 1.0f, 0.0f)));
-                        if (glm::length(perpendicular1) < 0.1f) // Если lightDir параллелен Y, используем другой вектор
+                        if (glm::length(perpendicular1) < 0.1f)
                             perpendicular1 = glm::normalize(glm::cross(lightDir, glm::vec3(1.0f, 0.0f, 0.0f)));
                         glm::vec3 perpendicular2 = glm::normalize(glm::cross(lightDir, perpendicular1));
                         
-                        // Три линии для стрелки
                         DebugLine arrow1, arrow2, arrow3;
                         arrow1.from = arrowEnd;
                         arrow1.to = arrowEnd - lightDir * arrowHeadSize + perpendicular1 * arrowHeadSize * 0.3f;
@@ -654,7 +635,6 @@ void IRenderer::updateLightsFromECS()
             
             if (!foundLight)
             {
-                // Default directional light (сверху)
                 scene.sun.direction = glm::vec4(0.f, -1.f, 0.f, 0.f);
                 scene.sun.color = glm::vec4(1.f, 1.f, 1.f, 1.f);
                 scene.sun.intensity = 1.f;
@@ -669,7 +649,6 @@ void IRenderer::updateLightsFromECS()
         }
         else
         {
-            // Default directional light (сверху)
             scene.sun.direction = glm::vec4(0.f, -1.f, 0.f, 0.f);
             scene.sun.color = glm::vec4(1.f, 1.f, 1.f, 1.f);
             scene.sun.intensity = 1.f;
@@ -684,7 +663,6 @@ void IRenderer::updateLightsFromECS()
     }
 
     // ============================================================
-    // PointLight (если есть)
     // ============================================================
     {
         if (world.component<PointLightComponent>().is_valid())
@@ -695,54 +673,49 @@ void IRenderer::updateLightsFromECS()
                 {
                     PointLightRenderData pointLight;
                     pointLight.position = glm::vec4(pos.toGLMVec(), 1.0f);
-                    pointLight.color = glm::vec4(light.color, 1.0f); // Используем цвет из компонента
-                    // Убеждаемся, что intensity не равна нулю
+                    pointLight.color = glm::vec4(light.color, 1.0f);
                     pointLight.intensity = (light.intencity > 0.0f) ? light.intencity : 1.0f;
                     pointLight.innerRadius = light.innerRadius;
-                    pointLight.outerRadius = (light.outerRadius > 0.0f) ? light.outerRadius : 10.0f; // Минимум 10 для внешнего радиуса
+                    pointLight.outerRadius = (light.outerRadius > 0.0f) ? light.outerRadius : 10.0f;
                     
                     scene.pointLights.push_back(pointLight);
                     
-                    // Debug визуализация радиуса PointLight
                     if (ctxPtr)
                     {
                         glm::vec3 lightPos = pos.toGLMVec();
                         float outerRadius = light.outerRadius;
                         
-                        // Рисуем сферу с внешним радиусом источника света
                         DebugSphere sphere;
                         sphere.center = lightPos;
                         sphere.radius = outerRadius;
-                        sphere.color = glm::vec3(light.color.x, light.color.y, light.color.z); // Используем цвет из компонента
+                        sphere.color = glm::vec3(light.color.x, light.color.y, light.color.z);
                         ctxPtr->addDebugSphere(sphere);
                         
-                        // Рисуем внутреннюю сферу (inner radius), если она > 0
                         if (light.innerRadius > 0.0f)
                         {
                             DebugSphere innerSphere;
                             innerSphere.center = lightPos;
                             innerSphere.radius = light.innerRadius;
-                            innerSphere.color = glm::vec3(light.color.x * 1.5f, light.color.y * 1.5f, light.color.z * 1.5f); // Более яркий цвет
+                            innerSphere.color = glm::vec3(light.color.x * 1.5f, light.color.y * 1.5f, light.color.z * 1.5f);
                             ctxPtr->addDebugSphere(innerSphere);
                         }
                         
-                        // Рисуем крест в центре источника света для лучшей видимости
                         float crossSize = 0.5f;
                         DebugLine crossX1, crossY1, crossZ1;
                         
                         crossX1.from = lightPos - glm::vec3(crossSize, 0.0f, 0.0f);
                         crossX1.to = lightPos + glm::vec3(crossSize, 0.0f, 0.0f);
-                        crossX1.color = glm::vec3(1.0f, 0.0f, 0.0f); // Красный для X
+                        crossX1.color = glm::vec3(1.0f, 0.0f, 0.0f);
                         ctxPtr->addDebugLine(crossX1);
                         
                         crossY1.from = lightPos - glm::vec3(0.0f, crossSize, 0.0f);
                         crossY1.to = lightPos + glm::vec3(0.0f, crossSize, 0.0f);
-                        crossY1.color = glm::vec3(0.0f, 1.0f, 0.0f); // Зеленый для Y
+                        crossY1.color = glm::vec3(0.0f, 1.0f, 0.0f);
                         ctxPtr->addDebugLine(crossY1);
                         
                         crossZ1.from = lightPos - glm::vec3(0.0f, 0.0f, crossSize);
                         crossZ1.to = lightPos + glm::vec3(0.0f, 0.0f, crossSize);
-                        crossZ1.color = glm::vec3(0.0f, 0.0f, 1.0f); // Синий для Z
+                        crossZ1.color = glm::vec3(0.0f, 0.0f, 1.0f);
                         ctxPtr->addDebugLine(crossZ1);
                     }
                 });
@@ -763,15 +736,12 @@ void IRenderer::rebuildRenderList()
 
     auto &world = worldPtr->get();
 
-    // Очищаем список объектов и маппинг
     m_listManager.clear();
     m_entityTracker.clear();
 
-    // Заново собираем все рендер-объекты из ECS
     auto qMesh = world.query<PositionComponent, RotationComponent, ScaleComponent, MeshComponent>();
     qMesh.each([&](flecs::entity e, const PositionComponent &pos, const RotationComponent &rot,
                    const ScaleComponent &scale, const MeshComponent &mesh) {
-        // Создаем состояние сущности
         auto &state = m_entityTracker.getOrCreateState(e.id());
         state.entityId = e.id();
         state.isValid = true;
@@ -780,7 +750,6 @@ void IRenderer::rebuildRenderList()
         state.scale = scale;
         state.mesh = mesh;
         
-        // Загружаем MaterialComponent если есть
         const MaterialComponent* material = e.get<MaterialComponent>();
         if (material)
         {
@@ -792,11 +761,9 @@ void IRenderer::rebuildRenderList()
         }
         else
         {
-            // Очищаем material если компонента нет
             state.material = MaterialComponent{};
         }
 
-        // Создаем рендер-объект через фабрику
         RenderObject obj = RenderObjectFactory::createFromState(state);
         m_listManager.addObject(obj, e.id());
     });

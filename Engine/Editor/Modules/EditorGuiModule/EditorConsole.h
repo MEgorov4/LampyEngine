@@ -8,13 +8,13 @@ namespace ScriptModule
 class LuaScriptModule;
 }
 
-class GUIEditorConsole : public ImGUIModule::GUIObject
+class GUIConsole : public ImGUIModule::GUIObject
 {
     ScriptModule::LuaScriptModule* m_luaScriptModule;
 
   public:
-    GUIEditorConsole();
-    ~GUIEditorConsole() override = default;
+    GUIConsole();
+    ~GUIConsole() override = default;
 
     void render(float deltaTime) override;
 

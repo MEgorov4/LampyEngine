@@ -8,7 +8,7 @@ namespace ResourceModule
     struct CookSettings
     {
         bool makePak = true;              // true: Content.pak, false: loose files
-        bool copyLooseAlongsidePak = false; // опционально: положить копию loose в Content/
+        bool copyLooseAlongsidePak = false;
         bool includeEngineAssets = true;
         std::string pakName = "Content.pak";
     };
@@ -21,7 +21,7 @@ namespace ResourceModule
                     std::filesystem::path contentDir,
                     CookSettings settings = {}) noexcept;
 
-        bool cook(); // главный вход
+        bool cook();
 
     private:
         bool ensureDirs() const noexcept;
