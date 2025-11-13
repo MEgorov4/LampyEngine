@@ -18,12 +18,38 @@ RenderObject RenderObjectFactory::createFromState(EntityRenderState& state)
     
     if (!state.mesh.vertShaderID.empty() && !state.mesh.fragShaderID.empty())
     {
-        obj.shader = RenderFactory::get().createShader(state.mesh.vertShaderID, state.mesh.fragShaderID);
+        try
+        {
+            obj.shader = RenderFactory::get().createShader(state.mesh.vertShaderID, state.mesh.fragShaderID);
+        }
+        catch (const std::exception& e)
+        {
+            LT_LOGW("RenderObjectFactory", "Failed to create shader: " + std::string(e.what()));
+            obj.shader.reset();
+        }
+        catch (...)
+        {
+            LT_LOGW("RenderObjectFactory", "Failed to create shader: unknown error");
+            obj.shader.reset();
+        }
     }
     
     if (!state.mesh.textureID.empty())
     {
-        obj.texture = RenderFactory::get().createTexture(state.mesh.textureID);
+        try
+        {
+            obj.texture = RenderFactory::get().createTexture(state.mesh.textureID);
+        }
+        catch (const std::exception& e)
+        {
+            LT_LOGW("RenderObjectFactory", "Failed to create texture: " + std::string(e.what()));
+            obj.texture.reset();
+        }
+        catch (...)
+        {
+            LT_LOGW("RenderObjectFactory", "Failed to create texture: unknown error");
+            obj.texture.reset();
+        }
     }
     
     if (!state.material.materialID.empty())
@@ -38,7 +64,20 @@ RenderObject RenderObjectFactory::createFromState(EntityRenderState& state)
                 LT_LOGI("RenderObjectFactory", "Material loaded successfully: " + obj.material->name);
                 if (!obj.material->albedoTexture.empty())
                 {
-                    obj.texture = RenderFactory::get().createTexture(obj.material->albedoTexture);
+                    try
+                    {
+                        obj.texture = RenderFactory::get().createTexture(obj.material->albedoTexture);
+                    }
+                    catch (const std::exception& e)
+                    {
+                        LT_LOGW("RenderObjectFactory", "Failed to create texture from material: " + std::string(e.what()));
+                        obj.texture.reset();
+                    }
+                    catch (...)
+                    {
+                        LT_LOGW("RenderObjectFactory", "Failed to create texture from material: unknown error");
+                        obj.texture.reset();
+                    }
                 }
             }
             else
@@ -68,7 +107,20 @@ void RenderObjectFactory::updateResources(RenderObject& obj, const EntityRenderS
     
     if (!state.mesh.vertShaderID.empty() && !state.mesh.fragShaderID.empty())
     {
-        obj.shader = RenderFactory::get().createShader(state.mesh.vertShaderID, state.mesh.fragShaderID);
+        try
+        {
+            obj.shader = RenderFactory::get().createShader(state.mesh.vertShaderID, state.mesh.fragShaderID);
+        }
+        catch (const std::exception& e)
+        {
+            LT_LOGW("RenderObjectFactory", "Failed to create shader: " + std::string(e.what()));
+            obj.shader.reset();
+        }
+        catch (...)
+        {
+            LT_LOGW("RenderObjectFactory", "Failed to create shader: unknown error");
+            obj.shader.reset();
+        }
     }
     else
     {
@@ -95,7 +147,20 @@ void RenderObjectFactory::updateResources(RenderObject& obj, const EntityRenderS
                 LT_LOGI("RenderObjectFactory", "Material loaded: " + obj.material->name + " (ID: " + obj.material->materialID.str() + ")");
                 if (!obj.material->albedoTexture.empty())
                 {
-                    obj.texture = RenderFactory::get().createTexture(obj.material->albedoTexture);
+                    try
+                    {
+                        obj.texture = RenderFactory::get().createTexture(obj.material->albedoTexture);
+                    }
+                    catch (const std::exception& e)
+                    {
+                        LT_LOGW("RenderObjectFactory", "Failed to create texture from material: " + std::string(e.what()));
+                        obj.texture.reset();
+                    }
+                    catch (...)
+                    {
+                        LT_LOGW("RenderObjectFactory", "Failed to create texture from material: unknown error");
+                        obj.texture.reset();
+                    }
                 }
                 else if (!state.mesh.textureID.empty())
                 {
@@ -111,7 +176,20 @@ void RenderObjectFactory::updateResources(RenderObject& obj, const EntityRenderS
                 LT_LOGW("RenderObjectFactory", "Failed to load material: " + state.material.materialID.str());
                 if (!state.mesh.textureID.empty())
                 {
-                    obj.texture = RenderFactory::get().createTexture(state.mesh.textureID);
+                    try
+                    {
+                        obj.texture = RenderFactory::get().createTexture(state.mesh.textureID);
+                    }
+                    catch (const std::exception& e)
+                    {
+                        LT_LOGW("RenderObjectFactory", "Failed to create texture: " + std::string(e.what()));
+                        obj.texture.reset();
+                    }
+                    catch (...)
+                    {
+                        LT_LOGW("RenderObjectFactory", "Failed to create texture: unknown error");
+                        obj.texture.reset();
+                    }
                 }
                 else
                 {

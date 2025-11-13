@@ -1,128 +1,75 @@
 #include "PhysicsModule.h"
-
-#include "BulletDebugDrawer.h"
-#include <btBulletDynamicsCommon.h>
-
-#include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
-#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
-#include <Modules/ObjectCoreModule/ECS/Systems/ECSPhysicsSystem.h>
+#include "PhysicsLocator.h"
+#include "PhysicsContext/PhysicsContext.h"
+#include "../../Foundation/Event/EventBus.h"
+#include "../../Core/CoreGlobal.h"
+#include "../../Modules/RenderModule/RenderLocator.h"
+#include "../../Modules/ObjectCoreModule/ECS/ECSModule.h"
+#include "Systems/PhysicsStepSystem.h"
+#include "Systems/SyncToPhysicsSystem.h"
+#include "Systems/SyncFromPhysicsSystem.h"
+#include "Systems/PhysicsRaycastSystem.h"
 
 namespace PhysicsModule
 {
-void PhysicsModule::startup()
-{
-    ZoneScopedN("PhysicsModule::startup");
-    m_ecsModule = GCM(ECSModule::ECSModule);
-
-    m_debugDrawer.reset(new BulletDebugDrawer());
-
-    m_collisionConfig.reset(new btDefaultCollisionConfiguration());
-    m_dispatcher.reset(new btCollisionDispatcher(m_collisionConfig.get()));
-    m_broadphase.reset(new btDbvtBroadphase());
-    m_solver.reset(new btSequentialImpulseConstraintSolver());
-    m_physicsWorld.reset(
-        new btDiscreteDynamicsWorld(m_dispatcher.get(), m_broadphase.get(), m_solver.get(), m_collisionConfig.get()));
-
-    setupWorldProperties();
-    // registrateBodies();
-    LT_LOGI("PhysicsModule", "Startup");
-}
-
-void PhysicsModule::shutdown()
-{
-    ZoneScopedN("PhysicsModule::shutdown");
-    LT_LOGI("PhysicsModule", "Shutdown");
-}
-
-void PhysicsModule::tick(float deltaTime)
-{
-    ZoneScopedN("PhysicsModule::tick");
-    if (m_tickEnabled)
+    struct PhysicsModule::Impl
     {
-        m_physicsWorld->stepSimulation(deltaTime, 10, 1.0f / 60.0f);
+        std::unique_ptr<PhysicsContext> context;
+    };
+
+    PhysicsModule::PhysicsModule()
+        : m_impl(std::make_unique<Impl>())
+    {
     }
-    if (m_shouldDebugDraw)
+
+    PhysicsModule::~PhysicsModule() = default;
+
+    void PhysicsModule::startup()
     {
-        m_physicsWorld->debugDrawWorld();
-    }
-}
+        ZoneScopedN("PhysicsModule::startup");
+        LT_LOGI("PhysicsModule", "Startup");
 
-void PhysicsModule::setupWorldProperties()
-{
-    ZoneScopedN("PhysicsModule::setupWorldProperties");
-    m_physicsWorld->setGravity(btVector3(0, -9.81f, 0));
-    m_physicsWorld->setDebugDrawer(m_debugDrawer.get());
-}
-
-void PhysicsModule::registrateBodies()
-{
-    LT_LOGI("PhysicsModule", "Registration rigid bodies");
-
-    // auto& world = m_ecsModule->getCurrentWorld();
-
-    // auto query = world.query<RigidbodyComponent, PositionComponent, RotationComponent, MeshComponent>();
-
-    // query.each([&](const flecs::entity& e, RigidbodyComponent& rigidbody, PositionComponent& transform,
-    // RotationComponent& rotation, MeshComponent& mesh)
-    //	{
-    //		if (!rigidbody.body.has_value())
-    //		{
-    //			btCollisionShape* shape = new btBoxShape(btVector3(AABB.x, AABB.z, AABB.y) * 0.5f);
-
-    //			btTransform startTransform;
-    //			startTransform.setIdentity();
-    //			startTransform.setOrigin(btVector3({ transform.x, transform.y, transform.z }));
-
-    //			btQuaternion rotationQuat;
-    //			rotationQuat.setEulerZYX(rotation.z, rotation.y, rotation.x);  // ������� �� ���� Z, Y, X
-    //			startTransform.setRotation(rotationQuat);
-
-    //			btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-
-    //			btScalar mass = rigidbody.isStatic ? 0.f : rigidbody.mass;
-    //			btVector3 inertia(0, 0, 0);
-    //			shape->calculateLocalInertia(mass, inertia);
-
-    //			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, inertia);
-    //			btRigidBody* body = new btRigidBody(rbInfo);
-
-    //			rigidbody.body.emplace(body);
-
-    //			// ��������� ���� � ���
-    //			m_physicsWorld->addRigidBody(body);
-    //		}
-    //	});
-}
-
-void PhysicsModule::setTickEnabled(bool tickEnabled)
-{
-    m_tickEnabled = tickEnabled;
-}
-
-void PhysicsModule::clearPhysicsWorld()
-{
-    int numBodies = m_physicsWorld->getNumCollisionObjects();
-    for (int i = numBodies - 1; i >= 0; --i)
-    {
-        btCollisionObject *obj = m_physicsWorld->getCollisionObjectArray()[i];
-        btRigidBody *body = btRigidBody::upcast(obj);
-
-        if (body)
+        // Get RenderContext for debug drawing
+        auto* renderContext = RenderModule::RenderLocator::Get();
+        if (!renderContext)
         {
-            if (body->getMotionState())
-            {
-                delete body->getMotionState(); // ������� motion state
-            }
-            delete body->getCollisionShape(); // ������� ������������ �����
+            LT_LOGW("PhysicsModule", "RenderContext not available, debug drawing disabled");
         }
 
-        m_physicsWorld->removeCollisionObject(obj);
-        // delete obj; // ������� ��� ������
+        // Create PhysicsContext
+        m_impl->context = std::make_unique<PhysicsContext>(renderContext);
+
+        // Register in DI
+        PhysicsLocator::Provide(m_impl->context.get());
+
+        // Connect to EventBus
+        m_impl->context->connectToEventBus(GCEB());
+
+        // Register ECS systems
+        // Systems will be registered when ECS world is available
+        // This is typically done in ECSModule startup or when world is created
+
+        LT_LOGI("PhysicsModule", "Startup complete");
+    }
+
+    void PhysicsModule::shutdown()
+    {
+        ZoneScopedN("PhysicsModule::shutdown");
+        LT_LOGI("PhysicsModule", "Shutdown");
+
+        PhysicsLocator::Reset();
+        m_impl->context.reset();
+        m_impl.reset();
+
+        LT_LOGI("PhysicsModule", "Shutdown complete");
+    }
+
+    void PhysicsModule::tick(float dt) noexcept
+    {
+        // Physics step - called from main loop
+        if (m_impl->context)
+        {
+            m_impl->context->step(dt);
+        }
     }
 }
-
-void PhysicsModule::enableDebugDraw(bool newFlag)
-{
-    m_shouldDebugDraw = newFlag;
-}
-} // namespace PhysicsModule

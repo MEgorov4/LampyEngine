@@ -39,11 +39,28 @@ class OpenGLRenderFactory final : public IRenderFactory
         LT_ASSERT_MSG(resourceMgr, "ResourceManager is null");
 
         auto rtex = resourceMgr->load<ResourceModule::RTexture>(id);
-        LT_ASSERT_MSG(rtex, "Failed to load texture resource");
+        if (!rtex)
+        {
+            LT_LOGE("OpenGLRenderFactory", "Failed to load texture resource: " + id.str());
+            return {};
+        }
 
-        auto tex = std::make_shared<OpenGLTexture>(rtex);
-        m_textureCache[key] = tex;
-        return tex;
+        try
+        {
+            auto tex = std::make_shared<OpenGLTexture>(rtex);
+            m_textureCache[key] = tex;
+            return tex;
+        }
+        catch (const std::exception& e)
+        {
+            LT_LOGE("OpenGLRenderFactory", "Failed to create texture: " + std::string(e.what()));
+            return {};
+        }
+        catch (...)
+        {
+            LT_LOGE("OpenGLRenderFactory", "Failed to create texture: unknown error");
+            return {};
+        }
     }
 
     std::shared_ptr<IMesh> createMesh(const ResourceModule::AssetID &id) override
@@ -93,14 +110,35 @@ class OpenGLRenderFactory final : public IRenderFactory
         LT_ASSERT_MSG(resourceMgr, "ResourceManager is null");
 
         auto v = resourceMgr->load<ResourceModule::RShader>(vs);
-        LT_ASSERT_MSG(v, "Failed to load vertex shader resource");
+        if (!v)
+        {
+            LT_LOGE("OpenGLRenderFactory", "Failed to load vertex shader resource: " + vs.str());
+            return {};
+        }
 
         auto f = resourceMgr->load<ResourceModule::RShader>(fs);
-        LT_ASSERT_MSG(f, "Failed to load fragment shader resource");
+        if (!f)
+        {
+            LT_LOGE("OpenGLRenderFactory", "Failed to load fragment shader resource: " + fs.str());
+            return {};
+        }
 
-        auto shader = std::make_shared<OpenGLShader>(v, f);
-        m_shaderCache[key] = shader;
-        return shader;
+        try
+        {
+            auto shader = std::make_shared<OpenGLShader>(v, f);
+            m_shaderCache[key] = shader;
+            return shader;
+        }
+        catch (const std::exception& e)
+        {
+            LT_LOGE("OpenGLRenderFactory", "Failed to create shader: " + std::string(e.what()));
+            return {};
+        }
+        catch (...)
+        {
+            LT_LOGE("OpenGLRenderFactory", "Failed to create shader: unknown error");
+            return {};
+        }
     }
 
     std::shared_ptr<IFramebuffer> createFramebuffer(const FramebufferData &data) override

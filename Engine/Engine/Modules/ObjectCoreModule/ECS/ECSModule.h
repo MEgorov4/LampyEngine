@@ -26,5 +26,6 @@ namespace ECSModule
         std::unique_ptr<WorldManager> m_worldManager;
         ModuleEventBinder m_binder;
         bool m_inSimulate = false;
+        std::string m_simulationSnapshot; // Snapshot of world state before simulation
     };
 }

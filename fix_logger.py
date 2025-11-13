@@ -34,3 +34,5 @@ with open(file_path, 'w', encoding='utf-8', newline='') as f:
 print(f"Removed Cyrillic comment from {file_path}")
 
 
+
+

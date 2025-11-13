@@ -5,6 +5,11 @@
 #include <Modules/ObjectCoreModule/ECS/Events.h>
 #include <Modules/ObjectCoreModule/ECS/Systems/ECSLuaScriptsSystem.h>
 #include <Modules/ObjectCoreModule/ECS/Systems/ECSPhysicsSystem.h>
+#include <Modules/PhysicsModule/Components/RigidBodyComponent.h>
+#include <Modules/PhysicsModule/Components/ColliderComponent.h>
+#include <Modules/PhysicsModule/Components/CharacterControllerComponent.h>
+#include <Modules/PhysicsModule/Components/PhysicsMaterialComponent.h>
+#include <Modules/PhysicsModule/Utils/PhysicsTypes.h>
 #include <Modules/ProjectModule/ProjectModule.h>
 #include <Modules/ResourceModule/ResourceManager.h>
 #include <Modules/ResourceModule/Material.h>
@@ -1065,4 +1070,320 @@ class ComponentRendererFactory
 
   private:
     std::unordered_map<std::string, RendererCreator> registry;
+};
+
+// ============================================================================
+// PhysicsModule Component Renderers
+// ============================================================================
+
+class PhysicsRigidBodyRenderer : public IComponentRenderer
+{
+public:
+    PhysicsRigidBodyRenderer() : IComponentRenderer() {}
+
+    void render(flecs::entity& entity) override
+    {
+        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+
+        if (ImGui::BeginChildFrame(10, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5f,
+                                               ImGui::GetWindowSize().y / 3.f)))
+        {
+            if (PhysicsModule::RigidBodyComponent* rb = entity.get_mut<PhysicsModule::RigidBodyComponent>())
+            {
+                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
+                bool headerOpen = ImGui::CollapsingHeader("Rigid Body Component", ImGuiTreeNodeFlags_DefaultOpen);
+                renderComponentControls(entity, "RigidBodyComponent", "Rigid Body Component");
+                
+                if (headerOpen)
+                {
+                    ImGui::PopStyleColor();
+                    ImGui::SetCursorPosX(0);
+                    ImGui::Separator();
+
+                    float mass = rb->mass;
+                    bool isStatic = rb->isStatic;
+                    bool isKinematic = rb->isKinematic;
+
+                    ImGui::Text("Mass:");
+                    ImGui::SameLine();
+                    ImGui::BeginDisabled(isStatic || isKinematic);
+                    if (ImGui::DragFloat("##Mass", &mass, 0.1f, 0.0f, 1000000.0f))
+                    {
+                        rb->mass = mass;
+                        entity.modified<PhysicsModule::RigidBodyComponent>();
+                    }
+                    ImGui::EndDisabled();
+
+                    ImGui::Text("Is Static:");
+                    ImGui::SameLine();
+                    if (ImGui::Checkbox("##IsStatic", &isStatic))
+                    {
+                        rb->isStatic = isStatic;
+                        if (isStatic)
+                            rb->isKinematic = false;
+                        rb->needsCreation = true;
+                        entity.modified<PhysicsModule::RigidBodyComponent>();
+                    }
+
+                    ImGui::Text("Is Kinematic:");
+                    ImGui::SameLine();
+                    ImGui::BeginDisabled(isStatic);
+                    if (ImGui::Checkbox("##IsKinematic", &isKinematic))
+                    {
+                        rb->isKinematic = isKinematic;
+                        if (isKinematic)
+                            rb->isStatic = false;
+                        rb->needsCreation = true;
+                        entity.modified<PhysicsModule::RigidBodyComponent>();
+                    }
+                    ImGui::EndDisabled();
+                }
+                else
+                {
+                    ImGui::PopStyleColor();
+                }
+            }
+        }
+        ImGui::EndChildFrame();
+    }
+};
+
+class PhysicsColliderRenderer : public IComponentRenderer
+{
+public:
+    PhysicsColliderRenderer() : IComponentRenderer() {}
+
+    void render(flecs::entity& entity) override
+    {
+        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+
+        if (ImGui::BeginChildFrame(11, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5f,
+                                               ImGui::GetWindowSize().y / 3.f)))
+        {
+            if (PhysicsModule::ColliderComponent* collider = entity.get_mut<PhysicsModule::ColliderComponent>())
+            {
+                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
+                bool headerOpen = ImGui::CollapsingHeader("Collider Component", ImGuiTreeNodeFlags_DefaultOpen);
+                renderComponentControls(entity, "ColliderComponent", "Collider Component");
+                
+                if (headerOpen)
+                {
+                    ImGui::PopStyleColor();
+                    ImGui::SetCursorPosX(0);
+                    ImGui::Separator();
+
+                    // Shape Type
+                    const char* shapeTypes[] = { "Box", "Sphere", "Capsule", "Cylinder", "Mesh", "ConvexHull" };
+                    int currentShapeType = static_cast<int>(collider->shapeDesc.type);
+                    
+                    ImGui::Text("Shape Type:");
+                    ImGui::SameLine();
+                    if (ImGui::Combo("##ShapeType", &currentShapeType, shapeTypes, IM_ARRAYSIZE(shapeTypes)))
+                    {
+                        collider->shapeDesc.type = static_cast<PhysicsModule::PhysicsShapeType>(currentShapeType);
+                        collider->needsCreation = true;
+                        entity.modified<PhysicsModule::ColliderComponent>();
+                    }
+
+                    // Shape parameters based on type
+                    if (collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Box ||
+                        collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Cylinder)
+                    {
+                        float size[3] = { collider->shapeDesc.size.x, collider->shapeDesc.size.y, collider->shapeDesc.size.z };
+                        ImGui::Text("Size:");
+                        ImGui::SameLine();
+                        if (ImGui::DragFloat3("##Size", size, 0.01f, 0.01f, 1000.0f))
+                        {
+                            collider->shapeDesc.size = glm::vec3(size[0], size[1], size[2]);
+                            collider->needsCreation = true;
+                            entity.modified<PhysicsModule::ColliderComponent>();
+                        }
+                    }
+
+                    if (collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Sphere ||
+                        collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Capsule)
+                    {
+                        float radius = collider->shapeDesc.radius;
+                        ImGui::Text("Radius:");
+                        ImGui::SameLine();
+                        if (ImGui::DragFloat("##Radius", &radius, 0.01f, 0.01f, 1000.0f))
+                        {
+                            collider->shapeDesc.radius = radius;
+                            collider->needsCreation = true;
+                            entity.modified<PhysicsModule::ColliderComponent>();
+                        }
+                    }
+
+                    if (collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Capsule ||
+                        collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Cylinder)
+                    {
+                        float height = collider->shapeDesc.height;
+                        ImGui::Text("Height:");
+                        ImGui::SameLine();
+                        if (ImGui::DragFloat("##Height", &height, 0.01f, 0.01f, 1000.0f))
+                        {
+                            collider->shapeDesc.height = height;
+                            collider->needsCreation = true;
+                            entity.modified<PhysicsModule::ColliderComponent>();
+                        }
+                    }
+
+                    // Is Trigger
+                    bool isTrigger = collider->isTrigger;
+                    ImGui::Text("Is Trigger:");
+                    ImGui::SameLine();
+                    if (ImGui::Checkbox("##IsTrigger", &isTrigger))
+                    {
+                        collider->isTrigger = isTrigger;
+                        collider->needsCreation = true;
+                        entity.modified<PhysicsModule::ColliderComponent>();
+                    }
+                }
+                else
+                {
+                    ImGui::PopStyleColor();
+                }
+            }
+        }
+        ImGui::EndChildFrame();
+    }
+};
+
+class PhysicsCharacterControllerRenderer : public IComponentRenderer
+{
+public:
+    PhysicsCharacterControllerRenderer() : IComponentRenderer() {}
+
+    void render(flecs::entity& entity) override
+    {
+        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+
+        if (ImGui::BeginChildFrame(12, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5f,
+                                               ImGui::GetWindowSize().y / 3.f)))
+        {
+            if (PhysicsModule::CharacterControllerComponent* cc = entity.get_mut<PhysicsModule::CharacterControllerComponent>())
+            {
+                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
+                bool headerOpen = ImGui::CollapsingHeader("Character Controller Component", ImGuiTreeNodeFlags_DefaultOpen);
+                renderComponentControls(entity, "CharacterControllerComponent", "Character Controller Component");
+                
+                if (headerOpen)
+                {
+                    ImGui::PopStyleColor();
+                    ImGui::SetCursorPosX(0);
+                    ImGui::Separator();
+
+                    float radius = cc->radius;
+                    float height = cc->height;
+                    float stepHeight = cc->stepHeight;
+                    float velocity[3] = { cc->velocity.x, cc->velocity.y, cc->velocity.z };
+
+                    ImGui::Text("Radius:");
+                    ImGui::SameLine();
+                    if (ImGui::DragFloat("##Radius", &radius, 0.01f, 0.01f, 10.0f))
+                    {
+                        cc->radius = radius;
+                        entity.modified<PhysicsModule::CharacterControllerComponent>();
+                    }
+
+                    ImGui::Text("Height:");
+                    ImGui::SameLine();
+                    if (ImGui::DragFloat("##Height", &height, 0.01f, 0.01f, 10.0f))
+                    {
+                        cc->height = height;
+                        entity.modified<PhysicsModule::CharacterControllerComponent>();
+                    }
+
+                    ImGui::Text("Step Height:");
+                    ImGui::SameLine();
+                    if (ImGui::DragFloat("##StepHeight", &stepHeight, 0.01f, 0.0f, 5.0f))
+                    {
+                        cc->stepHeight = stepHeight;
+                        entity.modified<PhysicsModule::CharacterControllerComponent>();
+                    }
+
+                    ImGui::Text("Velocity:");
+                    ImGui::SameLine();
+                    if (ImGui::DragFloat3("##Velocity", velocity, 0.1f, -1000.0f, 1000.0f))
+                    {
+                        cc->velocity = glm::vec3(velocity[0], velocity[1], velocity[2]);
+                        entity.modified<PhysicsModule::CharacterControllerComponent>();
+                    }
+
+                    ImGui::Text("Is Grounded:");
+                    ImGui::SameLine();
+                    ImGui::BeginDisabled(true);
+                    ImGui::Checkbox("##IsGrounded", &cc->isGrounded);
+                    ImGui::EndDisabled();
+                }
+                else
+                {
+                    ImGui::PopStyleColor();
+                }
+            }
+        }
+        ImGui::EndChildFrame();
+    }
+};
+
+class PhysicsMaterialRenderer : public IComponentRenderer
+{
+public:
+    PhysicsMaterialRenderer() : IComponentRenderer() {}
+
+    void render(flecs::entity& entity) override
+    {
+        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+
+        if (ImGui::BeginChildFrame(13, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5f,
+                                               ImGui::GetWindowSize().y / 3.f)))
+        {
+            if (PhysicsModule::PhysicsMaterialComponent* material = entity.get_mut<PhysicsModule::PhysicsMaterialComponent>())
+            {
+                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
+                bool headerOpen = ImGui::CollapsingHeader("Physics Material Component", ImGuiTreeNodeFlags_DefaultOpen);
+                renderComponentControls(entity, "PhysicsMaterialComponent", "Physics Material Component");
+                
+                if (headerOpen)
+                {
+                    ImGui::PopStyleColor();
+                    ImGui::SetCursorPosX(0);
+                    ImGui::Separator();
+
+                    float friction = material->friction;
+                    float restitution = material->restitution;
+                    float density = material->density;
+
+                    ImGui::Text("Friction:");
+                    ImGui::SameLine();
+                    if (ImGui::DragFloat("##Friction", &friction, 0.01f, 0.0f, 10.0f))
+                    {
+                        material->friction = friction;
+                        entity.modified<PhysicsModule::PhysicsMaterialComponent>();
+                    }
+
+                    ImGui::Text("Restitution:");
+                    ImGui::SameLine();
+                    if (ImGui::DragFloat("##Restitution", &restitution, 0.01f, 0.0f, 1.0f))
+                    {
+                        material->restitution = restitution;
+                        entity.modified<PhysicsModule::PhysicsMaterialComponent>();
+                    }
+
+                    ImGui::Text("Density:");
+                    ImGui::SameLine();
+                    if (ImGui::DragFloat("##Density", &density, 0.01f, 0.01f, 10000.0f))
+                    {
+                        material->density = density;
+                        entity.modified<PhysicsModule::PhysicsMaterialComponent>();
+                    }
+                }
+                else
+                {
+                    ImGui::PopStyleColor();
+                }
+            }
+        }
+        ImGui::EndChildFrame();
+    }
 };

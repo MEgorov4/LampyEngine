@@ -59,6 +59,24 @@ GUIWorldInspector::GUIWorldInspector() :
     {
         return std::make_unique<MaterialRenderer>();
     });
+
+    // Register PhysicsModule component renderers
+    factory.registerRenderer("RigidBodyComponent", [this]()
+    {
+        return std::make_unique<PhysicsRigidBodyRenderer>();
+    });
+    factory.registerRenderer("ColliderComponent", [this]()
+    {
+        return std::make_unique<PhysicsColliderRenderer>();
+    });
+    factory.registerRenderer("CharacterControllerComponent", [this]()
+    {
+        return std::make_unique<PhysicsCharacterControllerRenderer>();
+    });
+    factory.registerRenderer("PhysicsMaterialComponent", [this]()
+    {
+        return std::make_unique<PhysicsMaterialRenderer>();
+    });
 }
 
 void GUIWorldInspector::render(float deltaTime)

@@ -4,6 +4,11 @@
 
 #include "../../ObjectCoreModule/ECS/Components/ECSComponents.h"
 #include "../../ObjectCoreModule/ECS/ECSModule.h"
+#include "../../ObjectCoreModule/ECS/ComponentRegistry.h"
+#include "../../ObjectCoreModule/ECS/EntityWorld.h"
+#include <Modules/PhysicsModule/Components/RigidBodyComponent.h>
+#include <Modules/PhysicsModule/Components/ColliderComponent.h>
+#include <Modules/PhysicsModule/Utils/PhysicsTypes.h>
 
 #include <Modules/ResourceModule/Asset/AssetID.h>
 
@@ -18,6 +23,7 @@ namespace
 {
 using ResourceModule::AssetID;
 using namespace ECSModule;
+using namespace PhysicsModule;
 
 template <typename Comp>
 void removeComponentIfPresent(flecs::entity& e)
@@ -38,7 +44,7 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
             auto* ecsModule = module.getECSModule();
             if (!ecsModule)
                 return nullptr;
-            auto* worldWrapper = ecsModule->getCurrentWorld();
+            EntityWorld* worldWrapper = ecsModule->getCurrentWorld();
             if (!worldWrapper)
                 return nullptr;
             return &worldWrapper->get();
@@ -131,6 +137,58 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
 
     state.new_usertype<EditorOnlyTag>("EditorOnlyTag");
     state.new_usertype<InvisibleTag>("InvisibleTag");
+
+    // Physics Module Components
+    // PhysicsShapeType enum
+    state.new_enum("PhysicsShapeType",
+        "Box", PhysicsShapeType::Box,
+        "Sphere", PhysicsShapeType::Sphere,
+        "Capsule", PhysicsShapeType::Capsule,
+        "Cylinder", PhysicsShapeType::Cylinder,
+        "Mesh", PhysicsShapeType::Mesh,
+        "ConvexHull", PhysicsShapeType::ConvexHull
+    );
+
+    // PhysicsShapeDesc
+    state.new_usertype<PhysicsShapeDesc>(
+        "PhysicsShapeDesc",
+        sol::constructors<PhysicsShapeDesc()>(),
+        "type", &PhysicsShapeDesc::type,
+        "size", &PhysicsShapeDesc::size,
+        "radius", &PhysicsShapeDesc::radius,
+        "height", &PhysicsShapeDesc::height
+    );
+    
+    sol::table physicsShapeDescTable = state.create_table();
+    physicsShapeDescTable["new"] = []() -> PhysicsShapeDesc { return PhysicsShapeDesc(); };
+    state["PhysicsShapeDesc"] = physicsShapeDescTable;
+
+    // RigidBodyComponent
+    state.new_usertype<RigidBodyComponent>(
+        "RigidBodyComponent",
+        sol::constructors<RigidBodyComponent()>(),
+        "mass", &RigidBodyComponent::mass,
+        "isStatic", &RigidBodyComponent::isStatic,
+        "isKinematic", &RigidBodyComponent::isKinematic,
+        "needsCreation", &RigidBodyComponent::needsCreation
+    );
+    
+    sol::table rigidBodyComponentTable = state.create_table();
+    rigidBodyComponentTable["new"] = []() -> RigidBodyComponent { return RigidBodyComponent(); };
+    state["RigidBodyComponent"] = rigidBodyComponentTable;
+
+    // ColliderComponent
+    state.new_usertype<ColliderComponent>(
+        "ColliderComponent",
+        sol::constructors<ColliderComponent()>(),
+        "shapeDesc", &ColliderComponent::shapeDesc,
+        "isTrigger", &ColliderComponent::isTrigger,
+        "needsCreation", &ColliderComponent::needsCreation
+    );
+    
+    sol::table colliderComponentTable = state.create_table();
+    colliderComponentTable["new"] = []() -> ColliderComponent { return ColliderComponent(); };
+    state["ColliderComponent"] = colliderComponentTable;
 
     state.new_usertype<flecs::world>(
         "World",
@@ -364,6 +422,48 @@ void ECSRegister::registerTypes(LuaScriptModule& module, sol::state& state)
             e.set<DirectionalLightComponent>(light);
         },
         "remove_directional_light", [](flecs::entity& e) { removeComponentIfPresent<DirectionalLightComponent>(e); },
+        // Physics components
+        "has_rigid_body", [](const flecs::entity& e) { return e.has<RigidBodyComponent>(); },
+        "get_rigid_body",
+        [](flecs::entity& e) -> sol::optional<RigidBodyComponent>
+        {
+            if (const RigidBodyComponent* rb = e.get<RigidBodyComponent>())
+                return *rb;
+            return sol::nullopt;
+        },
+        "set_rigid_body",
+        [](flecs::entity& e, const RigidBodyComponent& rb)
+        {
+            e.set<RigidBodyComponent>(rb);
+        },
+        "remove_rigid_body", [](flecs::entity& e) { removeComponentIfPresent<RigidBodyComponent>(e); },
+        "has_collider", [](const flecs::entity& e) { return e.has<ColliderComponent>(); },
+        "get_collider",
+        [](flecs::entity& e) -> sol::optional<ColliderComponent>
+        {
+            if (const ColliderComponent* collider = e.get<ColliderComponent>())
+                return *collider;
+            return sol::nullopt;
+        },
+        "set_collider",
+        [](flecs::entity& e, const ColliderComponent& collider)
+        {
+            e.set<ColliderComponent>(collider);
+        },
+        "remove_collider", [](flecs::entity& e) { removeComponentIfPresent<ColliderComponent>(e); },
+        // Generic component add/remove using ComponentRegistry
+        "add_component",
+        [](flecs::entity& e, const std::string& componentName)
+        {
+            auto& registry = ComponentRegistry::getInstance();
+            return registry.addComponent(e, componentName);
+        },
+        "remove_component",
+        [](flecs::entity& e, const std::string& componentName)
+        {
+            auto& registry = ComponentRegistry::getInstance();
+            return registry.removeComponent(e, componentName);
+        },
         "has_editor_only_tag", [](const flecs::entity& e) { return e.has<EditorOnlyTag>(); },
         "add_editor_only_tag", [](flecs::entity& e) { e.add<EditorOnlyTag>(); },
         "remove_editor_only_tag", [](flecs::entity& e) { e.remove<EditorOnlyTag>(); },

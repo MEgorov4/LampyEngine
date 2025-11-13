@@ -15,6 +15,8 @@
 #include <Core/EventHelpers.h>
 #include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
+#include <Modules/PhysicsModule/PhysicsLocator.h>
+#include <Modules/PhysicsModule/PhysicsContext/PhysicsContext.h>
 #include <Modules/ResourceModule/ResourceManager.h>
 
 namespace RenderModule
@@ -328,6 +330,16 @@ void IRenderer::render()
     if (ctxPtr)
     {
         ctxPtr->beginFrame();
+        
+        // Call physics debug draw before flushing debug primitives
+        if (auto* physicsCtx = PhysicsModule::PhysicsLocator::TryGet())
+        {
+            if (physicsCtx->isDebugDrawEnabled())
+            {
+                physicsCtx->debugDraw();
+            }
+        }
+        
         ctxPtr->flushDebugPrimitives();
     }
 

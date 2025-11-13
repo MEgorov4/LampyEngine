@@ -4,8 +4,11 @@
 
 #include <EngineMinimal.h>
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
+#include <Modules/PhysicsModule/PhysicsLocator.h>
+#include <Modules/PhysicsModule/PhysicsContext/PhysicsContext.h>
 #include <Modules/ProjectModule/ProjectModule.h>
 #include <imgui.h>
+#include <btBulletDynamicsCommon.h>
 
 GUIEditorToolPanel::GUIEditorToolPanel() :
     ImGUIModule::GUIObject(), m_ecsModule(GCM(ECSModule::ECSModule)),
@@ -40,6 +43,92 @@ void GUIEditorToolPanel::render(float deltaTime)
             if (ImGui::Button("Stop"))
             {
                 GCEB().emit(Events::EditorUI::SimulationStop{});
+            }
+        }
+
+        ImGui::SameLine();
+
+        // Physics Debug Draw toggle
+        if (auto* physicsCtx = PhysicsModule::PhysicsLocator::TryGet())
+        {
+            bool debugDrawEnabled = physicsCtx->isDebugDrawEnabled();
+            if (ImGui::Checkbox("Physics Debug", &debugDrawEnabled))
+            {
+                physicsCtx->setDebugDrawEnabled(debugDrawEnabled);
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Toggle physics debug visualization");
+            }
+
+            // Debug mode flags (only show when debug is enabled)
+            if (debugDrawEnabled)
+            {
+                ImGui::SameLine();
+                if (ImGui::Button("Debug Options..."))
+                {
+                    ImGui::OpenPopup("PhysicsDebugOptions");
+                }
+
+                if (ImGui::BeginPopup("PhysicsDebugOptions"))
+                {
+                    int currentMode = physicsCtx->getDebugMode();
+                    int newMode = currentMode;
+
+                    // Toggle flags
+                    bool wireframe = (currentMode & btIDebugDraw::DBG_DrawWireframe) != 0;
+                    bool aabb = (currentMode & btIDebugDraw::DBG_DrawAabb) != 0;
+                    bool contactPoints = (currentMode & btIDebugDraw::DBG_DrawContactPoints) != 0;
+                    bool constraints = (currentMode & btIDebugDraw::DBG_DrawConstraints) != 0;
+                    bool normals = (currentMode & btIDebugDraw::DBG_DrawNormals) != 0;
+
+                    if (ImGui::Checkbox("Wireframe", &wireframe))
+                    {
+                        if (wireframe)
+                            newMode |= btIDebugDraw::DBG_DrawWireframe;
+                        else
+                            newMode &= ~btIDebugDraw::DBG_DrawWireframe;
+                    }
+
+                    if (ImGui::Checkbox("AABB", &aabb))
+                    {
+                        if (aabb)
+                            newMode |= btIDebugDraw::DBG_DrawAabb;
+                        else
+                            newMode &= ~btIDebugDraw::DBG_DrawAabb;
+                    }
+
+                    if (ImGui::Checkbox("Contact Points", &contactPoints))
+                    {
+                        if (contactPoints)
+                            newMode |= btIDebugDraw::DBG_DrawContactPoints;
+                        else
+                            newMode &= ~btIDebugDraw::DBG_DrawContactPoints;
+                    }
+
+                    if (ImGui::Checkbox("Constraints", &constraints))
+                    {
+                        if (constraints)
+                            newMode |= btIDebugDraw::DBG_DrawConstraints;
+                        else
+                            newMode &= ~btIDebugDraw::DBG_DrawConstraints;
+                    }
+
+                    if (ImGui::Checkbox("Normals", &normals))
+                    {
+                        if (normals)
+                            newMode |= btIDebugDraw::DBG_DrawNormals;
+                        else
+                            newMode &= ~btIDebugDraw::DBG_DrawNormals;
+                    }
+
+                    if (newMode != currentMode)
+                    {
+                        physicsCtx->setDebugMode(newMode);
+                    }
+
+                    ImGui::EndPopup();
+                }
             }
         }
 

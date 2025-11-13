@@ -187,13 +187,18 @@ void Application::engineTick()
             }
 
             {
-                ZoneScopedN("Tick/PhysicsTick");
-                m_physicsModule->tick(deltaTime);
+                ZoneScopedN("Tick/ECSTick");
+                // ECS tick runs all systems in OnUpdate phase
+                // SyncToPhysics runs (synchronizes ECS -> Physics)
+                // SyncFromPhysics also runs (synchronizes Physics -> ECS from previous frame)
+                m_ecsModule->ecsTick(deltaTime);
             }
 
             {
-                ZoneScopedN("Tick/ECSTick");
-                m_ecsModule->ecsTick(deltaTime);
+                ZoneScopedN("Tick/PhysicsTick");
+                // Physics step runs after ECS tick
+                // SyncFromPhysics will sync results on next frame
+                m_physicsModule->tick(deltaTime);
             }
 
             {

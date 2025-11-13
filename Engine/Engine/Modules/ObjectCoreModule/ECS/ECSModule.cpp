@@ -8,6 +8,13 @@
 #include "Editor/Modules/EditorGuiModule/Events.h"
 #include <Modules/LuaScriptModule/LuaScriptModule.h>
 #include <Modules/PhysicsModule/PhysicsModule.h>
+#include <Modules/PhysicsModule/PhysicsLocator.h>
+#include <Modules/PhysicsModule/PhysicsContext/PhysicsContext.h>
+#include <Modules/PhysicsModule/Components/RigidBodyComponent.h>
+#include <Modules/PhysicsModule/Utils/PhysicsTypes.h>
+#include <Modules/PhysicsModule/Components/ColliderComponent.h>
+#include <Modules/PhysicsModule/Components/CharacterControllerComponent.h>
+#include <Modules/PhysicsModule/Components/PhysicsMaterialComponent.h>
 #include <Modules/ProjectModule/ProjectModule.h>
 #include <Modules/ResourceModule/ResourceManager.h>
 #include <Modules/ResourceModule/RWorld.h>
@@ -188,15 +195,70 @@ void ECSModule::ecsTick(float dt)
 void ECSModule::simulate(bool state)
 {
     ZoneScopedN("ECSModule::simulate");
+    auto* world = getCurrentWorld();
+    if (!world)
+        return;
+
     if (state && !m_inSimulate)
     {
+        // Save current world state before starting simulation
+        m_simulationSnapshot = world->serialize();
         m_inSimulate = true;
         GCEB().emit(Events::ECS::WorldOpened{"Simulation"});
     }
     else if (!state && m_inSimulate)
     {
         m_inSimulate = false;
+        
+        // Clear all physics bodies before restoring state
+        auto* physicsCtx = PhysicsModule::PhysicsLocator::TryGet();
+        if (physicsCtx)
+        {
+            auto& flecsWorld = world->get();
+            // Collect all entities with RigidBodyComponent to avoid iterator invalidation
+            std::vector<flecs::entity> entitiesToClear;
+            flecsWorld.each<PhysicsModule::RigidBodyComponent>([&entitiesToClear](flecs::entity e, PhysicsModule::RigidBodyComponent&) {
+                entitiesToClear.push_back(e);
+            });
+            
+            // Destroy physics bodies for all entities
+            for (auto& entity : entitiesToClear)
+            {
+                if (entity.is_valid())
+                {
+                    physicsCtx->destroyBodyForEntity(entity);
+                }
+            }
+        }
+        
+        // Restore world state from snapshot
+        if (!m_simulationSnapshot.empty())
+        {
+            world->deserialize(m_simulationSnapshot);
+            
+            // Reset RigidBodyComponent flags to ensure physics bodies are recreated
+            auto& flecsWorld = world->get();
+            using namespace PhysicsModule;
+            flecsWorld.each<RigidBodyComponent>([&](flecs::entity e, RigidBodyComponent& rb) {
+                rb.bodyHandle = InvalidBodyHandle;
+                rb.needsCreation = true;
+            });
+            
+            // Also reset ColliderComponent flags
+            flecsWorld.each<ColliderComponent>([&](flecs::entity e, ColliderComponent& collider) {
+                collider.needsCreation = true;
+            });
+            
+            m_simulationSnapshot.clear();
+        }
+        
+        // Emit WorldClosed event to notify renderer to clear render list
+        // This happens BEFORE the next frame, so renderer will rebuild on next frame
         GCEB().emit(Events::ECS::WorldClosed{"Simulation"});
+        
+        // Emit WorldOpened event to notify renderer to rebuild render list
+        // This ensures renderer knows the world is ready after deserialization
+        GCEB().emit(Events::ECS::WorldOpened{"EditorWorld"});
     }
 }
 
@@ -338,10 +400,41 @@ void ECSModule::registerComponents()
         [](flecs::entity &e) { e.remove<PointLightComponent>(); },
         [](flecs::entity &e) { return e.has<PointLightComponent>(); }));
 
-    // Register RigidbodyComponent
+    // Register RigidbodyComponent (legacy)
     registry.registerComponent(std::make_unique<Factory>(
         "RigidbodyComponent", "Rigidbody Component", [](flecs::entity &e) { e.add<RigidbodyComponent>(); },
         [](flecs::entity &e) { e.remove<RigidbodyComponent>(); },
         [](flecs::entity &e) { return e.has<RigidbodyComponent>(); }));
+
+    // Register PhysicsModule components
+    using namespace PhysicsModule;
+    
+    // Register RigidBodyComponent
+    registry.registerComponent(std::make_unique<Factory>(
+        "RigidBodyComponent", "Rigid Body Component",
+        [](flecs::entity &e) { e.set<RigidBodyComponent>({}); },
+        [](flecs::entity &e) { e.remove<RigidBodyComponent>(); },
+        [](flecs::entity &e) { return e.has<RigidBodyComponent>(); }));
+
+    // Register ColliderComponent
+    registry.registerComponent(std::make_unique<Factory>(
+        "ColliderComponent", "Collider Component",
+        [](flecs::entity &e) { e.set<ColliderComponent>({}); },
+        [](flecs::entity &e) { e.remove<ColliderComponent>(); },
+        [](flecs::entity &e) { return e.has<ColliderComponent>(); }));
+
+    // Register CharacterControllerComponent
+    registry.registerComponent(std::make_unique<Factory>(
+        "CharacterControllerComponent", "Character Controller Component",
+        [](flecs::entity &e) { e.set<CharacterControllerComponent>({}); },
+        [](flecs::entity &e) { e.remove<CharacterControllerComponent>(); },
+        [](flecs::entity &e) { return e.has<CharacterControllerComponent>(); }));
+
+    // Register PhysicsMaterialComponent
+    registry.registerComponent(std::make_unique<Factory>(
+        "PhysicsMaterialComponent", "Physics Material Component",
+        [](flecs::entity &e) { e.set<PhysicsMaterialComponent>({}); },
+        [](flecs::entity &e) { e.remove<PhysicsMaterialComponent>(); },
+        [](flecs::entity &e) { return e.has<PhysicsMaterialComponent>(); }));
 }
 } // namespace ECSModule
