@@ -9,6 +9,12 @@ namespace RenderModule
 		OpenGL
 	};
 
+	enum class RenderOutputMode
+	{
+		OffscreenTexture,
+		WindowSwapchain
+	};
+
 	/// <summary>
 	/// Singleton class that manages rendering configuration settings.
 	/// </summary>
@@ -18,6 +24,7 @@ namespace RenderModule
 
 		uint32_t MAX_FRAMES_IN_FLIGHT = 2; ///< Maximum number of frames that can be in flight at once.
 		bool IMGUI_ENABLED = true; ///< Flag indicating whether ImGui is enabled.
+		RenderOutputMode OUTPUT_MODE = RenderOutputMode::OffscreenTexture;
 
 	public:
 		/// <summary>
@@ -36,6 +43,7 @@ namespace RenderModule
 		/// <returns>Maximum frames in flight.</returns>
 		uint32_t getMaxFramesInFlight() const { return MAX_FRAMES_IN_FLIGHT; }
 		GraphicsAPI getGraphicsAPI() const { return GRAPHICS_API; }
+		RenderOutputMode getOutputMode() const { return OUTPUT_MODE; }
 		/// <summary>
 		/// Checks whether ImGui rendering is enabled.
 		/// </summary>
@@ -53,6 +61,8 @@ namespace RenderModule
 		/// </summary>
 		/// <param name="state">True to enable ImGui, false to disable.</param>
 		void setImGuiEnabled(bool state) { IMGUI_ENABLED = state; }
+
+		void setOutputMode(RenderOutputMode mode) { OUTPUT_MODE = mode; }
 
 	private:
 		/// <summary>

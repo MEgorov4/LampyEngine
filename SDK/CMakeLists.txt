@@ -56,10 +56,11 @@ if(TARGET ${EDITOR_NAME})
     )
 endif()
 
-if(TARGET ProjectBrowser)
+if(DEFINED PROJECT_BROWSER_EXECUTABLE)
     install(
-        TARGETS ProjectBrowser
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        PROGRAMS ${PROJECT_BROWSER_EXECUTABLE}
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        RENAME ProjectBrowser${CMAKE_EXECUTABLE_SUFFIX}
     )
 endif()
 

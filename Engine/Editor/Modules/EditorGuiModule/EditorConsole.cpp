@@ -1,6 +1,6 @@
 #include "EditorConsole.h"
 
-#include <Modules/LuaScriptModule/LuaScriptModule.h>
+#include <Modules/ScriptModule/LuaScriptModule.h>
 #include <imgui.h>
 
 GUIConsole::GUIConsole() : GUIObject(), m_luaScriptModule(GCM(ScriptModule::LuaScriptModule))

@@ -12,7 +12,7 @@
 #include <Modules/ImGuiModule/GUIObject.h>
 #include <Modules/ImGuiModule/ImGuiModule.h>
 #include <Modules/InputModule/InputModule.h>
-#include <Modules/LuaScriptModule/LuaScriptModule.h>
+#include <Modules/ScriptModule/LuaScriptModule.h>
 #include <Modules/ProjectModule/ProjectModule.h>
 #include <Modules/RenderModule/RenderModule.h>
 

@@ -6,6 +6,9 @@
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/ResourceModule/ResourceManager.h>
 #include <Modules/WindowModule/WindowModule.h>
+#include "RenderConfig.h"
+#include <cstdlib>
+#include <string_view>
 
 namespace RenderModule
 {
@@ -25,6 +28,31 @@ void RenderModule::startup()
 
     LT_LOGI("RenderModule", "Init render factory");
     RenderFactory::init();
+
+    if (m_configuredOutputMode)
+    {
+        RenderConfig::getInstance().setOutputMode(*m_configuredOutputMode);
+    }
+    else if (const char *outputMode = std::getenv("LAMPY_RENDER_OUTPUT"))
+    {
+        std::string_view mode(outputMode);
+        if (mode == "window")
+        {
+            RenderConfig::getInstance().setOutputMode(RenderOutputMode::WindowSwapchain);
+        }
+        else if (mode == "offscreen")
+        {
+            RenderConfig::getInstance().setOutputMode(RenderOutputMode::OffscreenTexture);
+        }
+    }
+}
+
+void RenderModule::applyConfig(const RenderModuleConfig &config)
+{
+    if (config.outputMode.has_value())
+    {
+        m_configuredOutputMode = config.outputMode;
+    }
 }
 
 IRenderer *RenderModule::getRenderer()

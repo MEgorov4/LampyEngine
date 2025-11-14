@@ -18,6 +18,8 @@
 #include <Modules/PhysicsModule/PhysicsLocator.h>
 #include <Modules/PhysicsModule/PhysicsContext/PhysicsContext.h>
 #include <Modules/ResourceModule/ResourceManager.h>
+#include <Modules/WindowModule/WindowModule.h>
+#include <Modules/WindowModule/Window.h>
 
 namespace RenderModule
 {
@@ -327,6 +329,8 @@ void IRenderer::render()
     ZoneScopedN("IRenderer::render");
 
     auto *ctxPtr = RenderLocator::Get();
+    const auto outputMode = RenderConfig::getInstance().getOutputMode();
+
     if (ctxPtr)
     {
         ctxPtr->beginFrame();
@@ -344,8 +348,32 @@ void IRenderer::render()
     }
 
     updateRenderList();
+    
+    if (outputMode == RenderOutputMode::WindowSwapchain)
+    {
+        if (auto *windowModule = GCM(WindowModule::WindowModule))
+        {
+            if (auto *window = windowModule->getWindow())
+            {
+                auto viewport = window->getWindowSize();
+                if (viewport.first > 0 && viewport.second > 0)
+                {
+                    if (ctxPtr)
+                    {
+                        ctxPtr->setViewport(viewport.first, viewport.second);
+                    }
+                    m_renderGraph.resizeAll(viewport.first, viewport.second);
+                }
+            }
+        }
+    }
 
     m_activeTextureHandle = m_renderGraph.execute();
+
+    if (outputMode == RenderOutputMode::WindowSwapchain)
+    {
+        presentToWindow(m_activeTextureHandle);
+    }
     
     if (ctxPtr)
     {
@@ -432,13 +460,17 @@ TextureHandle IRenderer::getOutputRenderHandle(int w, int h)
 
     LT_ASSERT_MSG(w > 0 && h > 0, "Output dimensions must be positive");
 
-    auto *ctxPtr = RenderLocator::Get();
-    if (ctxPtr)
+    if (RenderConfig::getInstance().getOutputMode() == RenderOutputMode::OffscreenTexture)
     {
-        ctxPtr->setViewport(w, h);
+        auto *ctxPtr = RenderLocator::Get();
+        if (ctxPtr)
+        {
+            ctxPtr->setViewport(w, h);
+        }
+
+        m_renderGraph.resizeAll(w, h);
     }
 
-    m_renderGraph.resizeAll(w, h);
     return m_activeTextureHandle;
 }
 

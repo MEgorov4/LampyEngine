@@ -14,6 +14,12 @@ namespace ResourceModule
     class ResourceManager;
 }
 
+namespace RenderModule
+{
+    class IShader;
+    class IMesh;
+}
+
 namespace RenderModule::OpenGL
 {
     class OpenGLFramebuffer;
@@ -27,9 +33,12 @@ namespace RenderModule::OpenGL
         OpenGLRenderer();
 
         void waitIdle() override;
+        void presentToWindow(TextureHandle handle) override;
 
     private:
         void init();
+        std::shared_ptr<IShader> m_presentShader;
+        std::shared_ptr<IMesh> m_presentQuad;
 
         void debugMessageHandle(const std::string& message) const;
     };

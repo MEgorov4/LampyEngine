@@ -4,6 +4,7 @@
 #include <Modules/ProjectModule/ProjectModule.h>
 #include <Editor/Modules/EditorGuiModule/EditorGUIModule.h>
 #include <Modules/ResourceModule/Asset/AssetManager.h>
+#include <Modules/RenderModule/RenderModule.h>
 
 void EditorApplication::startup()
 {
@@ -42,5 +43,12 @@ void EditorApplication::render()
 void EditorApplication::tick(float deltaTime)
 {
     ZoneScopedN("Editor::tick");
+}
+
+void EditorApplication::configureModules(ModuleConfigRegistry &registry)
+{
+    RenderModule::RenderModuleConfig renderCfg;
+    renderCfg.outputMode = RenderModule::RenderOutputMode::OffscreenTexture;
+    registry.setConfig<RenderModule::RenderModule>(renderCfg);
 }
 

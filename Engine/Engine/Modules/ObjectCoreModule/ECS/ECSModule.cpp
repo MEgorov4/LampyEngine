@@ -6,7 +6,7 @@
 #include "Systems/ECSLuaScriptsSystem.h"
 #include "Systems/ECSPhysicsSystem.h"
 #include "Editor/Modules/EditorGuiModule/Events.h"
-#include <Modules/LuaScriptModule/LuaScriptModule.h>
+#include <Modules/ScriptModule/LuaScriptModule.h>
 #include <Modules/PhysicsModule/PhysicsModule.h>
 #include <Modules/PhysicsModule/PhysicsLocator.h>
 #include <Modules/PhysicsModule/PhysicsContext/PhysicsContext.h>

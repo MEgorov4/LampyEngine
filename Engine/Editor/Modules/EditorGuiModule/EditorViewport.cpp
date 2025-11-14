@@ -4,7 +4,7 @@
 
 #include <Modules/InputModule/InputModule.h>
 #include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
-#include <Modules/LuaScriptModule/LuaScriptModule.h>
+#include <Modules/ScriptModule/LuaScriptModule.h>
 #include <Modules/RenderModule/IRenderer.h>
 #include <Modules/RenderModule/RenderLocator.h>
 #include <Modules/RenderModule/RenderModule.h>

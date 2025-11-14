@@ -23,4 +23,7 @@ class EditorApplication : public Application
 
     void render() override;
     void tick(float deltaTime) override;
+
+  protected:
+    void configureModules(ModuleConfigRegistry& registry) override;
 };

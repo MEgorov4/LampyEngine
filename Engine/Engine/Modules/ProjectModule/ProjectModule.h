@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <EngineMinimal.h>
+#include <optional>
 
 namespace ProjectModule
 {
@@ -52,6 +53,7 @@ namespace ProjectModule
 	class ProjectModule : public IModule
 	{
 		ProjectConfig m_projectConfig; ///< Stores the project configuration.
+		std::optional<std::string> m_projectFileOverride;
 	public:
 		/// <summary>
 		/// Initializes the project module and sets up the project environment.
@@ -69,6 +71,8 @@ namespace ProjectModule
 		/// </summary>
 		void shutdown() override;
 
+		void setProjectFileOverride(const std::string& projectFile);
+
 	private:
 		/// <summary>
 		/// Sets up the project environment by launching the Project Browser and retrieving configuration data.
@@ -79,5 +83,7 @@ namespace ProjectModule
 		/// Saves the current project configuration to a file.
 		/// </summary>
 		void saveProjectConfig();
+
+		bool loadProjectFromFile(const std::string& filePath);
 	};
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <EngineMinimal.h>
+#include <optional>
 
 class RuntimeApplication : public Application
 {
@@ -8,6 +9,7 @@ class RuntimeApplication : public Application
     ~RuntimeApplication() override = default;
 
     void startup();
+    void setProjectFileOverride(const std::string& path);
 
   protected:
     void onStartupMinor(ContextLocator *locator) override;
@@ -16,5 +18,10 @@ class RuntimeApplication : public Application
 
     void render() override;
     void tick(float deltaTime) override;
+
+    void configureModules(ModuleConfigRegistry& registry) override;
+
+  private:
+    std::optional<std::string> m_projectFileOverride;
 };
 

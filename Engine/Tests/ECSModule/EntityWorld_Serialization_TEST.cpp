@@ -4,7 +4,7 @@
 #include <Modules/ObjectCoreModule/ECS/Systems/ECSLuaScriptsSystem.h>
 #include <Modules/ResourceModule/ResourceManager.h>
 #include <Modules/ResourceModule/Asset/AssetID.h>
-#include <Modules/LuaScriptModule/LuaScriptModule.h>
+#include <Modules/ScriptModule/LuaScriptModule.h>
 #include <Modules/PhysicsModule/PhysicsModule.h>
 #include <Foundation/Memory/MemorySystem.h>
 #include <Core/Core.h>

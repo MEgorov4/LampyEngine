@@ -2,6 +2,7 @@
 
 #include <boost/process.hpp>
 #include <nlohmann/json.hpp>
+#include <Foundation/Filesystem/Fs.h>
 
 namespace ProjectModule
 {
@@ -105,9 +106,24 @@ void ProjectModule::shutdown()
     saveProjectConfig();
 }
 
+void ProjectModule::setProjectFileOverride(const std::string &projectFile)
+{
+    if (!projectFile.empty())
+    {
+        m_projectFileOverride = projectFile;
+        LT_LOG(LogVerbosity::Info, "ProjectModule",
+               "Project override file set to: " + projectFile);
+    }
+}
+
 void ProjectModule::setupProjectEnvironment()
 {
     namespace bp = boost::process;
+
+    if (m_projectFileOverride && loadProjectFromFile(*m_projectFileOverride))
+    {
+        return;
+    }
 
     LT_LOG(LogVerbosity::Info, "ProjectModule", "Load project config");
 
@@ -153,6 +169,31 @@ void ProjectModule::saveProjectConfig()
     else
     {
         LT_LOG(LogVerbosity::Error, "ProjectModule", "Failed to save project config.");
+    }
+}
+
+bool ProjectModule::loadProjectFromFile(const std::string &filePath)
+{
+    using namespace EngineCore::Foundation;
+
+    if (!Fs::exists(filePath))
+    {
+        LT_LOG(LogVerbosity::Error, "ProjectModule", "Specified project file does not exist: " + filePath);
+        return false;
+    }
+
+    try
+    {
+        std::string projectFileContent = Fs::readTextFile(filePath);
+        m_projectConfig = ProjectConfig(projectFileContent);
+        LT_LOG(LogVerbosity::Info, "ProjectModule", "Loaded project file: " + filePath);
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        LT_LOG(LogVerbosity::Error, "ProjectModule",
+               "Failed to load project file '" + filePath + "': " + e.what());
+        return false;
     }
 }
 

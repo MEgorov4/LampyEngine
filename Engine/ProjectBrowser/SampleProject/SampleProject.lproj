@@ -1,0 +1,11 @@
+{
+  "projectPath": "SampleProject",
+  "projectName": "SampleProject",
+  "resourcesPath": "SampleProject/Resources",
+  "buildPath": "SampleProject/Build",
+  "configPath": "SampleProject/Config",
+  "logsPath": "SampleProject/Saved",
+  "editorStartWorld": "default",
+  "gameStartWorld": "default",
+  "result": "success"
+}

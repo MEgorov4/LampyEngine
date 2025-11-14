@@ -4,6 +4,8 @@
 #include <Modules/WindowModule/Window.h>
 #include <Modules/WindowModule/WindowModule.h>
 #include "../RenderLocator.h"
+#include "../RenderFactory.h"
+#include "../Abstract/RenderState.h"
 
 #include "OpenGLObjects/OpenGLFramebuffer.h"
 #include "OpenGLObjects/OpenGLMesh.h"
@@ -56,6 +58,65 @@ void OpenGLRenderer::init()
 void OpenGLRenderer::waitIdle()
 {
     glFinish();
+}
+
+void OpenGLRenderer::presentToWindow(TextureHandle handle)
+{
+    if (handle.id == 0)
+    {
+        return;
+    }
+
+    auto *windowModule = GCM(WindowModule::WindowModule);
+    if (!windowModule)
+    {
+        return;
+    }
+
+    auto *window = windowModule->getWindow();
+    if (!window)
+    {
+        return;
+    }
+
+    auto [width, height] = window->getWindowSize();
+    if (width <= 0 || height <= 0)
+    {
+        return;
+    }
+
+    if (!m_presentShader)
+    {
+        m_presentShader = RenderFactory::get().createShader({"Shaders/GLSL/Core/copyTexture.vert"},
+                                                            {"Shaders/GLSL/Core/copyTexture.frag"});
+        if (m_presentShader)
+        {
+            m_presentShader->scanTextureBindings({{"sourceTexture", 0}});
+        }
+    }
+
+    if (!m_presentQuad)
+    {
+        m_presentQuad = RenderFactory::get().createMesh2D();
+    }
+
+    if (!m_presentShader || !m_presentQuad)
+    {
+        return;
+    }
+
+    auto state = RenderState::saveState();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, width, height);
+    RenderState::enableDepthTest(false);
+    RenderState::enableCullFace(false);
+    RenderState::setDepthMask(false);
+
+    m_presentShader->use();
+    m_presentShader->bindTextures({{"sourceTexture", handle}});
+    m_presentQuad->draw();
+
+    RenderState::restoreState(state);
 }
 
 void OpenGLRenderer::debugMessageHandle(const std::string &message) const

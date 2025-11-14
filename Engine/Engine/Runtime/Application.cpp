@@ -12,7 +12,7 @@
 #include <Modules/AudioModule/AudioModule.h>
 #include <Modules/ImGuiModule/ImGuiModule.h>
 #include <Modules/InputModule/InputModule.h>
-#include <Modules/LuaScriptModule/LuaScriptModule.h>
+#include <Modules/ScriptModule/LuaScriptModule.h>
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/PhysicsModule/PhysicsModule.h>
 #include <Modules/ProjectModule/ProjectModule.h>
@@ -31,6 +31,7 @@ void Application::run()
 
     LT_LOG(LogVerbosity::Info, "Engine", "Run");
     startupMinor();
+    configureModules(m_moduleConfigRegistry);
     startupMajor();
     collectRuntimeModules();
     LT_LOG(LogVerbosity::Info, "Engine", "Create engine tick");
@@ -123,7 +124,9 @@ void Application::startupMajor()
     Core::Register(std::make_shared<InputModule::InputModule>(), 20);
     Core::Register(std::make_shared<WindowModule::WindowModule>(), 25);
     Core::Register(std::make_shared<AudioModule::AudioModule>(), 30);
-    Core::Register(std::make_shared<RenderModule::RenderModule>(), 40);
+    auto renderModule = std::make_shared<RenderModule::RenderModule>();
+    m_moduleConfigRegistry.applyConfig(*renderModule);
+    Core::Register(renderModule, 40);
     Core::Register(std::make_shared<ImGUIModule::ImGUIModule>(), 45);
     Core::Register(std::make_shared<ECSModule::ECSModule>(), 50);
     Core::Register(std::make_shared<PhysicsModule::PhysicsModule>(), 55);

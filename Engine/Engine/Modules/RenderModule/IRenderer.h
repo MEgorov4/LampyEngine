@@ -10,6 +10,7 @@
 #include "RenderListManager.h"
 #include "CameraUpdater.h"
 #include "TransformUpdater.h"
+#include "RenderConfig.h"
 
 namespace ECSModule { class ECSModule; }
 
@@ -36,6 +37,7 @@ public:
 
     void render();
     virtual void waitIdle() = 0;
+    virtual void presentToWindow(TextureHandle handle) {}
 
     void updateRenderList();
     void applyRenderDiff(const RenderDiff& diff);

@@ -2,7 +2,7 @@
 #include <Modules/ObjectCoreModule/ECS/EntityWorld.h>
 #include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
 #include <Modules/ResourceModule/ResourceManager.h>
-#include <Modules/LuaScriptModule/LuaScriptModule.h>
+#include <Modules/ScriptModule/LuaScriptModule.h>
 #include <Modules/PhysicsModule/PhysicsModule.h>
 #include <Modules/PhysicsModule/PhysicsLocator.h>
 #include <Modules/PhysicsModule/PhysicsContext/PhysicsContext.h>

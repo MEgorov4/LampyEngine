@@ -1,0 +1,1 @@
+FPS template placeholder for Config.

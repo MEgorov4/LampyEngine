@@ -1,5 +1,5 @@
 #pragma once 
-#include "Modules/LuaScriptModule/LuaScriptModule.h"
+#include "Modules/ScriptModule/LuaScriptModule.h"
 #include <flecs.h>
 
 struct ScriptComponent {

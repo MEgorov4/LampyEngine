@@ -1,6 +1,7 @@
 #pragma once
 
 #include <EngineMinimal.h>
+#include "ModuleConfigRegistry.h"
 
 namespace InputModule
 {
@@ -45,6 +46,7 @@ class Application
     ResourceModule::AssetManager* m_assetManager = nullptr;
 
     std::unique_ptr<ContextLocator> m_contextLocator;
+    ModuleConfigRegistry m_moduleConfigRegistry;
 
   public:
     Application()                                  = default;
@@ -65,6 +67,16 @@ class Application
     virtual void onShutdown() = 0;
     virtual void render()     = 0;
     virtual void tick(float dt) = 0;
+    virtual void configureModules(ModuleConfigRegistry& registry) {}
+
+    ModuleConfigRegistry& moduleConfigRegistry()
+    {
+        return m_moduleConfigRegistry;
+    }
+    const ModuleConfigRegistry& moduleConfigRegistry() const
+    {
+        return m_moduleConfigRegistry;
+    }
 
   private:
     void startupMajor();
