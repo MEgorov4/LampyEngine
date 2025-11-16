@@ -12,6 +12,8 @@
 
 namespace RenderModule
 {
+RenderModule* RenderModule::s_instance = nullptr;
+
 void RenderModule::startup()
 {
     LT_LOGI("RenderModule", "Startup");
@@ -48,6 +50,7 @@ void RenderModule::startup()
             RenderConfig::getInstance().setOutputMode(RenderOutputMode::OffscreenTexture);
         }
     }
+    s_instance = this;
 }
 
 void RenderModule::applyConfig(const RenderModuleConfig &config)
@@ -76,6 +79,10 @@ IRenderer *RenderModule::getRenderer()
 void RenderModule::shutdown()
 {
     LT_LOGI("RenderModule", "Shutdown");
+
+    // Release UI backend and callbacks first so they don't access renderer/context during destruction.
+    m_uiCallbacks.clear();
+    m_uiBackend.reset();
     
     if (m_context)
     {
@@ -100,5 +107,12 @@ void RenderModule::shutdown()
     
     LT_LOGI("RenderModule", "Destroy context");
     m_context.reset();
+
+    s_instance = nullptr;
+}
+
+RenderModule* RenderModule::GetInstance()
+{
+    return s_instance;
 }
 } // namespace RenderModule

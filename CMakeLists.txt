@@ -71,6 +71,7 @@ find_package(stb REQUIRED)
 find_package(clip REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(Tracy REQUIRED)
+find_package(nuklear REQUIRED)
 
 function(format_source_group)
   foreach(_source IN ITEMS ${ARGN})

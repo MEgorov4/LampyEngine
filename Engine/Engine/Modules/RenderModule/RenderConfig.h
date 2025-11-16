@@ -24,6 +24,7 @@ namespace RenderModule
 
         uint32_t MAX_FRAMES_IN_FLIGHT = 2; ///< Maximum number of frames that can be in flight at once.
         bool IMGUI_ENABLED = true; ///< Flag indicating whether ImGui is enabled.
+        bool UI_ENABLED = true; ///< Flag indicating whether high-level UI (e.g. Nuklear) is enabled.
         bool DEBUG_PASS_ENABLED = true; ///< Flag indicating whether debug pass rendering is enabled.
         bool GRID_PASS_ENABLED = true; ///< Flag indicating whether grid rendering is enabled.
         RenderOutputMode OUTPUT_MODE = RenderOutputMode::OffscreenTexture;
@@ -52,6 +53,11 @@ namespace RenderModule
         /// <returns>True if ImGui is enabled, otherwise false.</returns>
         bool getImGuiEnabled() const { return IMGUI_ENABLED; }
         /// <summary>
+        /// Checks whether the high-level UI (Nuklear backend) is enabled.
+        /// </summary>
+        /// <returns>True if UI is enabled, otherwise false.</returns>
+        bool getUIEnabled() const { return UI_ENABLED; }
+        /// <summary>
         /// Checks whether the debug render pass is enabled.
         /// </summary>
         /// <returns>True if the debug pass should run, otherwise false.</returns>
@@ -73,6 +79,11 @@ namespace RenderModule
         /// </summary>
         /// <param name="state">True to enable ImGui, false to disable.</param>
         void setImGuiEnabled(bool state) { IMGUI_ENABLED = state; }
+        /// <summary>
+        /// Enables or disables high-level UI rendering (e.g. Nuklear).
+        /// </summary>
+        /// <param name="state">True to enable UI, false to disable.</param>
+        void setUIEnabled(bool state) { UI_ENABLED = state; }
         /// <summary>
         /// Enables or disables the debug render pass.
         /// </summary>

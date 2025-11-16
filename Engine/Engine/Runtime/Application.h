@@ -23,6 +23,11 @@ namespace RenderModule
 class RenderModule;
 }
 
+namespace UIModule
+{
+class UIModule;
+}
+
 namespace ResourceModule
 {
 class AssetManager;

@@ -8,6 +8,7 @@
 #include "RenderGraph/RenderNodes.h"
 #include "RenderLocator.h"
 #include "RenderObjectFactory.h"
+#include "UIRenderPass.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -389,9 +390,13 @@ void IRenderer::render()
 
     if (outputMode == RenderOutputMode::WindowSwapchain)
     {
+        // Present the final composed scene to the main window.
         presentToWindow(m_activeTextureHandle);
+
+        // Render UI on top of the presented scene using the configured UI backend.
+        UIRenderPass::render();
     }
-    
+
     if (ctxPtr)
     {
         ctxPtr->endFrame();

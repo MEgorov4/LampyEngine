@@ -25,3 +25,5 @@ class EngineDeps(ConanFile):
         self.requires("efsw/1.4.1")
         self.requires("imgui/1.92.0-docking")
         self.requires("tracy/0.12.2")
+        # UI: Nuklear (rendered via IUIRenderBackend, separate from ImGui)
+        self.requires("nuklear/4.06.1")

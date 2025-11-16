@@ -21,7 +21,8 @@ target_link_libraries(
     imgui::imgui
     nlohmann_json::nlohmann_json 
     glm::glm
-    Tracy::TracyClient)
+    Tracy::TracyClient
+    nuklear::nuklear)
 target_precompile_headers(${ENGINE_NAME} PRIVATE EnginePCH.h)
 
 target_include_directories(${ENGINE_NAME}

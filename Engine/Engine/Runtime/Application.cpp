@@ -18,6 +18,7 @@
 #include <Modules/ProjectModule/ProjectModule.h>
 #include <Modules/RenderModule/IRenderer.h>
 #include <Modules/RenderModule/RenderModule.h>
+#include <Modules/UIModule/UIModule.h>
 #include <Modules/ResourceModule/Asset/AssetManager.h>
 #include <Modules/ResourceModule/ResourceManager.h>
 #include <Modules/ShaderCompilerModule/ShaderCompiler.h>
@@ -130,6 +131,7 @@ void Application::startupMajor()
     auto renderModule = std::make_shared<RenderModule::RenderModule>();
     m_moduleConfigRegistry.applyConfig(*renderModule);
     Core::Register(renderModule, 40);
+    Core::Register(std::make_shared<UIModule::UIModule>(), 42);
     Core::Register(std::make_shared<ImGUIModule::ImGUIModule>(), 45);
     Core::Register(std::make_shared<ECSModule::ECSModule>(), 50);
     Core::Register(std::make_shared<PhysicsModule::PhysicsModule>(), 55);
