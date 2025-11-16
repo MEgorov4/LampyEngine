@@ -828,15 +828,14 @@ inline void FinalCompose(const std::vector<Resource, ResourceAllocator<Resource>
     std::unordered_map<std::string, TextureHandle> texBindings;
     for (auto &in : inputs)
     {
-        // Маппим debug_pass_color на texture_pass_color для совместимости с шейдером
-        if (in.name == "debug_pass_color")
+        // Маппим промежуточные ресурсы на texture_pass_color для совместимости с шейдером
+        if (in.name == "debug_pass_color" || in.name == "grid_pass_color")
         {
             texBindings["texture_pass_color"] = in.handle;
+            continue;
         }
-        else
-        {
-            texBindings[in.name] = in.handle;
-        }
+
+        texBindings[in.name] = in.handle;
     }
 
     shader->bindTextures(texBindings);
@@ -1082,28 +1081,9 @@ inline void GridPass(const std::vector<Resource, ResourceAllocator<Resource>> &i
 
     fb->bind();
 
-    // ВАЖНО: Для теста рисуем сетку БЕЗ копирования входной текстуры
-    // Если зеленый экран виден, значит quad рендерится, и проблема была в порядке операций
-    gridShader->use();
-
-    // Устанавливаем данные камеры (всё, что нужно для бесконечной сетки)
-    if (gridShader->hasUniformBlock("CameraData"))
-    {
-        ShaderUniformBlock_CameraData cameraData;
-        cameraData.view = scene.camera.view;
-        cameraData.projection = scene.camera.projection;
-        cameraData.position = scene.camera.position;
-        gridShader->setUniformData("CameraData", &cameraData, sizeof(ShaderUniformBlock_CameraData));
-    }
-
-    // Рисуем сетку БЕЗ depth test для проверки видимости
     auto state = RenderState::saveState();
-    RenderState::enableDepthTest(false); // Отключаем для теста
-    RenderState::enableBlend(false);
-    gridMesh->draw(); // Автоматически использует GL_TRIANGLE_STRIP для quad
-    RenderState::restoreState(state);
-    
-    // Копируем входную текстуру (PBR результат) ПОВЕРХ сетки для теста
+
+    // Сначала копируем PBR результат в framebuffer в полный экран
     if (!inputs.empty() && inputs[0].handle.id != 0)
     {
         static std::shared_ptr<IShader> copyShader;
@@ -1121,15 +1101,38 @@ inline void GridPass(const std::vector<Resource, ResourceAllocator<Resource>> &i
             quad = RenderFactory::get().createMesh2D();
         }
 
-        // Копируем color с blend для смешивания с сеткой
         copyShader->use();
         copyShader->bindTextures({{"sourceTexture", inputs[0].handle}});
+
         RenderState::enableDepthTest(false);
-        RenderState::enableBlend(true);
-        RenderState::setBlendFunc(BlendFunc::SrcAlpha, BlendFunc::OneMinusSrcAlpha);
+        RenderState::enableBlend(false);
         quad->draw();
     }
+    else
+    {
+        glViewport(0, 0, vpWidth, vpHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
 
+    // Затем рисуем сетку поверх сцены с альфа-смешением
+    gridShader->use();
+
+    if (gridShader->hasUniformBlock("CameraData"))
+    {
+        ShaderUniformBlock_CameraData cameraData;
+        cameraData.view = scene.camera.view;
+        cameraData.projection = scene.camera.projection;
+        cameraData.position = scene.camera.position;
+        gridShader->setUniformData("CameraData", &cameraData, sizeof(ShaderUniformBlock_CameraData));
+    }
+
+    RenderState::enableDepthTest(false);
+    RenderState::enableBlend(true);
+    RenderState::setBlendFunc(BlendFunc::SrcAlpha, BlendFunc::OneMinusSrcAlpha);
+    gridMesh->draw();
+
+    RenderState::restoreState(state);
     fb->unbind();
     outputs[0].handle = fb->getColorTexture();
 }

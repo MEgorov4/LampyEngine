@@ -11,9 +11,9 @@ namespace PhysicsModule
     void SyncToPhysicsSystem::Register(flecs::world& world)
     {
         // Run in OnUpdate phase
-        world.system<PositionComponent, RotationComponent, RigidBodyComponent, ColliderComponent>()
+        world.system<TransformComponent, RigidBodyComponent, ColliderComponent>()
             .kind(flecs::OnUpdate)
-            .each([](flecs::entity e, PositionComponent& pos, RotationComponent& rot, 
+            .each([](flecs::entity e, TransformComponent& transform, 
                      RigidBodyComponent& rb, ColliderComponent& collider)
             {
                 auto* ctx = PhysicsLocator::TryGet();
@@ -27,8 +27,8 @@ namespace PhysicsModule
                     desc.mass = rb.mass;
                     desc.bodyType = rb.isStatic ? RigidBodyType::Static : 
                                    (rb.isKinematic ? RigidBodyType::Kinematic : RigidBodyType::Dynamic);
-                    desc.position = pos.toGLMVec();
-                    desc.rotation = rot.toQuat();
+                    desc.position = transform.position.toGLMVec();
+                    desc.rotation = transform.rotation.toQuat();
                     desc.shape = collider.shapeDesc;
                     
                     // Ensure shape has valid default values if not set
@@ -48,8 +48,8 @@ namespace PhysicsModule
                 else if (rb.isKinematic)
                 {
                     // Update transform for kinematic bodies
-                    glm::vec3 position = pos.toGLMVec();
-                    glm::quat rotation = rot.toQuat();
+                    glm::vec3 position = transform.position.toGLMVec();
+                    glm::quat rotation = transform.rotation.toQuat();
                     ctx->updateBodyTransform(e, position, rotation);
                 }
             });

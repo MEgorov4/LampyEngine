@@ -236,6 +236,19 @@ function Entity:set_name(value) end
 
 function Entity:destruct() end
 
+-- Transform --------------------------------------------------------------
+
+---@return boolean
+function Entity:has_transform() return false end
+
+---@return TransformComponent|nil
+function Entity:get_transform() return nil end
+
+---@param value TransformComponent
+function Entity:set_transform(value) end
+
+function Entity:remove_transform() end
+
 -- Position ---------------------------------------------------------------
 
 ---@return boolean
@@ -399,6 +412,12 @@ local RotationComponent = {}
 ---@field y number
 ---@field z number
 local ScaleComponent = {}
+
+---@class TransformComponent
+---@field position PositionComponent
+---@field rotation RotationComponent
+---@field scale ScaleComponent
+local TransformComponent = {}
 
 ---@class CameraComponent
 ---@field fov number

@@ -45,6 +45,7 @@ namespace ProjectModule
 		std::string getGameStartWorld() const;
 
 		void setEditorStartWorld(const std::string& path);
+		void setGameStartWorld(const std::string& path);
 	};
 
 	/// <summary>
@@ -72,6 +73,7 @@ namespace ProjectModule
 		void shutdown() override;
 
 		void setProjectFileOverride(const std::string& projectFile);
+		void saveProjectConfigNow();
 
 	private:
 		/// <summary>

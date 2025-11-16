@@ -22,6 +22,7 @@ class EntityWorld
   public:
     EntityWorld(ResourceModule::ResourceManager* resources, ScriptModule::LuaScriptModule* scripts,
                 PhysicsModule::PhysicsModule* physics);
+    ~EntityWorld();
 
     void init();
     void reset();

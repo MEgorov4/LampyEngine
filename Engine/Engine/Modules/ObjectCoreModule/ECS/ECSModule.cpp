@@ -54,9 +54,7 @@ void ECSModule::startup()
 
         if (evt.withDefaultComponents)
         {
-            entity.set<PositionComponent>({0.0f, 0.0f, 0.0f});
-            entity.set<RotationComponent>({0.0f, 0.0f, 0.0f});
-            entity.set<ScaleComponent>({1.0f, 1.0f, 1.0f});
+            entity.set<TransformComponent>(TransformComponent{});
         }
 
         GCEB().emit(Events::ECS::EntityCreated{entity.id(), evt.entityName});
@@ -273,16 +271,16 @@ void ECSModule::emitRenderFrameData()
     auto &world = worldPtr->get();
     Events::ECS::RenderFrameData frameData;
 
-    auto qCam = world.query<PositionComponent, RotationComponent, CameraComponent>();
+    auto qCam = world.query<TransformComponent, CameraComponent>();
     qCam.each(
-        [&](flecs::entity, const PositionComponent &pos, const RotationComponent &rot, const CameraComponent &cam) {
-            frameData.camera.posX = pos.x;
-            frameData.camera.posY = pos.y;
-            frameData.camera.posZ = pos.z;
-            frameData.camera.rotX = rot.x;
-            frameData.camera.rotY = rot.y;
-            frameData.camera.rotZ = rot.z;
-            const glm::quat quat = rot.toQuat();
+        [&](flecs::entity, const TransformComponent &transform, const CameraComponent &cam) {
+            frameData.camera.posX = transform.position.x;
+            frameData.camera.posY = transform.position.y;
+            frameData.camera.posZ = transform.position.z;
+            frameData.camera.rotX = transform.rotation.x;
+            frameData.camera.rotY = transform.rotation.y;
+            frameData.camera.rotZ = transform.rotation.z;
+            const glm::quat quat = transform.rotation.toQuat();
             frameData.camera.rotQX = quat.x;
             frameData.camera.rotQY = quat.y;
             frameData.camera.rotQZ = quat.z;
@@ -293,32 +291,32 @@ void ECSModule::emitRenderFrameData()
             frameData.camera.farClip = cam.farClip;
         });
 
-    auto qMesh = world.query<PositionComponent, RotationComponent, ScaleComponent, MeshComponent>();
-    qMesh.each([&](flecs::entity e, const PositionComponent &pos, const RotationComponent &rot,
-                   const ScaleComponent &scale, const MeshComponent &) {
+    auto qMesh = world.query<TransformComponent, MeshComponent>();
+    qMesh.each([&](flecs::entity e, const TransformComponent &trs,
+                   const MeshComponent &) {
         if (!e.is_valid())
         {
             return;
         }
 
-        Events::ECS::ObjectTransformData transform;
-        transform.entityId = e.id();
-        transform.posX = pos.x;
-        transform.posY = pos.y;
-        transform.posZ = pos.z;
-        transform.rotX = rot.x;
-        transform.rotY = rot.y;
-        transform.rotZ = rot.z;
+        Events::ECS::ObjectTransformData objectTransform;
+        objectTransform.entityId = e.id();
+        objectTransform.posX = trs.position.x;
+        objectTransform.posY = trs.position.y;
+        objectTransform.posZ = trs.position.z;
+        objectTransform.rotX = trs.rotation.x;
+        objectTransform.rotY = trs.rotation.y;
+        objectTransform.rotZ = trs.rotation.z;
 
-        const glm::quat quat = rot.toQuat();
-        transform.rotQX = quat.x;
-        transform.rotQY = quat.y;
-        transform.rotQZ = quat.z;
-        transform.rotQW = quat.w;
-        transform.scaleX = scale.x;
-        transform.scaleY = scale.y;
-        transform.scaleZ = scale.z;
-        frameData.objectsTransforms.push_back(transform);
+        const glm::quat quat = trs.rotation.toQuat();
+        objectTransform.rotQX = quat.x;
+        objectTransform.rotQY = quat.y;
+        objectTransform.rotQZ = quat.z;
+        objectTransform.rotQW = quat.w;
+        objectTransform.scaleX = trs.scale.x;
+        objectTransform.scaleY = trs.scale.y;
+        objectTransform.scaleZ = trs.scale.z;
+        frameData.objectsTransforms.push_back(objectTransform);
     });
 
     GCEB().emit(frameData);
@@ -330,25 +328,12 @@ void ECSModule::registerComponents()
     auto &registry = ComponentRegistry::getInstance();
     using Factory = ComponentFactory;
 
-    // Register PositionComponent
+    // Register TransformComponent
     registry.registerComponent(std::make_unique<Factory>(
-        "PositionComponent", "Position Component",
-        [](flecs::entity &e) { e.set<PositionComponent>({0.0f, 0.0f, 0.0f}); },
-        [](flecs::entity &e) { e.remove<PositionComponent>(); },
-        [](flecs::entity &e) { return e.has<PositionComponent>(); }));
-
-    // Register RotationComponent
-    registry.registerComponent(std::make_unique<Factory>(
-        "RotationComponent", "Rotation Component",
-        [](flecs::entity &e) { e.set<RotationComponent>({0.0f, 0.0f, 0.0f}); },
-        [](flecs::entity &e) { e.remove<RotationComponent>(); },
-        [](flecs::entity &e) { return e.has<RotationComponent>(); }));
-
-    // Register ScaleComponent
-    registry.registerComponent(std::make_unique<Factory>(
-        "ScaleComponent", "Scale Component", [](flecs::entity &e) { e.set<ScaleComponent>({1.0f, 1.0f, 1.0f}); },
-        [](flecs::entity &e) { e.remove<ScaleComponent>(); },
-        [](flecs::entity &e) { return e.has<ScaleComponent>(); }));
+        "TransformComponent", "Transform Component",
+        [](flecs::entity &e) { e.set<TransformComponent>(TransformComponent{}); },
+        [](flecs::entity &e) { e.remove<TransformComponent>(); },
+        [](flecs::entity &e) { return e.has<TransformComponent>(); }));
 
     // Register MeshComponent
     registry.registerComponent(std::make_unique<Factory>(
@@ -375,7 +360,11 @@ void ECSModule::registerComponents()
 
     // Register ScriptComponent
     registry.registerComponent(std::make_unique<Factory>(
-        "ScriptComponent", "Script Component", [](flecs::entity &e) { e.set<ScriptComponent>({""}); },
+        "ScriptComponent",
+        "Script Component",
+        [](flecs::entity &e) {
+            e.set<ScriptComponent>(ScriptComponent{});
+        },
         [](flecs::entity &e) { e.remove<ScriptComponent>(); },
         [](flecs::entity &e) { return e.has<ScriptComponent>(); }));
 

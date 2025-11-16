@@ -76,14 +76,14 @@ TEST_F(EcsSyncTest, CreateEntityWithPhysicsComponents)
     collider.shapeDesc.size = glm::vec3(1.0f);
     collider.needsCreation = true;
     
-    entity.set<PositionComponent>(pos);
-    entity.set<RotationComponent>(rot);
+    SetEntityPosition(entity, pos);
+    SetEntityRotation(entity, rot);
     entity.set<RigidBodyComponent>(rb);
     entity.set<ColliderComponent>(collider);
     
     // Verify components are set
-    EXPECT_TRUE(entity.has<PositionComponent>());
-    EXPECT_TRUE(entity.has<RotationComponent>());
+    EXPECT_TRUE(entity.has<TransformComponent>());
+    EXPECT_TRUE(entity.has<TransformComponent>());
     EXPECT_TRUE(entity.has<RigidBodyComponent>());
     EXPECT_TRUE(entity.has<ColliderComponent>());
 }
@@ -106,8 +106,8 @@ TEST_F(EcsSyncTest, CreateBodyFromComponents)
     rot.y = 0.0f;
     rot.z = 0.0f;
     
-    entity.set<PositionComponent>(pos);
-    entity.set<RotationComponent>(rot);
+    SetEntityPosition(entity, pos);
+    SetEntityRotation(entity, rot);
     
     RigidBodyDesc desc;
     desc.bodyType = RigidBodyType::Dynamic;
@@ -147,8 +147,8 @@ TEST_F(EcsSyncTest, SyncTransformToPhysics)
     RotationComponent rot;
     rot.fromEulerDegrees(glm::vec3(0.0f, 45.0f, 0.0f));
     
-    entity.set<PositionComponent>(pos);
-    entity.set<RotationComponent>(rot);
+    SetEntityPosition(entity, pos);
+    SetEntityRotation(entity, rot);
     
     RigidBodyDesc desc;
     desc.bodyType = RigidBodyType::Kinematic;

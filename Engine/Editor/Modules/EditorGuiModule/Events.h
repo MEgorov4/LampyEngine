@@ -184,6 +184,18 @@ namespace Events::EditorUI
         std::string worldPath;
     };
 
+    enum class WorldDefaultTarget
+    {
+        Editor,
+        Game
+    };
+
+    struct WorldDefaultChanged
+    {
+        std::string worldPath;
+        WorldDefaultTarget target = WorldDefaultTarget::Editor;
+    };
+
     // ============================================================================
     // Main Menu Events
     // ============================================================================

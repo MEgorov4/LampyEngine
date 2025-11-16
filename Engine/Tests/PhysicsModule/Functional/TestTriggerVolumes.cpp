@@ -84,8 +84,8 @@ TEST_F(TriggerVolumesTest, TriggerVolumeSetup)
     rot.y = 0.0f;
     rot.z = 0.0f;
     
-    trigger.set<PositionComponent>(pos);
-    trigger.set<RotationComponent>(rot);
+    SetEntityPosition(trigger, pos);
+    SetEntityRotation(trigger, rot);
     
     ColliderComponent collider;
     collider.shapeDesc.type = PhysicsShapeType::Box;
@@ -128,8 +128,8 @@ TEST_F(TriggerVolumesTest, ObjectEntersTriggerVolume)
     triggerRot.y = 0.0f;
     triggerRot.z = 0.0f;
     
-    trigger.set<PositionComponent>(triggerPos);
-    trigger.set<RotationComponent>(triggerRot);
+    SetEntityPosition(trigger, triggerPos);
+    SetEntityRotation(trigger, triggerRot);
     
     ColliderComponent triggerCollider;
     triggerCollider.shapeDesc.type = PhysicsShapeType::Box;
@@ -159,8 +159,8 @@ TEST_F(TriggerVolumesTest, ObjectEntersTriggerVolume)
     objRot.y = 0.0f;
     objRot.z = 0.0f;
     
-    object.set<PositionComponent>(objPos);
-    object.set<RotationComponent>(objRot);
+    SetEntityPosition(object, objPos);
+    SetEntityRotation(object, objRot);
     
     RigidBodyDesc objDesc;
     objDesc.bodyType = RigidBodyType::Dynamic;

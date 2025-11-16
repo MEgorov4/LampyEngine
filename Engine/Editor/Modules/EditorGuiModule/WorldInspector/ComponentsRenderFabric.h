@@ -1,6 +1,7 @@
 #pragma once
 
 #include <EngineMinimal.h>
+#include <algorithm>
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/ObjectCoreModule/ECS/Events.h>
 #include <Modules/ObjectCoreModule/ECS/Systems/ECSLuaScriptsSystem.h>
@@ -24,13 +25,11 @@ class IComponentRenderer
   protected:
     ProjectModule::ProjectModule* m_projectModule;
     
-    // Helper to get display name for AssetID (file name instead of UUID)
     std::string getAssetDisplayName(const ResourceModule::AssetID& assetID) const
     {
         if (assetID.empty())
             return "None";
         
-        // Try to get AssetInfo from database
         if (auto* db = ResourceModule::AssetRegistryAccessor::Get())
         {
             if (auto infoOpt = db->get(assetID))
@@ -40,8 +39,51 @@ class IComponentRenderer
             }
         }
         
-        // Fallback to UUID if not found in database
         return assetID.str();
+    }
+
+    bool beginComponentPanel(flecs::entity& entity, const std::string& typeName, const std::string& displayName) const
+    {
+        ImGui::PushID(typeName.c_str());
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 3.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 2.0f));
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.18f, 0.19f, 0.24f, 0.9f));
+
+        bool open = ImGui::CollapsingHeader(displayName.c_str(),
+                                            ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth);
+        renderComponentControls(entity, typeName);
+        ImGui::PopStyleColor();
+
+        if (!open)
+        {
+            ImGui::PopStyleVar(2);
+            ImGui::PopID();
+        }
+
+        return open;
+    }
+
+    void endComponentPanel() const
+    {
+        ImGui::PopStyleVar(2);
+        ImGui::PopID();
+        ImGui::Spacing();
+    }
+
+    bool beginPropertyTable() const
+    {
+        if (ImGui::BeginTable("Properties", 2, ImGuiTableFlags_SizingStretchProp))
+        {
+            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+            return true;
+        }
+        return false;
+    }
+
+    void endPropertyTable() const
+    {
+        ImGui::EndTable();
     }
 
   public:
@@ -50,30 +92,27 @@ class IComponentRenderer
     {
     }
 
-    // Render component with header buttons (remove, reset) - override in derived classes if needed
     virtual void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName)
     {
-        // Default: just call legacy render
-        // Derived classes should override this and call renderComponentControls after CollapsingHeader
         render(entity);
     }
 
-    // Legacy render method (for backward compatibility)
     virtual void render(flecs::entity& entity) = 0;
 
-    // Render component header with controls (call after CollapsingHeader)
-    void renderComponentControls(flecs::entity& entity, const std::string& typeName, const std::string& displayName)
+    void renderComponentControls(flecs::entity& entity, const std::string& typeName) const
     {
         ImGui::PushID((typeName + "_controls").c_str());
-        
-        // Position buttons at the end of the header line
-        float buttonWidth = ImGui::CalcTextSize("↻ Reset").x + ImGui::GetStyle().FramePadding.x * 2;
-        float buttonWidth2 = ImGui::CalcTextSize("× Remove").x + ImGui::GetStyle().FramePadding.x * 2;
-        float totalWidth = buttonWidth + buttonWidth2 + ImGui::GetStyle().ItemSpacing.x;
-        
-        ImGui::SameLine(ImGui::GetWindowWidth() - totalWidth - 10);
-        
-        // Reset button
+
+        const float spacing = ImGui::GetStyle().ItemSpacing.x;
+        const float buttonWidthReset = ImGui::CalcTextSize("↻ Reset").x + ImGui::GetStyle().FramePadding.x * 2.0f;
+        const float buttonWidthRemove = ImGui::CalcTextSize("× Remove").x + ImGui::GetStyle().FramePadding.x * 2.0f;
+        const float totalWidth = buttonWidthReset + buttonWidthRemove + spacing;
+
+        float cursorStart = ImGui::GetCursorPosX();
+        float available = ImGui::GetContentRegionAvail().x;
+        float newX = cursorStart + std::max(0.0f, available - totalWidth);
+        ImGui::SameLine(newX);
+
         if (ImGui::SmallButton("↻ Reset"))
         {
             Events::EditorUI::ComponentResetRequest evt{};
@@ -81,24 +120,21 @@ class IComponentRenderer
             evt.componentTypeName = typeName;
             GCEB().emit(evt);
         }
-        
+
         if (ImGui::IsItemHovered())
         {
             ImGui::SetTooltip("Reset component to default values");
         }
-        
+
         ImGui::SameLine();
-        
-        // Remove button (don't allow removing Position, Rotation, Scale - core transform)
-        bool isCoreTransform = (typeName == "PositionComponent" || 
-                                typeName == "RotationComponent" || 
-                                typeName == "ScaleComponent");
-        
+
+        bool isCoreTransform = (typeName == "TransformComponent");
+
         if (isCoreTransform)
         {
             ImGui::BeginDisabled(true);
         }
-        
+
         if (ImGui::SmallButton("× Remove"))
         {
             Events::EditorUI::ComponentRemoveRequest evt{};
@@ -106,7 +142,7 @@ class IComponentRenderer
             evt.componentTypeName = typeName;
             GCEB().emit(evt);
         }
-        
+
         if (isCoreTransform)
         {
             ImGui::EndDisabled();
@@ -115,143 +151,77 @@ class IComponentRenderer
                 ImGui::SetTooltip("Core transform components cannot be removed");
             }
         }
-        else
+        else if (ImGui::IsItemHovered())
         {
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::SetTooltip("Remove component from entity");
-            }
+            ImGui::SetTooltip("Remove component from entity");
         }
-        
+
         ImGui::PopID();
     }
 
-    virtual ~IComponentRenderer()
-    {
-    }
+    virtual ~IComponentRenderer() = default;
 };
 
-class PositionRenderer : public IComponentRenderer
+class TransformRenderer : public IComponentRenderer
 {
   public:
-    PositionRenderer() : IComponentRenderer()
+    TransformRenderer() : IComponentRenderer()
     {
     }
 
     void render(flecs::entity& entity) override
     {
-        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
-
-        if (ImGui::BeginChildFrame(1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5f,
-                                             ImGui::GetWindowSize().y / 3.f)))
-        {
-            if (const PositionComponent* pos = entity.get<PositionComponent>())
-            {
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
-                bool headerOpen = ImGui::CollapsingHeader("Position Component", ImGuiTreeNodeFlags_DefaultOpen);
-                renderComponentControls(entity, "PositionComponent", "Position Component");
-                
-                if (headerOpen)
-                {
-                    ImGui::PopStyleColor();
-                    ImGui::SetCursorPosX(0);
-                    ImGui::Separator();
-
-                    ImGui::Text("Position:");
-                    ImGui::SameLine();
-
-                    float position[3] = {pos->x, pos->y, pos->z};
-
-                    if (ImGui::DragFloat3("##PositionComponent", position, 0.01f))
-                    {
-                        entity.set<PositionComponent>({position[0], position[1], position[2]});
-                    }
-                }
-                else
-                {
-                    ImGui::PopStyleColor();
-                }
-            }
-        }
-        ImGui::EndChildFrame();
-    }
-};
-
-class RotationRenderer : public IComponentRenderer
-{
-  public:
-    RotationRenderer() : IComponentRenderer()
-    {
+        render(entity, "TransformComponent", "Transform");
     }
 
-    void render(flecs::entity& entity) override
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
     {
-        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
-
-        if (ImGui::BeginChildFrame(
-                1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3)))
+        if (const TransformComponent* transform = entity.get<TransformComponent>())
         {
-            if (auto rot = entity.get<RotationComponent>())
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            if (beginPropertyTable())
             {
-                ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("RotationComponent").x) / 2);
-
-                ImGui::SetCursorPosX(0);
-                ImGui::Separator();
-
-                ImGui::Text("RotationComponent");
-
-                ImGui::SameLine();
-
-                float rotation[3] = {rot->x, rot->y, rot->z};
-
-                if (ImGui::DragFloat3("##RotationComponent", rotation, 5.f))
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Position");
+                ImGui::TableSetColumnIndex(1);
+                float position[3] = {transform->position.x, transform->position.y, transform->position.z};
+                if (ImGui::DragFloat3("##Position", position, 0.01f))
                 {
+                    auto& mutableTransform = EnsureTransformComponent(entity);
+                    mutableTransform.position = {position[0], position[1], position[2]};
+                }
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Rotation");
+                ImGui::TableSetColumnIndex(1);
+                float rotation[3] = {transform->rotation.x, transform->rotation.y, transform->rotation.z};
+                if (ImGui::DragFloat3("##Rotation", rotation, 1.0f))
+                {
+                    auto& mutableTransform = EnsureTransformComponent(entity);
                     RotationComponent newRot;
                     newRot.fromEulerDegrees(glm::vec3(rotation[0], rotation[1], rotation[2]));
-                    entity.set<RotationComponent>(newRot);
+                    mutableTransform.rotation = newRot;
                 }
-            }
-        }
-        ImGui::EndChildFrame();
-    }
-};
 
-class ScaleRenderer : public IComponentRenderer
-{
-  public:
-    ScaleRenderer() : IComponentRenderer()
-    {
-    }
-
-    void render(flecs::entity& entity) override
-    {
-        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
-
-        if (ImGui::BeginChildFrame(
-                1, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3)))
-        {
-            if (const ScaleComponent* scale = entity.get<ScaleComponent>())
-            {
-                ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("ScaleComponent").x) / 2);
-
-                ImGui::SetCursorPosX(0);
-                ImGui::Separator();
-
-                ImGui::Text("ScaleComponent");
-
-                ImGui::SameLine();
-
-                float scalev[3] = {scale->x, scale->y, scale->z};
-
-                if (ImGui::DragFloat3("##ScaleComponent", scalev, 0.01f, -100, 100))
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Scale");
+                ImGui::TableSetColumnIndex(1);
+                float scale[3] = {transform->scale.x, transform->scale.y, transform->scale.z};
+                if (ImGui::DragFloat3("##Scale", scale, 0.01f, -100.0f, 100.0f))
                 {
-                    auto sc = entity.get_mut<ScaleComponent>();
-                    sc->fromGMLVec(glm::vec3(scalev[0], scalev[1], scalev[2]));
-                    entity.modified<ScaleComponent>();
+                    auto& mutableTransform = EnsureTransformComponent(entity);
+                    mutableTransform.scale = {scale[0], scale[1], scale[2]};
                 }
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -264,321 +234,188 @@ class MeshComponentRenderer : public IComponentRenderer
 
     void render(flecs::entity& entity) override
     {
-        if (ImGui::BeginChildFrame(
-                2, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4)))
+        render(entity, "MeshComponent", "Mesh");
+    }
+
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (const MeshComponent* meshComponent = entity.get<MeshComponent>())
         {
-            if (const MeshComponent* meshComponent = entity.get<MeshComponent>())
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            std::string resPath = m_projectModule->getProjectConfig().getResourcesPath();
+
+            if (beginPropertyTable())
             {
-                ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("MeshComponent").x) / 2);
-
-                ImGui::SetWindowFontScale(1.2);
-                ImGui::Text("MeshComponent");
-                ImGui::SetWindowFontScale(1);
-
-                ImGui::SetCursorPosX(0);
-                ImGui::Separator();
-
-                std::string resPath = m_projectModule->getProjectConfig().getResourcesPath();
-                
-                // Mesh ID
-                ImGui::Text("Mesh ID:");
-                ImGui::SameLine();
-                std::string meshDisplay = getAssetDisplayName(meshComponent->meshID);
-                if (meshComponent->meshID.empty())
-                    meshDisplay = "None (drop mesh asset)";
-                ImGui::TextColored(meshComponent->meshID.empty() ? ImVec4(0.5f, 0.5f, 0.5f, 1.0f) : ImVec4(0.8f, 0.8f, 1.0f, 1.0f), "%s", meshDisplay.c_str());
-                
-                if (ImGui::BeginDragDropTarget())
+                auto drawAssetField = [&](const char* label,
+                                          const ResourceModule::AssetID& value,
+                                          auto onAssetDrop,
+                                          auto onFileDrop)
                 {
-                    // Support AssetID from AssetBrowser
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetID"))
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::TextUnformatted(label);
+                    ImGui::TableSetColumnIndex(1);
+                    std::string display = getAssetDisplayName(value);
+                    if (value.empty())
+                        display = std::string("None (drop ") + label + ")";
+                    ImVec4 color = value.empty() ? ImVec4(0.5f, 0.5f, 0.5f, 1.0f) : ImVec4(0.8f, 0.8f, 1.0f, 1.0f);
+                    ImGui::TextColored(color, "%s", display.c_str());
+
+                    if (ImGui::BeginDragDropTarget())
                     {
-                        std::string assetIDStr = static_cast<const char*>(payload->Data);
-                        ResourceModule::AssetID assetID(assetIDStr);
-                        
-                        MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-                        if (meshComponentMut)
+                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetID"))
                         {
-                            meshComponentMut->meshID = assetID;
+                            std::string assetIDStr = static_cast<const char*>(payload->Data);
+                            ResourceModule::AssetID assetID(assetIDStr);
+                            onAssetDrop(assetID);
+                        }
+                        else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
+                        {
+                            std::string droppedPath = static_cast<const char*>(payload->Data);
+                            std::filesystem::path absPath(droppedPath);
+                            std::filesystem::path resRoot(resPath);
+                            std::filesystem::path relativePath;
+
+                            try
+                            {
+                                if (std::filesystem::exists(absPath))
+                                {
+                                    auto canonicalPath = std::filesystem::canonical(absPath);
+                                    if (canonicalPath.string().rfind(resRoot.string(), 0) == 0)
+                                    {
+                                        relativePath = std::filesystem::relative(canonicalPath, resRoot);
+                                    }
+                                    else
+                                    {
+                                        relativePath = canonicalPath;
+                                    }
+                                }
+                                else
+                                {
+                                    relativePath = absPath;
+                                }
+                            }
+                            catch (...)
+                            {
+                                relativePath = absPath;
+                            }
+
+                            onFileDrop(relativePath.generic_string());
+                        }
+                        ImGui::EndDragDropTarget();
+                    }
+                };
+
+                drawAssetField(
+                    "Mesh",
+                    meshComponent->meshID,
+                    [&](const ResourceModule::AssetID& assetID)
+                    {
+                        if (auto mesh = entity.get_mut<MeshComponent>())
+                        {
+                            mesh->meshID = assetID;
                             entity.modified<MeshComponent>();
                             GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                         }
-                    }
-                    // Support FilePath from ContentBrowser
-                    else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
+                    },
+                    [&](const std::string& path)
                     {
-                        std::string droppedPath = static_cast<const char*>(payload->Data);
-                        std::filesystem::path path(droppedPath);
-                        std::string ext = path.extension().string();
-                        
-                        // Support .obj files for meshes
+                        std::filesystem::path p(path);
+                        std::string ext = p.extension().string();
                         if (ext == ".obj" || ext == ".meshbin")
                         {
-                            MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-                            if (meshComponentMut)
+                            if (auto mesh = entity.get_mut<MeshComponent>())
                             {
-                                // Convert absolute path to relative path if it's in resources
-                                std::filesystem::path absPath(droppedPath);
-                                std::filesystem::path relativePath;
-                                
-                                try {
-                                    if (std::filesystem::exists(absPath))
-                                    {
-                                        std::filesystem::path canonicalPath = std::filesystem::canonical(absPath);
-                                        std::filesystem::path resPathObj(resPath);
-                                        if (canonicalPath.string().find(resPathObj.string()) == 0)
-                                        {
-                                            relativePath = std::filesystem::relative(canonicalPath, resPathObj);
-                                            relativePath = relativePath.generic_string();
-                                        }
-                                        else
-                                        {
-                                            relativePath = canonicalPath.generic_string();
-                                        }
-                                    }
-                                    else
-                                    {
-                                        relativePath = absPath.generic_string();
-                                    }
-                                }
-                                catch (...)
-                                {
-                                    relativePath = absPath.generic_string();
-                                }
-                                
-                                meshComponentMut->meshID = ResourceModule::AssetID(relativePath.generic_string());
+                                mesh->meshID = ResourceModule::AssetID(std::filesystem::path(path).generic_string());
                                 entity.modified<MeshComponent>();
                                 GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                             }
                         }
-                    }
-                    ImGui::EndDragDropTarget();
-                }
+                    });
 
-                // Texture ID
-                ImGui::Text("Texture ID:");
-                ImGui::SameLine();
-                std::string textureDisplay = getAssetDisplayName(meshComponent->textureID);
-                if (meshComponent->textureID.empty())
-                    textureDisplay = "None (drop texture asset)";
-                ImGui::TextColored(meshComponent->textureID.empty() ? ImVec4(0.5f, 0.5f, 0.5f, 1.0f) : ImVec4(0.8f, 0.8f, 1.0f, 1.0f), "%s", textureDisplay.c_str());
-                
-                if (ImGui::BeginDragDropTarget())
-                {
-                    // Support AssetID from AssetBrowser
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetID"))
+                drawAssetField(
+                    "Texture",
+                    meshComponent->textureID,
+                    [&](const ResourceModule::AssetID& assetID)
                     {
-                        std::string assetIDStr = static_cast<const char*>(payload->Data);
-                        ResourceModule::AssetID assetID(assetIDStr);
-                        
-                        MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-                        if (meshComponentMut)
+                        if (auto mesh = entity.get_mut<MeshComponent>())
                         {
-                            meshComponentMut->textureID = assetID;
+                            mesh->textureID = assetID;
                             entity.modified<MeshComponent>();
                             GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                         }
-                    }
-                    // Support FilePath from ContentBrowser
-                    else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
+                    },
+                    [&](const std::string& path)
                     {
-                        std::string droppedPath = static_cast<const char*>(payload->Data);
-                        std::filesystem::path path(droppedPath);
-                        std::string ext = path.extension().string();
-                        
-                        // Support image files for textures
+                        std::string ext = std::filesystem::path(path).extension().string();
                         if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
                         {
-                            MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-                            if (meshComponentMut)
+                            if (auto mesh = entity.get_mut<MeshComponent>())
                             {
-                                // Convert absolute path to relative path if it's in resources
-                                std::filesystem::path absPath(droppedPath);
-                                std::filesystem::path relativePath;
-                                
-                                try {
-                                    if (std::filesystem::exists(absPath))
-                                    {
-                                        std::filesystem::path canonicalPath = std::filesystem::canonical(absPath);
-                                        std::filesystem::path resPathObj(resPath);
-                                        if (canonicalPath.string().find(resPathObj.string()) == 0)
-                                        {
-                                            relativePath = std::filesystem::relative(canonicalPath, resPathObj);
-                                            relativePath = relativePath.generic_string();
-                                        }
-                                        else
-                                        {
-                                            relativePath = canonicalPath.generic_string();
-                                        }
-                                    }
-                                    else
-                                    {
-                                        relativePath = absPath.generic_string();
-                                    }
-                                }
-                                catch (...)
-                                {
-                                    relativePath = absPath.generic_string();
-                                }
-                                
-                                meshComponentMut->textureID = ResourceModule::AssetID(relativePath.generic_string());
+                                mesh->textureID = ResourceModule::AssetID(std::filesystem::path(path).generic_string());
                                 entity.modified<MeshComponent>();
                                 GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                             }
                         }
-                    }
-                    ImGui::EndDragDropTarget();
-                }
+                    });
 
-                // Vertex Shader ID
-                ImGui::Text("Vertex Shader ID:");
-                ImGui::SameLine();
-                std::string vertShaderDisplay = getAssetDisplayName(meshComponent->vertShaderID);
-                if (meshComponent->vertShaderID.empty())
-                    vertShaderDisplay = "None (drop shader asset)";
-                ImGui::TextColored(meshComponent->vertShaderID.empty() ? ImVec4(0.5f, 0.5f, 0.5f, 1.0f) : ImVec4(0.8f, 0.8f, 1.0f, 1.0f), "%s", vertShaderDisplay.c_str());
-                
-                if (ImGui::BeginDragDropTarget())
-                {
-                    // Support both FilePath (from ContentBrowser) and AssetID (from AssetBrowser)
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetID"))
+                drawAssetField(
+                    "Vertex Shader",
+                    meshComponent->vertShaderID,
+                    [&](const ResourceModule::AssetID& assetID)
                     {
-                        std::string assetIDStr = static_cast<const char*>(payload->Data);
-                        ResourceModule::AssetID assetID(assetIDStr);
-                        
-                        MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-                        if (meshComponentMut)
+                        if (auto mesh = entity.get_mut<MeshComponent>())
                         {
-                            meshComponentMut->vertShaderID = assetID;
+                            mesh->vertShaderID = assetID;
                             entity.modified<MeshComponent>();
                             GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                         }
-                    }
-                    else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
+                    },
+                    [&](const std::string& path)
                     {
-                        std::string droppedPath = static_cast<const char*>(payload->Data);
-                        std::filesystem::path path(droppedPath);
-                        std::string ext = path.extension().string();
-                        
-                        // Support .vert files for vertex shaders
-                        if (ext == ".vert")
+                        if (std::filesystem::path(path).extension() == ".vert")
                         {
-                            MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-                            if (meshComponentMut)
+                            if (auto mesh = entity.get_mut<MeshComponent>())
                             {
-                                std::filesystem::path absPath(droppedPath);
-                                std::filesystem::path relativePath;
-                                
-                                try {
-                                    if (std::filesystem::exists(absPath))
-                                    {
-                                        std::filesystem::path canonicalPath = std::filesystem::canonical(absPath);
-                                        std::filesystem::path resPathObj(resPath);
-                                        if (canonicalPath.string().find(resPathObj.string()) == 0)
-                                        {
-                                            relativePath = std::filesystem::relative(canonicalPath, resPathObj);
-                                            relativePath = relativePath.generic_string();
-                                        }
-                                        else
-                                        {
-                                            relativePath = canonicalPath.generic_string();
-                                        }
-                                    }
-                                    else
-                                    {
-                                        relativePath = absPath.generic_string();
-                                    }
-                                }
-                                catch (...)
-                                {
-                                    relativePath = absPath.generic_string();
-                                }
-                                
-                                meshComponentMut->vertShaderID = ResourceModule::AssetID(relativePath.generic_string());
+                                mesh->vertShaderID = ResourceModule::AssetID(std::filesystem::path(path).generic_string());
                                 entity.modified<MeshComponent>();
                                 GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                             }
                         }
-                    }
-                    ImGui::EndDragDropTarget();
-                }
+                    });
 
-                // Fragment Shader ID
-                ImGui::Text("Fragment Shader ID:");
-                ImGui::SameLine();
-                std::string fragShaderDisplay = getAssetDisplayName(meshComponent->fragShaderID);
-                if (meshComponent->fragShaderID.empty())
-                    fragShaderDisplay = "None (drop shader asset)";
-                ImGui::TextColored(meshComponent->fragShaderID.empty() ? ImVec4(0.5f, 0.5f, 0.5f, 1.0f) : ImVec4(0.8f, 0.8f, 1.0f, 1.0f), "%s", fragShaderDisplay.c_str());
-                
-                if (ImGui::BeginDragDropTarget())
-                {
-                    // Support AssetID from AssetBrowser
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetID"))
+                drawAssetField(
+                    "Fragment Shader",
+                    meshComponent->fragShaderID,
+                    [&](const ResourceModule::AssetID& assetID)
                     {
-                        std::string assetIDStr = static_cast<const char*>(payload->Data);
-                        ResourceModule::AssetID assetID(assetIDStr);
-                        
-                        MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-                        if (meshComponentMut)
+                        if (auto mesh = entity.get_mut<MeshComponent>())
                         {
-                            meshComponentMut->fragShaderID = assetID;
+                            mesh->fragShaderID = assetID;
                             entity.modified<MeshComponent>();
                             GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                         }
-                    }
-                    // Support FilePath from ContentBrowser
-                    else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
+                    },
+                    [&](const std::string& path)
                     {
-                        std::string droppedPath = static_cast<const char*>(payload->Data);
-                        std::filesystem::path path(droppedPath);
-                        std::string ext = path.extension().string();
-                        
-                        // Support .frag files for fragment shaders
-                        if (ext == ".frag")
+                        if (std::filesystem::path(path).extension() == ".frag")
                         {
-                            MeshComponent* meshComponentMut = entity.get_mut<MeshComponent>();
-                            if (meshComponentMut)
+                            if (auto mesh = entity.get_mut<MeshComponent>())
                             {
-                                std::filesystem::path absPath(droppedPath);
-                                std::filesystem::path relativePath;
-                                
-                                try {
-                                    if (std::filesystem::exists(absPath))
-                                    {
-                                        std::filesystem::path canonicalPath = std::filesystem::canonical(absPath);
-                                        std::filesystem::path resPathObj(resPath);
-                                        if (canonicalPath.string().find(resPathObj.string()) == 0)
-                                        {
-                                            relativePath = std::filesystem::relative(canonicalPath, resPathObj);
-                                            relativePath = relativePath.generic_string();
-                                        }
-                                        else
-                                        {
-                                            relativePath = canonicalPath.generic_string();
-                                        }
-                                    }
-                                    else
-                                    {
-                                        relativePath = absPath.generic_string();
-                                    }
-                                }
-                                catch (...)
-                                {
-                                    relativePath = absPath.generic_string();
-                                }
-                                
-                                meshComponentMut->fragShaderID = ResourceModule::AssetID(relativePath.generic_string());
+                                mesh->fragShaderID = ResourceModule::AssetID(std::filesystem::path(path).generic_string());
                                 entity.modified<MeshComponent>();
                                 GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MeshComponent"});
                             }
                         }
-                    }
-                    ImGui::EndDragDropTarget();
-                }
+                    });
+
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -591,43 +428,128 @@ class ScriptRenderer : public IComponentRenderer
 
     void render(flecs::entity& entity) override
     {
-        if (ImGui::BeginChildFrame(
-                3, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4)))
+        render(entity, "ScriptComponent", "Script");
+    }
+
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (const ScriptComponent* script = entity.get<ScriptComponent>())
         {
-            if (const ScriptComponent* script = entity.get<ScriptComponent>())
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            auto assignScript = [&](const ResourceModule::AssetID& assetID)
             {
-                ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("ScriptComponent").x) / 2);
+                if (ScriptComponent* scriptMut = entity.get_mut<ScriptComponent>())
+                {
+                    if (scriptMut->scriptID == assetID)
+                        return;
+                    scriptMut->scriptID = assetID;
+                    entity.modified<ScriptComponent>();
+                }
+                else
+                {
+                    ScriptComponent newComponent{};
+                    newComponent.scriptID = assetID;
+                    entity.set<ScriptComponent>(newComponent);
+                }
+                GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "ScriptComponent"});
+            };
 
-                ImGui::SetWindowFontScale(1.2);
-                ImGui::Text("ScriptComponent");
-                ImGui::SetWindowFontScale(1);
+            if (beginPropertyTable())
+            {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Script");
+                ImGui::TableSetColumnIndex(1);
+                std::string displayName = getAssetDisplayName(script->scriptID);
+                if (script->scriptID.empty())
+                    displayName = "None (drop .lua asset)";
+                ImVec4 color = script->scriptID.empty()
+                                   ? ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
+                                   : ImVec4(0.8f, 0.8f, 1.0f, 1.0f);
+                ImGui::TextColored(color, "%s", displayName.c_str());
 
-                ImGui::SetCursorPosX(0);
-                ImGui::Separator();
-
-                ImGui::Text("Path:");
-                ImGui::SameLine();
-
-                std::string resPath = m_projectModule->getProjectConfig().getResourcesPath();
-                ImGui::Text(Fs::fileName(script->scriptPath.c_str()).empty()
-                                ? "empty"
-                                : Fs::fileName(script->scriptPath.c_str()).c_str());
+                if (!script->scriptID.empty())
+                {
+                    ImGui::SameLine();
+                    ImGui::TextDisabled("%s", script->scriptID.str().c_str());
+                }
 
                 if (ImGui::BeginDragDropTarget())
                 {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetID"))
+                    {
+                        std::string assetIDStr = static_cast<const char*>(payload->Data);
+                        ResourceModule::AssetID assetID(assetIDStr);
+                        bool accept = true;
+                        if (auto* db = ResourceModule::AssetRegistryAccessor::Get())
+                        {
+                            if (auto infoOpt = db->get(assetID))
+                            {
+                                accept = (infoOpt->type == ResourceModule::AssetType::Script);
+                            }
+                        }
+                        if (accept)
+                        {
+                            assignScript(assetID);
+                        }
+                    }
+                    else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
                     {
                         std::string droppedPath = static_cast<const char*>(payload->Data);
-                        if (droppedPath.size() > 4 && droppedPath.substr(droppedPath.size() - 4) == ".lua")
+                        std::filesystem::path absPath(droppedPath);
+                        if (absPath.extension() == ".lua")
                         {
-                            entity.set<ScriptComponent>({droppedPath});
+                            std::filesystem::path resRoot(m_projectModule->getProjectConfig().getResourcesPath());
+                            std::filesystem::path relativePath;
+                            try
+                            {
+                                if (std::filesystem::exists(absPath))
+                                {
+                                    auto canonicalPath = std::filesystem::canonical(absPath);
+                                    if (canonicalPath.string().rfind(resRoot.string(), 0) == 0)
+                                    {
+                                        relativePath = std::filesystem::relative(canonicalPath, resRoot);
+                                    }
+                                    else
+                                    {
+                                        relativePath = canonicalPath;
+                                    }
+                                }
+                                else
+                                {
+                                    relativePath = absPath;
+                                }
+                            }
+                            catch (...)
+                            {
+                                relativePath = absPath;
+                            }
+
+                            if (!relativePath.empty())
+                            {
+                                assignScript(ResourceModule::AssetID(relativePath.generic_string()));
+                            }
                         }
                     }
                     ImGui::EndDragDropTarget();
                 }
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Actions");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::Button("Clear Script"))
+                {
+                    assignScript(ResourceModule::AssetID());
+                }
+
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -640,37 +562,34 @@ class DirectionalLightRenderer : public IComponentRenderer
 
     void render(flecs::entity& entity) override
     {
-        if (ImGui::BeginChildFrame(
-                4, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4)))
-        {
-            if (const DirectionalLightComponent* dirLightComponent = entity.get<DirectionalLightComponent>())
-            {
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
-                bool headerOpen = ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen);
-                renderComponentControls(entity, "DirectionalLightComponent", "Directional Light");
-                
-                if (headerOpen)
-                {
-                    ImGui::PopStyleColor();
-                    ImGui::SetCursorPosX(0);
-                    ImGui::Separator();
+        render(entity, "DirectionalLightComponent", "Directional Light");
+    }
 
-                    float intencity = dirLightComponent->intencity;
-                    ImGui::Text("Intensity:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat("##dirLightIntencity", &intencity, 0.01f, 0.0f, 1000.f))
-                    {
-                        entity.set<DirectionalLightComponent>({intencity});
-                        GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "DirectionalLightComponent"});
-                    }
-                }
-                else
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (const DirectionalLightComponent* dirLightComponent = entity.get<DirectionalLightComponent>())
+        {
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            if (beginPropertyTable())
+            {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Intensity");
+                ImGui::TableSetColumnIndex(1);
+                float intensity = dirLightComponent->intencity;
+                if (ImGui::DragFloat("##DirIntensity", &intensity, 0.01f, 0.0f, 1000.0f))
                 {
-                    ImGui::PopStyleColor();
+                    entity.set<DirectionalLightComponent>({intensity});
+                    GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "DirectionalLightComponent"});
                 }
+
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -683,90 +602,84 @@ class PointLightRenderer : public IComponentRenderer
 
     void render(flecs::entity& entity) override
     {
-        if (ImGui::BeginChildFrame(
-                5, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4)))
+        render(entity, "PointLightComponent", "Point Light");
+    }
+
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (const PointLightComponent* pointLightComponent = entity.get<PointLightComponent>())
         {
-            if (const PointLightComponent* pointLightComponent = entity.get<PointLightComponent>())
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            if (beginPropertyTable())
             {
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
-                bool headerOpen = ImGui::CollapsingHeader("Point Light", ImGuiTreeNodeFlags_DefaultOpen);
-                renderComponentControls(entity, "PointLightComponent", "Point Light");
-                
-                if (headerOpen)
+                float color[3] = {pointLightComponent->color.x, pointLightComponent->color.y, pointLightComponent->color.z};
+                float intensity = pointLightComponent->intencity;
+                float innerRadius = pointLightComponent->innerRadius;
+                float outerRadius = pointLightComponent->outerRadius;
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Color");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::ColorEdit3("##PointColor", color, ImGuiColorEditFlags_NoInputs))
                 {
-                    ImGui::PopStyleColor();
-                    ImGui::SetCursorPosX(0);
-                    ImGui::Separator();
-
-                    float innerRadius = pointLightComponent->innerRadius;
-                    float outerRadius = pointLightComponent->outerRadius;
-                    float intensity = pointLightComponent->intencity;
-                    glm::vec3 color = pointLightComponent->color;
-                    float colorArray[3] = { color.x, color.y, color.z };
-
-                    ImGui::Text("Color:");
-                    ImGui::SameLine();
-                    if (ImGui::ColorEdit3("##pointLightColor", colorArray, ImGuiColorEditFlags_NoInputs))
+                    if (auto comp = entity.get_mut<PointLightComponent>())
                     {
-                        PointLightComponent* comp = entity.get_mut<PointLightComponent>();
-                        if (comp)
-                        {
-                            comp->color = glm::vec3(colorArray[0], colorArray[1], colorArray[2]);
-                            entity.modified<PointLightComponent>();
-                            GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "PointLightComponent"});
-                        }
-                    }
-
-                    ImGui::Text("Intensity:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat("##pointLightIntensity", &intensity, 0.01f, 0.0f, 1000.f))
-                    {
-                        PointLightComponent* comp = entity.get_mut<PointLightComponent>();
-                        if (comp)
-                        {
-                            comp->intencity = intensity;
-                            entity.modified<PointLightComponent>();
-                            GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "PointLightComponent"});
-                        }
-                    }
-
-                    ImGui::Text("Inner Radius:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat("##pointLightInnerRadius", &innerRadius, 0.1f, 0.0f, 1000.f))
-                    {
-                        PointLightComponent* comp = entity.get_mut<PointLightComponent>();
-                        if (comp)
-                        {
-                            comp->innerRadius = innerRadius;
-                            if (comp->innerRadius > comp->outerRadius)
-                                comp->innerRadius = comp->outerRadius;
-                            entity.modified<PointLightComponent>();
-                            GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "PointLightComponent"});
-                        }
-                    }
-
-                    ImGui::Text("Outer Radius:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat("##pointLightOuterRadius", &outerRadius, 0.1f, 0.0f, 1000.f))
-                    {
-                        PointLightComponent* comp = entity.get_mut<PointLightComponent>();
-                        if (comp)
-                        {
-                            comp->outerRadius = outerRadius;
-                            if (comp->outerRadius < comp->innerRadius)
-                                comp->outerRadius = comp->innerRadius;
-                            entity.modified<PointLightComponent>();
-                            GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "PointLightComponent"});
-                        }
+                        comp->color = glm::vec3(color[0], color[1], color[2]);
+                        entity.modified<PointLightComponent>();
+                        GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "PointLightComponent"});
                     }
                 }
-                else
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Intensity");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::DragFloat("##PointIntensity", &intensity, 0.01f, 0.0f, 1000.0f))
                 {
-                    ImGui::PopStyleColor();
+                    if (auto comp = entity.get_mut<PointLightComponent>())
+                    {
+                        comp->intencity = intensity;
+                        entity.modified<PointLightComponent>();
+                        GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "PointLightComponent"});
+                    }
                 }
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Inner Radius");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::DragFloat("##PointInnerRadius", &innerRadius, 0.1f, 0.0f, 1000.0f))
+                {
+                    if (auto comp = entity.get_mut<PointLightComponent>())
+                    {
+                        comp->innerRadius = std::min(innerRadius, comp->outerRadius);
+                        entity.modified<PointLightComponent>();
+                        GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "PointLightComponent"});
+                    }
+                }
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Outer Radius");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::DragFloat("##PointOuterRadius", &outerRadius, 0.1f, 0.0f, 1000.0f))
+                {
+                    if (auto comp = entity.get_mut<PointLightComponent>())
+                    {
+                        comp->outerRadius = std::max(outerRadius, comp->innerRadius);
+                        entity.modified<PointLightComponent>();
+                        GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "PointLightComponent"});
+                    }
+                }
+
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -779,65 +692,59 @@ class CameraRenderer : public IComponentRenderer
 
     void render(flecs::entity& entity) override
     {
-        if (ImGui::BeginChildFrame(3, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5,
-                                             ImGui::GetWindowSize().y / 2.25)))
+        render(entity, "CameraComponent", "Camera");
+    }
+
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (CameraComponent* camera = entity.get_mut<CameraComponent>())
         {
-            if (CameraComponent* camera = entity.get_mut<CameraComponent>())
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            if (beginPropertyTable())
             {
-                ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("CameraComponent").x) / 2);
-
-                ImGui::SetWindowFontScale(1.2);
-                ImGui::Text("CameraComponent");
-                ImGui::SetWindowFontScale(1);
-
-                ImGui::SetCursorPosX(0);
-                ImGui::Separator();
-
-                float fov      = camera->fov;
-                float aspect   = camera->aspect;
-                float farClip  = camera->farClip;
-                float nearClip = camera->nearClip;
-
-                const float labelWidth = 110.0f;
-
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Field of view:");
-                ImGui::SameLine(labelWidth);
-                if (ImGui::SliderFloat("##FOV", &fov, 30.0f, 180.0f))
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Field of View");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::SliderFloat("##CameraFOV", &camera->fov, 30.0f, 180.0f))
                 {
-                    camera->fov = fov;
                     entity.modified<CameraComponent>();
                 }
 
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Aspect ratio:");
-                ImGui::SameLine(labelWidth);
-                if (ImGui::SliderFloat("##ASPECT", &aspect, 0.01f, 1.0f))
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Aspect Ratio");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::SliderFloat("##CameraAspect", &camera->aspect, 0.01f, 1.0f))
                 {
-                    camera->aspect = aspect;
                     entity.modified<CameraComponent>();
                 }
 
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Far clip:");
-                ImGui::SameLine(labelWidth);
-                if (ImGui::SliderFloat("##FAR", &farClip, 10.0f, 10000.0f))
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Far Clip");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::SliderFloat("##CameraFar", &camera->farClip, 10.0f, 10000.0f))
                 {
-                    camera->farClip = farClip;
                     entity.modified<CameraComponent>();
                 }
 
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Near clip:");
-                ImGui::SameLine(labelWidth);
-                if (ImGui::SliderFloat("##NEAR", &nearClip, 0.01f, 10.0f))
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Near Clip");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::SliderFloat("##CameraNear", &camera->nearClip, 0.01f, 10.0f))
                 {
-                    camera->nearClip = nearClip;
                     entity.modified<CameraComponent>();
                 }
+
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -850,45 +757,43 @@ class RigidbodyRenderer : public IComponentRenderer
 
     void render(flecs::entity& entity) override
     {
-        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+        render(entity, "RigidbodyComponent", "Rigidbody");
+    }
 
-        if (ImGui::BeginChildFrame(
-                5, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 3)))
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (RigidbodyComponent* body = entity.get_mut<RigidbodyComponent>())
         {
-            if (RigidbodyComponent* body = entity.get_mut<RigidbodyComponent>())
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            if (beginPropertyTable())
             {
-                ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("RigidbodyComponent").x) / 2);
-
-                ImGui::SetWindowFontScale(1.2);
-                ImGui::Text("RigidbodyComponent");
-                ImGui::SetWindowFontScale(1);
-
-                ImGui::SetCursorPosX(0);
-                ImGui::Separator();
-
-                float mass    = body->mass;
-                bool isStatic = body->isStatic;
-
-                ImGui::Text("static");
-                ImGui::SameLine();
-
-                if (ImGui::Checkbox("##static", &isStatic))
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Static");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::Checkbox("##RigidStatic", &body->isStatic))
                 {
-                    body->isStatic = isStatic;
+                    entity.modified<RigidbodyComponent>();
                 }
 
-                ImGui::Text("mass");
-                ImGui::SameLine();
-
-                ImGui::BeginDisabled(isStatic);
-                if (ImGui::DragFloat("##mass", &mass, 0.1f, 0.f, 100000000.f))
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Mass");
+                ImGui::TableSetColumnIndex(1);
+                ImGui::BeginDisabled(body->isStatic);
+                if (ImGui::DragFloat("##RigidMass", &body->mass, 0.1f, 0.0f, 100000000.0f))
                 {
-                    body->mass = mass;
+                    entity.modified<RigidbodyComponent>();
                 }
                 ImGui::EndDisabled();
+
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -901,145 +806,126 @@ class MaterialRenderer : public IComponentRenderer
 
     void render(flecs::entity& entity) override
     {
-        if (ImGui::BeginChildFrame(
-                6, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5, ImGui::GetWindowSize().y / 4)))
-        {
-            if (const MaterialComponent* materialComponent = entity.get<MaterialComponent>())
-            {
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
-                bool headerOpen = ImGui::CollapsingHeader("Material Component", ImGuiTreeNodeFlags_DefaultOpen);
-                renderComponentControls(entity, "MaterialComponent", "Material Component");
-                
-                if (headerOpen)
-                {
-                    ImGui::PopStyleColor();
-                    ImGui::SetCursorPosX(0);
-                    ImGui::Separator();
+        render(entity, "MaterialComponent", "Material");
+    }
 
-                    // Material ID
-                    ImGui::Text("Material ID:");
-                    ImGui::SameLine();
-                    std::string materialDisplay = getAssetDisplayName(materialComponent->materialID);
-                    if (materialComponent->materialID.empty())
-                        materialDisplay = "None (drop material asset)";
-                    ImGui::TextColored(materialComponent->materialID.empty() ? ImVec4(0.5f, 0.5f, 0.5f, 1.0f) : ImVec4(0.8f, 0.8f, 1.0f, 1.0f), "%s", materialDisplay.c_str());
-                    
-                    if (ImGui::BeginDragDropTarget())
-                    {
-                        // Support AssetID from AssetBrowser
-                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetID"))
-                        {
-                            std::string assetIDStr = static_cast<const char*>(payload->Data);
-                            ResourceModule::AssetID assetID(assetIDStr);
-                            
-                            // Check if it's a material asset
-                            if (auto* db = ResourceModule::AssetRegistryAccessor::Get())
-                            {
-                                if (auto infoOpt = db->get(assetID))
-                                {
-                                    if (infoOpt->type == ResourceModule::AssetType::Material)
-                                    {
-                                        MaterialComponent* materialComponentMut = entity.get_mut<MaterialComponent>();
-                                        if (materialComponentMut)
-                                        {
-                                            materialComponentMut->materialID = assetID;
-                                            entity.modified<MaterialComponent>();
-                                            GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MaterialComponent"});
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        // Support FilePath from ContentBrowser
-                        else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
-                        {
-                            std::string droppedPath = static_cast<const char*>(payload->Data);
-                            std::filesystem::path path(droppedPath);
-                            std::string ext = path.extension().string();
-                            
-                            // Support .lmat files for materials
-                            if (ext == ".lmat")
-                            {
-                                MaterialComponent* materialComponentMut = entity.get_mut<MaterialComponent>();
-                                if (materialComponentMut)
-                                {
-                                    std::string resPath = m_projectModule->getProjectConfig().getResourcesPath();
-                                    std::filesystem::path absPath(droppedPath);
-                                    std::filesystem::path relativePath;
-                                    
-                                    try {
-                                        if (std::filesystem::exists(absPath))
-                                        {
-                                            std::filesystem::path canonicalPath = std::filesystem::canonical(absPath);
-                                            std::filesystem::path resPathObj(resPath);
-                                            if (canonicalPath.string().find(resPathObj.string()) == 0)
-                                            {
-                                                relativePath = std::filesystem::relative(canonicalPath, resPathObj);
-                                                relativePath = relativePath.generic_string();
-                                            }
-                                            else
-                                            {
-                                                relativePath = canonicalPath.generic_string();
-                                            }
-                                        }
-                                        else
-                                        {
-                                            relativePath = absPath.generic_string();
-                                        }
-                                    }
-                                    catch (...)
-                                    {
-                                        relativePath = absPath.generic_string();
-                                    }
-                                    
-                                    materialComponentMut->materialID = ResourceModule::AssetID(relativePath.generic_string());
-                                    entity.modified<MaterialComponent>();
-                                    GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MaterialComponent"});
-                                }
-                            }
-                        }
-                        ImGui::EndDragDropTarget();
-                    }
-                    
-                    // Show material preview if loaded
-                    if (!materialComponent->materialID.empty())
-                    {
-                        auto rm = GCM(ResourceModule::ResourceManager);
-                        if (rm)
-                        {
-                            auto material = rm->load<ResourceModule::RMaterial>(materialComponent->materialID);
-                            if (material)
-                            {
-                                ImGui::Separator();
-                                ImGui::Text("Material: %s", material->name.c_str());
-                                
-                                // Albedo Color
-                                float albedo[4] = {material->albedoColor.r, material->albedoColor.g, 
-                                                  material->albedoColor.b, material->albedoColor.a};
-                                ImGui::Text("Albedo Color:");
-                                ImGui::SameLine();
-                                if (ImGui::ColorEdit4("##AlbedoColor", albedo, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar))
-                                {
-                                    // Note: This would require saving the material back to file, which is not implemented yet
-                                    // For now, this is read-only preview
-                                }
-                                
-                                // Roughness
-                                ImGui::Text("Roughness: %.2f", material->roughness);
-                                
-                                // Metallic
-                                ImGui::Text("Metallic: %.2f", material->metallic);
-                            }
-                        }
-                    }
-                }
-                else
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (const MaterialComponent* materialComponent = entity.get<MaterialComponent>())
+        {
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            if (beginPropertyTable())
+            {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Material");
+                ImGui::TableSetColumnIndex(1);
+
+                std::string display = getAssetDisplayName(materialComponent->materialID);
+                if (materialComponent->materialID.empty())
+                    display = "None (drop material asset)";
+                ImVec4 color = materialComponent->materialID.empty()
+                                   ? ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
+                                   : ImVec4(0.8f, 0.8f, 1.0f, 1.0f);
+                ImGui::TextColored(color, "%s", display.c_str());
+
+                if (ImGui::BeginDragDropTarget())
                 {
-                    ImGui::PopStyleColor();
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AssetID"))
+                    {
+                        std::string assetIDStr = static_cast<const char*>(payload->Data);
+                        ResourceModule::AssetID assetID(assetIDStr);
+                        if (auto* db = ResourceModule::AssetRegistryAccessor::Get())
+                        {
+                            if (auto infoOpt = db->get(assetID))
+                            {
+                                if (infoOpt->type == ResourceModule::AssetType::Material)
+                                {
+                                    if (auto mat = entity.get_mut<MaterialComponent>())
+                                    {
+                                        mat->materialID = assetID;
+                                        entity.modified<MaterialComponent>();
+                                        GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MaterialComponent"});
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FilePath"))
+                    {
+                        std::string droppedPath = static_cast<const char*>(payload->Data);
+                        std::filesystem::path absPath(droppedPath);
+                        if (absPath.extension() == ".lmat")
+                        {
+                            std::filesystem::path relativePath;
+                            std::string resPath = m_projectModule->getProjectConfig().getResourcesPath();
+                            try
+                            {
+                                if (std::filesystem::exists(absPath))
+                                {
+                                    auto canonicalPath = std::filesystem::canonical(absPath);
+                                    std::filesystem::path resRoot(resPath);
+                                    if (canonicalPath.string().rfind(resRoot.string(), 0) == 0)
+                                    {
+                                        relativePath = std::filesystem::relative(canonicalPath, resRoot);
+                                    }
+                                    else
+                                    {
+                                        relativePath = canonicalPath;
+                                    }
+                                }
+                                else
+                                {
+                                    relativePath = absPath;
+                                }
+                            }
+                            catch (...)
+                            {
+                                relativePath = absPath;
+                            }
+
+                            if (auto mat = entity.get_mut<MaterialComponent>())
+                            {
+                                mat->materialID =
+                                    ResourceModule::AssetID(relativePath.generic_string());
+                                entity.modified<MaterialComponent>();
+                                GCEB().emit(Events::ECS::ComponentChanged{entity.id(), "MaterialComponent"});
+                            }
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                endPropertyTable();
+            }
+
+            if (!materialComponent->materialID.empty())
+            {
+                if (auto rm = GCM(ResourceModule::ResourceManager))
+                {
+                    auto material = rm->load<ResourceModule::RMaterial>(materialComponent->materialID);
+                    if (material)
+                    {
+                        ImGui::Separator();
+                        ImGui::Text("Name: %s", material->name.c_str());
+                        float albedo[4] = {material->albedoColor.r,
+                                           material->albedoColor.g,
+                                           material->albedoColor.b,
+                                           material->albedoColor.a};
+                        ImGui::TextUnformatted("Albedo Color");
+                        ImGui::SameLine();
+                        ImGui::ColorEdit4("##AlbedoPreview", albedo,
+                                          ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
+                        ImGui::Text("Roughness: %.2f", material->roughness);
+                        ImGui::Text("Metallic: %.2f", material->metallic);
+                    }
                 }
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -1083,68 +969,64 @@ public:
 
     void render(flecs::entity& entity) override
     {
-        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+        render(entity, "RigidBodyComponent", "Rigid Body");
+    }
 
-        if (ImGui::BeginChildFrame(10, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5f,
-                                               ImGui::GetWindowSize().y / 3.f)))
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (auto rb = entity.get_mut<PhysicsModule::RigidBodyComponent>())
         {
-            if (PhysicsModule::RigidBodyComponent* rb = entity.get_mut<PhysicsModule::RigidBodyComponent>())
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            if (beginPropertyTable())
             {
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
-                bool headerOpen = ImGui::CollapsingHeader("Rigid Body Component", ImGuiTreeNodeFlags_DefaultOpen);
-                renderComponentControls(entity, "RigidBodyComponent", "Rigid Body Component");
-                
-                if (headerOpen)
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Mass");
+                ImGui::TableSetColumnIndex(1);
+                ImGui::BeginDisabled(rb->isStatic || rb->isKinematic);
+                if (ImGui::DragFloat("##PhysMass", &rb->mass, 0.1f, 0.0f, 1000000.0f))
                 {
-                    ImGui::PopStyleColor();
-                    ImGui::SetCursorPosX(0);
-                    ImGui::Separator();
-
-                    float mass = rb->mass;
-                    bool isStatic = rb->isStatic;
-                    bool isKinematic = rb->isKinematic;
-
-                    ImGui::Text("Mass:");
-                    ImGui::SameLine();
-                    ImGui::BeginDisabled(isStatic || isKinematic);
-                    if (ImGui::DragFloat("##Mass", &mass, 0.1f, 0.0f, 1000000.0f))
-                    {
-                        rb->mass = mass;
-                        entity.modified<PhysicsModule::RigidBodyComponent>();
-                    }
-                    ImGui::EndDisabled();
-
-                    ImGui::Text("Is Static:");
-                    ImGui::SameLine();
-                    if (ImGui::Checkbox("##IsStatic", &isStatic))
-                    {
-                        rb->isStatic = isStatic;
-                        if (isStatic)
-                            rb->isKinematic = false;
-                        rb->needsCreation = true;
-                        entity.modified<PhysicsModule::RigidBodyComponent>();
-                    }
-
-                    ImGui::Text("Is Kinematic:");
-                    ImGui::SameLine();
-                    ImGui::BeginDisabled(isStatic);
-                    if (ImGui::Checkbox("##IsKinematic", &isKinematic))
-                    {
-                        rb->isKinematic = isKinematic;
-                        if (isKinematic)
-                            rb->isStatic = false;
-                        rb->needsCreation = true;
-                        entity.modified<PhysicsModule::RigidBodyComponent>();
-                    }
-                    ImGui::EndDisabled();
+                    entity.modified<PhysicsModule::RigidBodyComponent>();
                 }
-                else
+                ImGui::EndDisabled();
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Static");
+                ImGui::TableSetColumnIndex(1);
+                bool isStatic = rb->isStatic;
+                if (ImGui::Checkbox("##PhysStatic", &isStatic))
                 {
-                    ImGui::PopStyleColor();
+                    rb->isStatic = isStatic;
+                    if (isStatic)
+                        rb->isKinematic = false;
+                    rb->needsCreation = true;
+                    entity.modified<PhysicsModule::RigidBodyComponent>();
                 }
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Kinematic");
+                ImGui::TableSetColumnIndex(1);
+                bool isKinematic = rb->isKinematic;
+                ImGui::BeginDisabled(rb->isStatic);
+                if (ImGui::Checkbox("##PhysKinematic", &isKinematic))
+                {
+                    rb->isKinematic = isKinematic;
+                    if (isKinematic)
+                        rb->isStatic = false;
+                    rb->needsCreation = true;
+                    entity.modified<PhysicsModule::RigidBodyComponent>();
+                }
+                ImGui::EndDisabled();
+
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -1155,97 +1037,91 @@ public:
 
     void render(flecs::entity& entity) override
     {
-        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+        render(entity, "ColliderComponent", "Collider");
+    }
 
-        if (ImGui::BeginChildFrame(11, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5f,
-                                               ImGui::GetWindowSize().y / 3.f)))
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (auto collider = entity.get_mut<PhysicsModule::ColliderComponent>())
         {
-            if (PhysicsModule::ColliderComponent* collider = entity.get_mut<PhysicsModule::ColliderComponent>())
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            if (beginPropertyTable())
             {
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
-                bool headerOpen = ImGui::CollapsingHeader("Collider Component", ImGuiTreeNodeFlags_DefaultOpen);
-                renderComponentControls(entity, "ColliderComponent", "Collider Component");
-                
-                if (headerOpen)
+                const char* shapeTypes[] = {"Box", "Sphere", "Capsule", "Cylinder", "Mesh", "ConvexHull"};
+                int currentShapeType = static_cast<int>(collider->shapeDesc.type);
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Shape");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::Combo("##ColliderShape", &currentShapeType, shapeTypes, IM_ARRAYSIZE(shapeTypes)))
                 {
-                    ImGui::PopStyleColor();
-                    ImGui::SetCursorPosX(0);
-                    ImGui::Separator();
+                    collider->shapeDesc.type = static_cast<PhysicsModule::PhysicsShapeType>(currentShapeType);
+                    collider->needsCreation = true;
+                    entity.modified<PhysicsModule::ColliderComponent>();
+                }
 
-                    // Shape Type
-                    const char* shapeTypes[] = { "Box", "Sphere", "Capsule", "Cylinder", "Mesh", "ConvexHull" };
-                    int currentShapeType = static_cast<int>(collider->shapeDesc.type);
-                    
-                    ImGui::Text("Shape Type:");
-                    ImGui::SameLine();
-                    if (ImGui::Combo("##ShapeType", &currentShapeType, shapeTypes, IM_ARRAYSIZE(shapeTypes)))
+                if (collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Box ||
+                    collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Cylinder)
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::TextUnformatted("Size");
+                    ImGui::TableSetColumnIndex(1);
+                    float size[3] = {collider->shapeDesc.size.x, collider->shapeDesc.size.y, collider->shapeDesc.size.z};
+                    if (ImGui::DragFloat3("##ColliderSize", size, 0.01f, 0.01f, 1000.0f))
                     {
-                        collider->shapeDesc.type = static_cast<PhysicsModule::PhysicsShapeType>(currentShapeType);
-                        collider->needsCreation = true;
-                        entity.modified<PhysicsModule::ColliderComponent>();
-                    }
-
-                    // Shape parameters based on type
-                    if (collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Box ||
-                        collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Cylinder)
-                    {
-                        float size[3] = { collider->shapeDesc.size.x, collider->shapeDesc.size.y, collider->shapeDesc.size.z };
-                        ImGui::Text("Size:");
-                        ImGui::SameLine();
-                        if (ImGui::DragFloat3("##Size", size, 0.01f, 0.01f, 1000.0f))
-                        {
-                            collider->shapeDesc.size = glm::vec3(size[0], size[1], size[2]);
-                            collider->needsCreation = true;
-                            entity.modified<PhysicsModule::ColliderComponent>();
-                        }
-                    }
-
-                    if (collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Sphere ||
-                        collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Capsule)
-                    {
-                        float radius = collider->shapeDesc.radius;
-                        ImGui::Text("Radius:");
-                        ImGui::SameLine();
-                        if (ImGui::DragFloat("##Radius", &radius, 0.01f, 0.01f, 1000.0f))
-                        {
-                            collider->shapeDesc.radius = radius;
-                            collider->needsCreation = true;
-                            entity.modified<PhysicsModule::ColliderComponent>();
-                        }
-                    }
-
-                    if (collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Capsule ||
-                        collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Cylinder)
-                    {
-                        float height = collider->shapeDesc.height;
-                        ImGui::Text("Height:");
-                        ImGui::SameLine();
-                        if (ImGui::DragFloat("##Height", &height, 0.01f, 0.01f, 1000.0f))
-                        {
-                            collider->shapeDesc.height = height;
-                            collider->needsCreation = true;
-                            entity.modified<PhysicsModule::ColliderComponent>();
-                        }
-                    }
-
-                    // Is Trigger
-                    bool isTrigger = collider->isTrigger;
-                    ImGui::Text("Is Trigger:");
-                    ImGui::SameLine();
-                    if (ImGui::Checkbox("##IsTrigger", &isTrigger))
-                    {
-                        collider->isTrigger = isTrigger;
+                        collider->shapeDesc.size = glm::vec3(size[0], size[1], size[2]);
                         collider->needsCreation = true;
                         entity.modified<PhysicsModule::ColliderComponent>();
                     }
                 }
-                else
+
+                if (collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Sphere ||
+                    collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Capsule)
                 {
-                    ImGui::PopStyleColor();
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::TextUnformatted("Radius");
+                    ImGui::TableSetColumnIndex(1);
+                    if (ImGui::DragFloat("##ColliderRadius", &collider->shapeDesc.radius, 0.01f, 0.01f, 1000.0f))
+                    {
+                        collider->needsCreation = true;
+                        entity.modified<PhysicsModule::ColliderComponent>();
+                    }
                 }
+
+                if (collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Capsule ||
+                    collider->shapeDesc.type == PhysicsModule::PhysicsShapeType::Cylinder)
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::TextUnformatted("Height");
+                    ImGui::TableSetColumnIndex(1);
+                    if (ImGui::DragFloat("##ColliderHeight", &collider->shapeDesc.height, 0.01f, 0.01f, 1000.0f))
+                    {
+                        collider->needsCreation = true;
+                        entity.modified<PhysicsModule::ColliderComponent>();
+                    }
+                }
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Trigger");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::Checkbox("##ColliderTrigger", &collider->isTrigger))
+                {
+                    collider->needsCreation = true;
+                    entity.modified<PhysicsModule::ColliderComponent>();
+                }
+
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -1256,73 +1132,69 @@ public:
 
     void render(flecs::entity& entity) override
     {
-        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+        render(entity, "CharacterControllerComponent", "Character Controller");
+    }
 
-        if (ImGui::BeginChildFrame(12, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5f,
-                                               ImGui::GetWindowSize().y / 3.f)))
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (auto cc = entity.get_mut<PhysicsModule::CharacterControllerComponent>())
         {
-            if (PhysicsModule::CharacterControllerComponent* cc = entity.get_mut<PhysicsModule::CharacterControllerComponent>())
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            if (beginPropertyTable())
             {
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
-                bool headerOpen = ImGui::CollapsingHeader("Character Controller Component", ImGuiTreeNodeFlags_DefaultOpen);
-                renderComponentControls(entity, "CharacterControllerComponent", "Character Controller Component");
-                
-                if (headerOpen)
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Radius");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::DragFloat("##CCRadius", &cc->radius, 0.01f, 0.01f, 10.0f))
                 {
-                    ImGui::PopStyleColor();
-                    ImGui::SetCursorPosX(0);
-                    ImGui::Separator();
-
-                    float radius = cc->radius;
-                    float height = cc->height;
-                    float stepHeight = cc->stepHeight;
-                    float velocity[3] = { cc->velocity.x, cc->velocity.y, cc->velocity.z };
-
-                    ImGui::Text("Radius:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat("##Radius", &radius, 0.01f, 0.01f, 10.0f))
-                    {
-                        cc->radius = radius;
-                        entity.modified<PhysicsModule::CharacterControllerComponent>();
-                    }
-
-                    ImGui::Text("Height:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat("##Height", &height, 0.01f, 0.01f, 10.0f))
-                    {
-                        cc->height = height;
-                        entity.modified<PhysicsModule::CharacterControllerComponent>();
-                    }
-
-                    ImGui::Text("Step Height:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat("##StepHeight", &stepHeight, 0.01f, 0.0f, 5.0f))
-                    {
-                        cc->stepHeight = stepHeight;
-                        entity.modified<PhysicsModule::CharacterControllerComponent>();
-                    }
-
-                    ImGui::Text("Velocity:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat3("##Velocity", velocity, 0.1f, -1000.0f, 1000.0f))
-                    {
-                        cc->velocity = glm::vec3(velocity[0], velocity[1], velocity[2]);
-                        entity.modified<PhysicsModule::CharacterControllerComponent>();
-                    }
-
-                    ImGui::Text("Is Grounded:");
-                    ImGui::SameLine();
-                    ImGui::BeginDisabled(true);
-                    ImGui::Checkbox("##IsGrounded", &cc->isGrounded);
-                    ImGui::EndDisabled();
+                    entity.modified<PhysicsModule::CharacterControllerComponent>();
                 }
-                else
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Height");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::DragFloat("##CCHeight", &cc->height, 0.01f, 0.01f, 10.0f))
                 {
-                    ImGui::PopStyleColor();
+                    entity.modified<PhysicsModule::CharacterControllerComponent>();
                 }
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Step Height");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::DragFloat("##CCStepHeight", &cc->stepHeight, 0.01f, 0.0f, 5.0f))
+                {
+                    entity.modified<PhysicsModule::CharacterControllerComponent>();
+                }
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Velocity");
+                ImGui::TableSetColumnIndex(1);
+                float velocity[3] = {cc->velocity.x, cc->velocity.y, cc->velocity.z};
+                if (ImGui::DragFloat3("##CCVelocity", velocity, 0.1f, -1000.0f, 1000.0f))
+                {
+                    cc->velocity = glm::vec3(velocity[0], velocity[1], velocity[2]);
+                    entity.modified<PhysicsModule::CharacterControllerComponent>();
+                }
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Grounded");
+                ImGui::TableSetColumnIndex(1);
+                ImGui::BeginDisabled(true);
+                ImGui::Checkbox("##CCGrounded", &cc->isGrounded);
+                ImGui::EndDisabled();
+
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };
 
@@ -1333,57 +1205,49 @@ public:
 
     void render(flecs::entity& entity) override
     {
-        ImGui::SetCursorPosX(ImGui::GetCursorStartPos().x);
+        render(entity, "PhysicsMaterialComponent", "Physics Material");
+    }
 
-        if (ImGui::BeginChildFrame(13, ImVec2(ImGui::GetWindowSize().x - ImGui::GetCursorStartPos().x * 3.5f,
-                                               ImGui::GetWindowSize().y / 3.f)))
+    void render(flecs::entity& entity, const std::string& typeName, const std::string& displayName) override
+    {
+        if (auto material = entity.get_mut<PhysicsModule::PhysicsMaterialComponent>())
         {
-            if (PhysicsModule::PhysicsMaterialComponent* material = entity.get_mut<PhysicsModule::PhysicsMaterialComponent>())
+            if (!beginComponentPanel(entity, typeName, displayName))
+                return;
+
+            if (beginPropertyTable())
             {
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.3f, 0.5f));
-                bool headerOpen = ImGui::CollapsingHeader("Physics Material Component", ImGuiTreeNodeFlags_DefaultOpen);
-                renderComponentControls(entity, "PhysicsMaterialComponent", "Physics Material Component");
-                
-                if (headerOpen)
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Friction");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::DragFloat("##PhysFriction", &material->friction, 0.01f, 0.0f, 10.0f))
                 {
-                    ImGui::PopStyleColor();
-                    ImGui::SetCursorPosX(0);
-                    ImGui::Separator();
-
-                    float friction = material->friction;
-                    float restitution = material->restitution;
-                    float density = material->density;
-
-                    ImGui::Text("Friction:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat("##Friction", &friction, 0.01f, 0.0f, 10.0f))
-                    {
-                        material->friction = friction;
-                        entity.modified<PhysicsModule::PhysicsMaterialComponent>();
-                    }
-
-                    ImGui::Text("Restitution:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat("##Restitution", &restitution, 0.01f, 0.0f, 1.0f))
-                    {
-                        material->restitution = restitution;
-                        entity.modified<PhysicsModule::PhysicsMaterialComponent>();
-                    }
-
-                    ImGui::Text("Density:");
-                    ImGui::SameLine();
-                    if (ImGui::DragFloat("##Density", &density, 0.01f, 0.01f, 10000.0f))
-                    {
-                        material->density = density;
-                        entity.modified<PhysicsModule::PhysicsMaterialComponent>();
-                    }
+                    entity.modified<PhysicsModule::PhysicsMaterialComponent>();
                 }
-                else
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Restitution");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::DragFloat("##PhysRestitution", &material->restitution, 0.01f, 0.0f, 1.0f))
                 {
-                    ImGui::PopStyleColor();
+                    entity.modified<PhysicsModule::PhysicsMaterialComponent>();
                 }
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted("Density");
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::DragFloat("##PhysDensity", &material->density, 0.01f, 0.01f, 10000.0f))
+                {
+                    entity.modified<PhysicsModule::PhysicsMaterialComponent>();
+                }
+
+                endPropertyTable();
             }
+
+            endComponentPanel();
         }
-        ImGui::EndChildFrame();
     }
 };

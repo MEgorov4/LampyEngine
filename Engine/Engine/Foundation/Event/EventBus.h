@@ -20,14 +20,18 @@ class EventBus
     {
         EventBus* m_bus = nullptr;
         size_t m_id     = 0;
+        std::weak_ptr<bool> m_busToken;
 
       public:
         Subscription() = default;
-        Subscription(EventBus* bus, size_t id) noexcept : m_bus(bus), m_id(id)
+        Subscription(EventBus* bus, size_t id, std::shared_ptr<bool> token) noexcept :
+            m_bus(bus), m_id(id), m_busToken(std::move(token))
         {
         }
         Subscription(Subscription&& other) noexcept :
-            m_bus(std::exchange(other.m_bus, nullptr)), m_id(std::exchange(other.m_id, 0))
+            m_bus(std::exchange(other.m_bus, nullptr)),
+            m_id(std::exchange(other.m_id, 0)),
+            m_busToken(std::move(other.m_busToken))
         {
         }
         Subscription& operator=(Subscription&& other) noexcept
@@ -35,8 +39,9 @@ class EventBus
             if (this != &other)
             {
                 unsubscribe();
-                m_bus = std::exchange(other.m_bus, nullptr);
-                m_id  = std::exchange(other.m_id, 0);
+                m_bus      = std::exchange(other.m_bus, nullptr);
+                m_id       = std::exchange(other.m_id, 0);
+                m_busToken = std::move(other.m_busToken);
             }
             return *this;
         }
@@ -48,15 +53,29 @@ class EventBus
         void unsubscribe()
         {
             if (m_bus && m_id)
-                m_bus->unsubscribe<T>(m_id);
+            {
+                if (auto token = m_busToken.lock())
+                {
+                    if (*token)
+                    {
+                        m_bus->unsubscribe<T>(m_id);
+                    }
+                }
+            }
             m_bus = nullptr;
             m_id  = 0;
+            m_busToken.reset();
         }
     };
 
   public:
     EventBus()  = default;
-    ~EventBus() = default;
+    ~EventBus()
+    {
+        if (m_aliveToken)
+            *m_aliveToken = false;
+        clear();
+    }
 
     template <typename T>
     [[nodiscard]]
@@ -66,7 +85,7 @@ class EventBus
         auto& list = m_handlers[typeid(T)];
         size_t id  = ++m_nextId;
         list.push_back(std::make_shared<Wrapper<T>>(id, std::move(handler)));
-        return Subscription<T>(this, id);
+        return Subscription<T>(this, id, m_aliveToken);
     }
 
     template <typename T> void unsubscribe(size_t id)
@@ -120,6 +139,7 @@ class EventBus
                        std::vector<std::shared_ptr<BaseWrapper>, ProfileAllocator<std::shared_ptr<BaseWrapper>>>>
         m_handlers;
     size_t m_nextId = 0;
+    std::shared_ptr<bool> m_aliveToken = std::make_shared<bool>(true);
 };
 
 } // namespace EngineCore::Foundation

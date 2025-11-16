@@ -44,7 +44,8 @@ class AssetImporterHub
 
     IAssetImporter* findImporter(const std::string& ext) const noexcept
     {
-        LT_ASSERT_MSG(!ext.empty(), "Extension cannot be empty");
+        if (ext.empty())
+            return nullptr;
         
         auto it = std::find_if(m_importers.begin(), m_importers.end(),
                                [&](const auto& ptr) { return ptr->supportsExtension(ext); });

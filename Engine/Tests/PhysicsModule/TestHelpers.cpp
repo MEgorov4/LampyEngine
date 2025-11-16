@@ -20,8 +20,8 @@ namespace PhysicsModuleTest::Helpers
         rot.y = 0.0f;
         rot.z = 0.0f;
         
-        entity.set<PositionComponent>(pos);
-        entity.set<RotationComponent>(rot);
+        SetEntityPosition(entity, pos);
+        SetEntityRotation(entity, rot);
         
         PhysicsModule::RigidBodyDesc desc;
         desc.bodyType = PhysicsModule::RigidBodyType::Static;
@@ -52,8 +52,8 @@ namespace PhysicsModuleTest::Helpers
         rot.y = 0.0f;
         rot.z = 0.0f;
         
-        entity.set<PositionComponent>(pos);
-        entity.set<RotationComponent>(rot);
+        SetEntityPosition(entity, pos);
+        SetEntityRotation(entity, rot);
         
         PhysicsModule::RigidBodyDesc desc;
         desc.bodyType = PhysicsModule::RigidBodyType::Dynamic;
@@ -83,8 +83,8 @@ namespace PhysicsModuleTest::Helpers
         rot.y = 0.0f;
         rot.z = 0.0f;
         
-        entity.set<PositionComponent>(pos);
-        entity.set<RotationComponent>(rot);
+        SetEntityPosition(entity, pos);
+        SetEntityRotation(entity, rot);
         
         PhysicsModule::RigidBodyDesc desc;
         desc.bodyType = PhysicsModule::RigidBodyType::Static;
@@ -115,8 +115,8 @@ namespace PhysicsModuleTest::Helpers
         rot.y = 0.0f;
         rot.z = 0.0f;
         
-        entity.set<PositionComponent>(pos);
-        entity.set<RotationComponent>(rot);
+        SetEntityPosition(entity, pos);
+        SetEntityRotation(entity, rot);
         
         PhysicsModule::RigidBodyDesc desc;
         desc.bodyType = bodyType;

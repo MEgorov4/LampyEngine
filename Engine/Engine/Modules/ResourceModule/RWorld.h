@@ -25,6 +25,11 @@ class RWorld final : public BaseResource
         return m_jsonData.empty();
     }
 
+    void setJsonData(std::string json) noexcept
+    {
+        m_jsonData = std::move(json);
+    }
+
   private:
     std::string m_jsonData;
 };

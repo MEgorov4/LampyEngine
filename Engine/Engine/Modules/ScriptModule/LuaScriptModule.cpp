@@ -121,7 +121,20 @@ void LuaScriptModule::processCommand(const std::string& command)
     if (!target)
         return;
 
-    target->runString(command);
+    try
+    {
+        target->runString(command);
+    }
+    catch (const std::exception& ex)
+    {
+        LT_LOGE("ScriptModule",
+                std::format("Exception while executing console command in VM [{}]: {}", target->name(), ex.what()));
+    }
+    catch (...)
+    {
+        LT_LOGE("ScriptModule",
+                std::format("Unknown exception while executing console command in VM [{}]", target->name()));
+    }
 }
 
 sol::state& LuaScriptModule::getLuaState()

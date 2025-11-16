@@ -9,9 +9,9 @@ namespace PhysicsModule
     void SyncFromPhysicsSystem::Register(flecs::world& world)
     {
         // Run in OnUpdate phase
-        world.system<PositionComponent, RotationComponent, RigidBodyComponent>()
+        world.system<TransformComponent, RigidBodyComponent>()
             .kind(flecs::OnUpdate)
-            .each([](flecs::entity e, PositionComponent& pos, RotationComponent& rot, 
+            .each([](flecs::entity e, TransformComponent& transform, 
                      RigidBodyComponent& rb)
             {
                 // Only sync from physics for dynamic bodies
@@ -25,8 +25,9 @@ namespace PhysicsModule
                     glm::quat rotation;
                     if (ctx->getBodyTransform(e, position, rotation))
                     {
-                        pos.fromGLMVec(position);
-                        rot.fromQuat(rotation);
+                        transform.position.fromGLMVec(position);
+                        transform.rotation.fromQuat(rotation);
+                        e.modified<TransformComponent>();
                     }
                 }
             });

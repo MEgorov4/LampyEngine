@@ -90,8 +90,8 @@ TEST_F(CollisionScenariosTest, FallingBoxHitsGround)
     groundRot.y = 0.0f;
     groundRot.z = 0.0f;
     
-    ground.set<PositionComponent>(groundPos);
-    ground.set<RotationComponent>(groundRot);
+    SetEntityPosition(ground, groundPos);
+    SetEntityRotation(ground, groundRot);
     
     RigidBodyDesc groundDesc;
     groundDesc.bodyType = RigidBodyType::Static;
@@ -116,8 +116,8 @@ TEST_F(CollisionScenariosTest, FallingBoxHitsGround)
     boxRot.y = 0.0f;
     boxRot.z = 0.0f;
     
-    box.set<PositionComponent>(boxPos);
-    box.set<RotationComponent>(boxRot);
+    SetEntityPosition(box, boxPos);
+    SetEntityRotation(box, boxRot);
     
     RigidBodyDesc boxDesc;
     boxDesc.bodyType = RigidBodyType::Dynamic;
@@ -194,8 +194,8 @@ TEST_F(CollisionScenariosTest, TwoBoxesCollide)
     rot1.y = 0.0f;
     rot1.z = 0.0f;
     
-    box1.set<PositionComponent>(pos1);
-    box1.set<RotationComponent>(rot1);
+    SetEntityPosition(box1, pos1);
+    SetEntityRotation(box1, rot1);
     
     RigidBodyDesc desc1;
     desc1.bodyType = RigidBodyType::Dynamic;
@@ -220,8 +220,8 @@ TEST_F(CollisionScenariosTest, TwoBoxesCollide)
     rot2.y = 0.0f;
     rot2.z = 0.0f;
     
-    box2.set<PositionComponent>(pos2);
-    box2.set<RotationComponent>(rot2);
+    SetEntityPosition(box2, pos2);
+    SetEntityRotation(box2, rot2);
     
     RigidBodyDesc desc2;
     desc2.bodyType = RigidBodyType::Dynamic;

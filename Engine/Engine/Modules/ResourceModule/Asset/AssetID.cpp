@@ -7,6 +7,7 @@
 #include <boost/uuid/detail/basic_name_generator.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
 #include <boost/uuid/string_generator.hpp>
+#include <boost/uuid/random_generator.hpp>
 #include <filesystem>
 #include <string>
 #include <type_traits>
@@ -105,6 +106,16 @@ AssetID ResourceModule::MakeDeterministicIDFromPath(const std::string& absPath)
 
     boost::uuids::name_generator_sha1 gen(LampyNamespaceUUID);
     const auto uuid = gen(norm);
+
+    AssetID id;
+    std::copy(uuid.begin(), uuid.end(), id.m_bytes.begin());
+    return id;
+}
+
+AssetID ResourceModule::MakeRandomAssetID()
+{
+    boost::uuids::random_generator gen;
+    const auto uuid = gen();
 
     AssetID id;
     std::copy(uuid.begin(), uuid.end(), id.m_bytes.begin());

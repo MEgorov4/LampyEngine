@@ -73,21 +73,9 @@ private:
                 onMeshComponentChanged(e, mesh);
             });
         
-        world.observer<PositionComponent>()
+        world.observer<TransformComponent>()
             .event(flecs::OnAdd)
-            .each([this](flecs::entity e, PositionComponent&) {
-                checkIfEntityBecameRenderable(e);
-            });
-        
-        world.observer<RotationComponent>()
-            .event(flecs::OnAdd)
-            .each([this](flecs::entity e, RotationComponent&) {
-                checkIfEntityBecameRenderable(e);
-            });
-        
-        world.observer<ScaleComponent>()
-            .event(flecs::OnAdd)
-            .each([this](flecs::entity e, ScaleComponent&) {
+            .each([this](flecs::entity e, TransformComponent&) {
                 checkIfEntityBecameRenderable(e);
             });
         
@@ -103,17 +91,13 @@ private:
     
     void onEntityBecameRenderable(flecs::entity e)
     {
-        bool hasPos = e.has<PositionComponent>();
-        bool hasRot = e.has<RotationComponent>();
-        bool hasScale = e.has<ScaleComponent>();
+        bool hasTransform = e.has<TransformComponent>();
         bool hasMesh = e.has<MeshComponent>();
         
-        if (!hasPos || !hasRot || !hasScale || !hasMesh)
+        if (!hasTransform || !hasMesh)
         {
             LT_LOGI("RenderObserver", "Entity " + std::to_string(e.id()) + 
-                    " missing components - pos:" + std::to_string(hasPos) + 
-                    " rot:" + std::to_string(hasRot) + 
-                    " scale:" + std::to_string(hasScale) + 
+                    " missing components - transform:" + std::to_string(hasTransform) + 
                     " mesh:" + std::to_string(hasMesh));
             return;
         }
@@ -122,15 +106,16 @@ private:
         state.entityId = e.id();
         state.isValid = true;
         
-        const PositionComponent* pos = e.get<PositionComponent>();
-        const RotationComponent* rot = e.get<RotationComponent>();
-        const ScaleComponent* scale = e.get<ScaleComponent>();
+        const TransformComponent* transform = e.get<TransformComponent>();
         const MeshComponent* mesh = e.get<MeshComponent>();
         const MaterialComponent* material = e.get<MaterialComponent>();
         
-        if (pos) state.position = *pos;
-        if (rot) state.rotation = *rot;
-        if (scale) state.scale = *scale;
+        if (transform)
+        {
+            state.position = transform->position;
+            state.rotation = transform->rotation;
+            state.scale = transform->scale;
+        }
         if (mesh) state.mesh = *mesh;
         if (material) state.material = *material;
         
@@ -200,8 +185,7 @@ private:
         auto* state = m_tracker->getState(e.id());
         if (!state)
         {
-            if (e.has<PositionComponent>() && e.has<RotationComponent>() && 
-                e.has<ScaleComponent>() && e.has<MeshComponent>())
+            if (e.has<TransformComponent>() && e.has<MeshComponent>())
             {
                 onEntityBecameRenderable(e);
             }
@@ -211,13 +195,14 @@ private:
                 newState.entityId = e.id();
                 newState.isValid = false;
                 
-                const PositionComponent* pos = e.get<PositionComponent>();
-                const RotationComponent* rot = e.get<RotationComponent>();
-                const ScaleComponent* scale = e.get<ScaleComponent>();
+                const TransformComponent* transform = e.get<TransformComponent>();
                 
-                if (pos) newState.position = *pos;
-                if (rot) newState.rotation = *rot;
-                if (scale) newState.scale = *scale;
+                if (transform)
+                {
+                    newState.position = transform->position;
+                    newState.rotation = transform->rotation;
+                    newState.scale = transform->scale;
+                }
                 newState.mesh = mesh;
                 
                 LT_LOGI("RenderObserver", "MeshComponent added to entity " + std::to_string(e.id()) + 
@@ -226,19 +211,18 @@ private:
             return;
         }
         
-        const PositionComponent* pos = e.get<PositionComponent>();
-        const RotationComponent* rot = e.get<RotationComponent>();
-        const ScaleComponent* scale = e.get<ScaleComponent>();
-        if (pos) state->position = *pos;
-        if (rot) state->rotation = *rot;
-        if (scale) state->scale = *scale;
+        const TransformComponent* transform = e.get<TransformComponent>();
+        if (transform)
+        {
+            state->position = transform->position;
+            state->rotation = transform->rotation;
+            state->scale = transform->scale;
+        }
         
         bool meshChanged = state->hasMeshChanged(mesh);
         
         bool needsToBecomeRenderable = !state->isValid && 
-                                       e.has<PositionComponent>() && 
-                                       e.has<RotationComponent>() && 
-                                       e.has<ScaleComponent>();
+                                       e.has<TransformComponent>();
         
         if (meshChanged || needsToBecomeRenderable)
         {
@@ -280,7 +264,7 @@ private:
         auto* state = m_tracker->getState(e.id());
         if (state && !state->isValid)
         {
-            if (e.has<PositionComponent>() && e.has<RotationComponent>() && e.has<ScaleComponent>())
+            if (e.has<TransformComponent>())
             {
                 const MeshComponent* mesh = e.get<MeshComponent>();
                 if (mesh)
@@ -291,7 +275,7 @@ private:
         }
         else if (!state)
         {
-            if (e.has<PositionComponent>() && e.has<RotationComponent>() && e.has<ScaleComponent>())
+            if (e.has<TransformComponent>())
             {
                 onEntityBecameRenderable(e);
             }

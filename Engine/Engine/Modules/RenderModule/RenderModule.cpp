@@ -24,6 +24,9 @@ void RenderModule::startup()
     LT_LOGI("RenderModule", "Create renderer");
     m_renderer = std::make_unique<OpenGL::OpenGLRenderer>();
     LT_ASSERT_MSG(m_renderer, "Failed to create OpenGLRenderer");
+
+    RenderConfig::getInstance().setDebugPassEnabled(m_configuredDebugPassEnabled.value_or(true));
+    RenderConfig::getInstance().setGridPassEnabled(m_configuredGridPassEnabled.value_or(true));
     m_renderer->postInit();
 
     LT_LOGI("RenderModule", "Init render factory");
@@ -52,6 +55,14 @@ void RenderModule::applyConfig(const RenderModuleConfig &config)
     if (config.outputMode.has_value())
     {
         m_configuredOutputMode = config.outputMode;
+    }
+    if (config.debugPassEnabled.has_value())
+    {
+        m_configuredDebugPassEnabled = config.debugPassEnabled;
+    }
+    if (config.gridPassEnabled.has_value())
+    {
+        m_configuredGridPassEnabled = config.gridPassEnabled;
     }
 }
 

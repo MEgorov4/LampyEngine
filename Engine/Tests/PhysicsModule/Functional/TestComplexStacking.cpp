@@ -75,8 +75,8 @@ TEST_F(ComplexStackingTest, StackThreeBoxes)
     groundRot.y = 0.0f;
     groundRot.z = 0.0f;
     
-    ground.set<PositionComponent>(groundPos);
-    ground.set<RotationComponent>(groundRot);
+    SetEntityPosition(ground, groundPos);
+    SetEntityRotation(ground, groundRot);
     
     RigidBodyDesc groundDesc;
     groundDesc.bodyType = RigidBodyType::Static;
@@ -105,8 +105,8 @@ TEST_F(ComplexStackingTest, StackThreeBoxes)
         rot.y = 0.0f;
         rot.z = 0.0f;
         
-        box.set<PositionComponent>(pos);
-        box.set<RotationComponent>(rot);
+        SetEntityPosition(box, pos);
+        SetEntityRotation(box, rot);
         
         RigidBodyDesc boxDesc;
         boxDesc.bodyType = RigidBodyType::Dynamic;
@@ -168,8 +168,8 @@ TEST_F(ComplexStackingTest, StackStabilizes)
     groundRot.y = 0.0f;
     groundRot.z = 0.0f;
     
-    ground.set<PositionComponent>(groundPos);
-    ground.set<RotationComponent>(groundRot);
+    SetEntityPosition(ground, groundPos);
+    SetEntityRotation(ground, groundRot);
     
     RigidBodyDesc groundDesc;
     groundDesc.bodyType = RigidBodyType::Static;
@@ -194,8 +194,8 @@ TEST_F(ComplexStackingTest, StackStabilizes)
     rot.y = 0.0f;
     rot.z = 0.0f;
     
-    box.set<PositionComponent>(pos);
-    box.set<RotationComponent>(rot);
+    SetEntityPosition(box, pos);
+    SetEntityRotation(box, rot);
     
     RigidBodyDesc boxDesc;
     boxDesc.bodyType = RigidBodyType::Dynamic;

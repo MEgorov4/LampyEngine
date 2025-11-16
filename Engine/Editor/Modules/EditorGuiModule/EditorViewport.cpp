@@ -89,27 +89,26 @@ void GUIEditorViewport::render(float deltaTime)
             glm::quat rot{1.f, 0.f, 0.f, 0.f};
             glm::vec3 scl{1.f};
 
-            if (const PositionComponent *pComp = ent.get<PositionComponent>())
-                pos = pComp->toGLMVec();
-            if (const RotationComponent *rComp = ent.get<RotationComponent>())
-                rot = rComp->toQuat();
-            if (const ScaleComponent *sComp = ent.get<ScaleComponent>())
-                scl = sComp->toGLMVec();
+            if (const TransformComponent *transform = ent.get<TransformComponent>())
+            {
+                pos = transform->position.toGLMVec();
+                rot = transform->rotation.toQuat();
+                scl = transform->scale.toGLMVec();
+            }
 
             glm::mat4 model(1.0f);
             model = glm::translate(model, pos);
             model *= glm::mat4_cast(rot);
             model = glm::scale(model, scl);
 
-            const PositionComponent *cPosComp = m_viewportEntity.get<PositionComponent>();
-            const RotationComponent *cRotComp = m_viewportEntity.get<RotationComponent>();
+            const TransformComponent *cameraTransform = m_viewportEntity.get<TransformComponent>();
             const CameraComponent *camComp = m_viewportEntity.get<CameraComponent>();
 
             float aspect = avail.x > 0 ? float(avail.x) / float(avail.y) : 1.0f;
 
             glm::mat4 proj = glm::perspective(glm::radians(camComp->fov), aspect, camComp->nearClip, camComp->farClip);
-            glm::vec3 cameraPos = cPosComp->toGLMVec();
-            glm::quat camRot = cRotComp->toQuat();
+            glm::vec3 cameraPos = cameraTransform ? cameraTransform->position.toGLMVec() : glm::vec3(0.0f);
+            glm::quat camRot = cameraTransform ? cameraTransform->rotation.toQuat() : glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
             glm::vec3 forward = camRot * glm::vec3(0, 0, -1);
             glm::vec3 up = camRot * glm::vec3(0, 1, 0);
 
@@ -128,15 +127,11 @@ void GUIEditorViewport::render(float deltaTime)
                 glm::vec3 newT;
                 glm::decompose(model, newS, newR, newT, skew, persp); // <glm/gtx/matrix_decompose.hpp>
 
-                ent.set<PositionComponent>({newT.x, newT.y, newT.z});
-
-                if (auto *rc = ent.get_mut<RotationComponent>())
-                {
-                    rc->fromQuat(newR);
-                    ent.modified<RotationComponent>();
-                }
-
-                ent.set<ScaleComponent>({newS.x, newS.y, newS.z});
+                auto& mutableTransform = EnsureTransformComponent(ent);
+                mutableTransform.position = {.x = newT.x, .y = newT.y, .z = newT.z};
+                mutableTransform.scale = {.x = newS.x, .y = newS.y, .z = newS.z};
+                mutableTransform.rotation.fromQuat(newR);
+                ent.modified<TransformComponent>();
             }
             if (ImGui::IsKeyPressed(ImGuiKey_T))
                 gizmoOp = ImGuizmo::TRANSLATE;
@@ -163,8 +158,12 @@ void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
 
     if (!m_processInput)
         return;
-    m_cameraPos = m_viewportEntity.get<PositionComponent>()->toGLMVec();
-    glm::quat cameraRotation = m_viewportEntity.get<RotationComponent>()->toQuat();
+    const TransformComponent* cameraTransform = m_viewportEntity.get<TransformComponent>();
+    if (!cameraTransform)
+        return;
+
+    m_cameraPos = cameraTransform->position.toGLMVec();
+    glm::quat cameraRotation = cameraTransform->rotation.toQuat();
 
     float speed = m_cameraSpeed;
     glm::vec3 movement(0.0f);
@@ -199,7 +198,9 @@ void GUIEditorViewport::onKeyAction(SDL_KeyboardEvent event)
     velocity *= 1.0f / (1.0f + damping * m_deltaTime);
 
     m_cameraPos += velocity * m_deltaTime;
-    m_viewportEntity.set<PositionComponent>({.x = m_cameraPos.x, .y = m_cameraPos.y, .z = m_cameraPos.z});
+    auto& mutableTransform = EnsureTransformComponent(m_viewportEntity);
+    mutableTransform.position = {.x = m_cameraPos.x, .y = m_cameraPos.y, .z = m_cameraPos.z};
+    m_viewportEntity.modified<TransformComponent>();
 }
 
 void GUIEditorViewport::onMouseAction(SDL_MouseMotionEvent mouseMotion)
@@ -212,10 +213,14 @@ void GUIEditorViewport::onMouseAction(SDL_MouseMotionEvent mouseMotion)
         m_firstMouse = true;
         return;
     }
-    const RotationComponent *rotation = m_viewportEntity.get<RotationComponent>();
+    const TransformComponent *transform = m_viewportEntity.get<TransformComponent>();
+    if (!transform)
+        return;
 
-    float pitch = rotation->x;
-    float yaw = rotation->y;
+    const RotationComponent &rotation = transform->rotation;
+
+    float pitch = rotation.x;
+    float yaw = rotation.y;
 
     if (m_firstMouse)
     {
@@ -239,8 +244,10 @@ void GUIEditorViewport::onMouseAction(SDL_MouseMotionEvent mouseMotion)
     if (m_viewportEntity.is_alive())
     {
         RotationComponent newRot;
-        newRot.fromEulerDegrees(glm::vec3(pitch, yaw, rotation->z));
-        m_viewportEntity.set<RotationComponent>(newRot);
+        newRot.fromEulerDegrees(glm::vec3(pitch, yaw, rotation.z));
+        auto& mutableTransform = EnsureTransformComponent(m_viewportEntity);
+        mutableTransform.rotation = newRot;
+        m_viewportEntity.modified<TransformComponent>();
     }
 }
 

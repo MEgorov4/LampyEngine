@@ -2,7 +2,6 @@
 
 #include "AssetBrowser/AssetBrowser.h"
 #include "ContentBrowser/ContentBrowser.h"
-#include "EditorConsole.h"
 #include "EditorToolPanel.h"
 #include "EditorViewport.h"
 #include "MainMenuBar.h"
@@ -37,9 +36,9 @@ void EditorGUIModule::startup()
     
     auto outputLog = m_imGuiModule->addObject(new GUIOutputLog());
     if (auto ptr = outputLog.lock()) {
-        ptr->setWindowName("Output Log");
+        ptr->setWindowName("Console");
         m_windowObjects.push_back(outputLog);
-        m_windowNames.push_back("Output Log");
+        m_windowNames.push_back("Console");
     }
 
     auto contentBrowser = m_imGuiModule->addObject(new GUIContentBrowser());
@@ -61,13 +60,6 @@ void EditorGUIModule::startup()
         ptr->setWindowName("Viewport");
         m_windowObjects.push_back(viewport);
         m_windowNames.push_back("Viewport");
-    }
-
-    auto console = m_imGuiModule->addObject(new GUIConsole());
-    if (auto ptr = console.lock()) {
-        ptr->setWindowName("Console");
-        m_windowObjects.push_back(console);
-        m_windowNames.push_back("Console");
     }
 
     auto assetBrowser = m_imGuiModule->addObject(new GUIAssetBrowser());

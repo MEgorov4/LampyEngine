@@ -214,13 +214,13 @@ FsResult Fs::duplicateFileInDirectory(const std::string& path)
     std::string base = original.stem().string();
     std::string ext  = original.extension().string();
 
-    fs::path candidate = dir / (base + ext);
-    int idx            = 1;
-    while (exists(candidate.string()))
+    int idx = 1;
+    fs::path candidate;
+    do
     {
-        candidate = dir / (base + "_" + std::to_string(idx) + ext);
+        candidate = dir / (base + " copy (" + std::to_string(idx) + ")" + ext);
         ++idx;
-    }
+    } while (exists(candidate.string()));
 
     std::error_code ec;
     fs::copy_file(original, candidate, fs::copy_options::overwrite_existing, ec);
@@ -351,17 +351,37 @@ FsResult Fs::copyAbsolutePathToClipboard(const std::string& path)
 
 FsResult Fs::copyRelativePathToClipboard(const std::string& path, const std::string& base)
 {
-    const auto rel = relativeTo(path, base);
-    if (rel.empty())
+    std::error_code ec;
+    auto canonicalPath = fs::weakly_canonical(path, ec);
+    if (ec)
     {
-        LT_LOG(LogVerbosity::Error, "Filesystem", "Relative path failed");
+        LT_LOG(LogVerbosity::Error, "Filesystem", "Failed to canonicalize path: " + path);
+        return FsResult::InvalidPath;
+    }
+
+    auto canonicalBase = fs::weakly_canonical(base, ec);
+    if (ec)
+    {
+        LT_LOG(LogVerbosity::Error, "Filesystem", "Failed to canonicalize base: " + base);
+        return FsResult::InvalidPath;
+    }
+
+    auto rel = fs::relative(canonicalPath, canonicalBase, ec);
+    if (ec)
+    {
+        LT_LOG(LogVerbosity::Error, "Filesystem", "Relative path failed: " + std::string(ec.message()));
         return FsResult::Undefined;
     }
-    // if (!clip::set_text(rel)) { TODO: Transit this shit
-    //   LT_LOG(LogVerbosity::Error, "Filesystem",
-    //         "Clipboard set failed (rel): " + rel);
-    // return FsResult::Undefined;
-    //}
+
+    const std::string normalized = rel.generic_string();
+    if (normalized.empty())
+    {
+        LT_LOG(LogVerbosity::Error, "Filesystem", "Relative path is empty");
+        return FsResult::Undefined;
+    }
+
+    // Clipboard copy placeholder
+    // if (!clip::set_text(normalized)) { ... }
     return FsResult::Success;
 }
 

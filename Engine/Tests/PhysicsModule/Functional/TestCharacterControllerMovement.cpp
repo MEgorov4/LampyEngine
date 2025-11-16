@@ -97,8 +97,8 @@ TEST_F(CharacterControllerMovementTest, CharacterControllerWithPhysicsBody)
     groundRot.y = 0.0f;
     groundRot.z = 0.0f;
     
-    ground.set<PositionComponent>(groundPos);
-    ground.set<RotationComponent>(groundRot);
+    SetEntityPosition(ground, groundPos);
+    SetEntityRotation(ground, groundRot);
     
     RigidBodyDesc groundDesc;
     groundDesc.bodyType = RigidBodyType::Static;
@@ -124,8 +124,8 @@ TEST_F(CharacterControllerMovementTest, CharacterControllerWithPhysicsBody)
     charRot.y = 0.0f;
     charRot.z = 0.0f;
     
-    character.set<PositionComponent>(charPos);
-    character.set<RotationComponent>(charRot);
+    SetEntityPosition(character, charPos);
+    SetEntityRotation(character, charRot);
     
     CharacterControllerComponent controller;
     controller.radius = 0.5f;

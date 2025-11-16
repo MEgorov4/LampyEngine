@@ -34,7 +34,9 @@ public:
 						rb.body.value()->getMotionState()->getWorldTransform(trans);
 						btVector3 pos = trans.getOrigin();
 
-						e.set<PositionComponent>({ pos.x(), pos.y(), pos.z() });
+						auto& transform = EnsureTransformComponent(e);
+						transform.position = { pos.x(), pos.y(), pos.z() };
+						e.modified<TransformComponent>();
 					}
 				});
 	}

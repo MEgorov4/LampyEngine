@@ -5,6 +5,8 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <flecs.h>
 
 #include "../../../ResourceModule/Mesh.h"
 #include "../../../ResourceModule/Shader.h"
@@ -77,6 +79,87 @@ struct ScaleComponent {
 		z = v.z;
 	}
 };
+
+struct TransformComponent {
+    PositionComponent position{};
+    RotationComponent rotation{};
+    ScaleComponent scale{};
+
+    TransformComponent() = default;
+    TransformComponent(const PositionComponent& pos,
+                       const RotationComponent& rot = {},
+                       const ScaleComponent& scl = {})
+        : position(pos), rotation(rot), scale(scl) {}
+
+    glm::mat4 toMatrix() const noexcept {
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), position.toGLMVec());
+        glm::mat4 rotationMat = glm::mat4_cast(rotation.toQuat());
+        glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), scale.toGLMVec());
+        return translation * rotationMat * scaleMat;
+    }
+
+    glm::mat4 toMatrixNoScale() const noexcept {
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), position.toGLMVec());
+        glm::mat4 rotationMat = glm::mat4_cast(rotation.toQuat());
+        return translation * rotationMat;
+    }
+
+    static TransformComponent FromTRS(const glm::vec3& pos,
+                                      const glm::quat& rot,
+                                      const glm::vec3& scl = glm::vec3(1.0f)) noexcept {
+        TransformComponent t{};
+        t.position.fromGLMVec(pos);
+        t.rotation.fromQuat(rot);
+        t.scale.fromGMLVec(scl);
+        return t;
+    }
+};
+
+inline TransformComponent& EnsureTransformComponent(flecs::entity& entity) {
+    if (!entity.has<TransformComponent>()) {
+        entity.set<TransformComponent>(TransformComponent{});
+    }
+    return *entity.get_mut<TransformComponent>();
+}
+
+inline void SetEntityPosition(flecs::entity& entity, const PositionComponent& pos) {
+    auto& transform = EnsureTransformComponent(entity);
+    transform.position = pos;
+    entity.modified<TransformComponent>();
+}
+
+inline const PositionComponent* GetEntityPosition(const flecs::entity& entity) {
+    if (const auto* transform = entity.get<TransformComponent>()) {
+        return &transform->position;
+    }
+    return nullptr;
+}
+
+inline void SetEntityRotation(flecs::entity& entity, const RotationComponent& rot) {
+    auto& transform = EnsureTransformComponent(entity);
+    transform.rotation = rot;
+    entity.modified<TransformComponent>();
+}
+
+inline const RotationComponent* GetEntityRotation(const flecs::entity& entity) {
+    if (const auto* transform = entity.get<TransformComponent>()) {
+        return &transform->rotation;
+    }
+    return nullptr;
+}
+
+inline void SetEntityScale(flecs::entity& entity, const ScaleComponent& scale) {
+    auto& transform = EnsureTransformComponent(entity);
+    transform.scale = scale;
+    entity.modified<TransformComponent>();
+}
+
+inline const ScaleComponent* GetEntityScale(const flecs::entity& entity) {
+    if (const auto* transform = entity.get<TransformComponent>()) {
+        return &transform->scale;
+    }
+    return nullptr;
+}
 
 struct CameraComponent
 {

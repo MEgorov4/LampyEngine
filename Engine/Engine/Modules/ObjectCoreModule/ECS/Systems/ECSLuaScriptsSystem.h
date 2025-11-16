@@ -1,64 +1,175 @@
 #pragma once 
 #include "Modules/ScriptModule/LuaScriptModule.h"
+#include <Modules/ResourceModule/ResourceManager.h>
+#include <Modules/ResourceModule/Script.h>
+#include <Foundation/Log/LoggerMacro.h>
 #include <flecs.h>
 
-struct ScriptComponent {
-	std::string scriptPath;
-	std::optional<sol::table> script_table;
-	std::optional<ScriptModule::LuaScriptModule*> scriptModule;
-	void initialize() {
-		std::string stdPath = scriptPath.c_str();
-		if (!script_table && !stdPath.empty()) {
-			try
-			{
-				sol::object result = scriptModule.value()->getLuaState().script_file(stdPath, sol::script_throw_on_error);
-			if (result.is<sol::table>()) {
-				script_table = result.as<sol::table>();
-			}
-			else {
-				script_table = scriptModule.value()->getLuaState().create_table();
-			}
-			}
-			catch (...)
-			{
+#include <exception>
+#include <format>
+#include <utility>
 
-			}
-		}
-	}
+namespace
+{
+constexpr std::string_view kScriptSystemCategory = "ECSLuaScriptsSystem";
+}
+
+struct ScriptComponent {
+	ResourceModule::AssetID scriptID;
+
+	ScriptModule::LuaScriptModule* scriptModule{nullptr};
+	ResourceModule::ResourceManager* resourceManager{nullptr};
 
 	void start(const flecs::entity& entity) {
-		initialize();  
-		if (script_table) {
-			script_table.value()["entity"] = entity;
-			sol::optional<sol::function> maybe_start = script_table.value()["Start"];
-			if (maybe_start) {
-				sol::function start_func = maybe_start.value();
-				start_func();
-			}
-		}
+		if (!ensureScriptLoaded(entity))
+			return;
+		invokeStart();
 	}
+
 	void end() {
-		if (script_table)
-		{
-			sol::optional<sol::function> maybe_end = script_table.value()["End"];
-			if (maybe_end) {
-				sol::function start_func = maybe_end.value();
-				start_func();
+		if (!m_scriptTable.valid())
+			return;
+		invokeFunction("OnEnd");
+		resetState();
+	}
+
+	void update(const flecs::entity& entity, float deltaTime) {
+		if (!ensureScriptLoaded(entity))
+			return;
+		invokeStart();
+		invokeFunction("OnUpdate", deltaTime);
+	}
+
+  private:
+	bool ensureScriptLoaded(const flecs::entity& entity) {
+		if (scriptID.empty()) {
+			if (m_scriptTable.valid())
+				resetState();
+			return false;
+		}
+
+		if (!scriptModule || !resourceManager)
+			return false;
+
+		if (!m_loadedScriptID.empty() && m_loadedScriptID == scriptID && m_scriptTable.valid()) {
+			assignEntityContext(entity);
+			return true;
+		}
+
+		auto scriptResource = resourceManager->load<ResourceModule::RScript>(scriptID);
+		if (!scriptResource) {
+			LT_LOGW(kScriptSystemCategory.data(), std::format("Failed to load script asset [{}]", scriptID.str()));
+			resetState();
+			return false;
+		}
+
+		sol::state* targetState = nullptr;
+		sol::environment baseEnv;
+
+		if (auto* runtimeVM = scriptModule->getRuntimeVM()) {
+			targetState = &runtimeVM->state();
+			baseEnv = runtimeVM->environment();
+		}
+		else {
+			try {
+				targetState = &scriptModule->getLuaState();
 			}
+			catch (const std::exception& ex) {
+				LT_LOGE(kScriptSystemCategory.data(),
+				        std::format("No Lua VM available to load script [{}]: {}", scriptID.str(), ex.what()));
+				return false;
+			}
+			baseEnv = sol::environment(*targetState, sol::create, targetState->globals());
+		}
+
+		if (!targetState) {
+			LT_LOGE(kScriptSystemCategory.data(),
+			        std::format("Lua state unavailable for script [{}]", scriptID.str()));
+			return false;
+		}
+
+		sol::load_result chunk = targetState->load(scriptResource->getSource());
+		if (!chunk.valid()) {
+			sol::error err = chunk;
+			LT_LOGE(kScriptSystemCategory.data(),
+			        std::format("Lua load error for script [{}]: {}", scriptID.str(), err.what()));
+			resetState();
+			return false;
+		}
+
+		sol::protected_function func = chunk;
+		m_environment = sol::environment(*targetState, sol::create, baseEnv);
+		sol::set_environment(m_environment, func);
+		sol::protected_function_result exec = func();
+		if (!exec.valid()) {
+			sol::error err = exec;
+			LT_LOGE(kScriptSystemCategory.data(),
+			        std::format("Lua execution error for script [{}]: {}", scriptID.str(), err.what()));
+			resetState();
+			return false;
+		}
+
+		sol::table exports;
+		if (exec.return_count() > 0) {
+			sol::object ret = exec.get<sol::object>();
+			if (ret.valid() && ret.get_type() == sol::type::table) {
+				exports = ret.as<sol::table>();
+			}
+		}
+
+		if (!exports.valid()) {
+			exports = targetState->create_table();
+		}
+
+		m_scriptTable = exports;
+		m_loadedScriptID = scriptID;
+		m_started = false;
+		assignEntityContext(entity);
+		return true;
+	}
+
+	void assignEntityContext(const flecs::entity& entity) {
+		if (m_scriptTable.valid()) {
+			m_scriptTable["entity"] = entity;
 		}
 	}
 
-	void update(float deltaTime) {
-		if (script_table)
-		{
-			sol::optional<sol::function> maybe_update = script_table.value()["Update"];
+	void resetState() {
+		m_scriptTable = sol::table();
+		m_environment = sol::environment();
+		m_loadedScriptID = {};
+		m_started = false;
+	}
 
-			if (maybe_update) {
-				sol::function update_func = maybe_update.value();
-				update_func(deltaTime); 
-			}
+	void invokeStart() {
+		if (m_started || !m_scriptTable.valid())
+			return;
+		invokeFunction("OnStart");
+		m_started = true;
+	}
+
+	template <typename... Args>
+	void invokeFunction(const char* functionName, Args&&... args) {
+		if (!m_scriptTable.valid())
+			return;
+
+		sol::object candidate = m_scriptTable[functionName];
+		if (!candidate.valid() || candidate.get_type() != sol::type::function)
+			return;
+
+		sol::protected_function func = candidate;
+		sol::protected_function_result result = func(std::forward<Args>(args)...);
+		if (!result.valid()) {
+			sol::error err = result;
+			LT_LOGE(kScriptSystemCategory.data(),
+			        std::format("Script [{}] {} failed: {}", scriptID.str(), functionName, err.what()));
 		}
 	}
+
+	sol::environment m_environment;
+	sol::table m_scriptTable;
+	ResourceModule::AssetID m_loadedScriptID;
+	bool m_started{false};
 };
 
 class ECSluaScriptsSystem {
@@ -66,20 +177,34 @@ class ECSluaScriptsSystem {
 	ECSluaScriptsSystem(const ECSluaScriptsSystem&) = delete;
 	ECSluaScriptsSystem& operator=(const ECSluaScriptsSystem&) = delete;
 
-	std::optional<ScriptModule::LuaScriptModule*> m_scriptModule;
+	ScriptModule::LuaScriptModule* m_scriptModule{nullptr};
+	ResourceModule::ResourceManager* m_resourceManager{nullptr};
+
 public:
 	static ECSluaScriptsSystem& getInstance() {
 		static ECSluaScriptsSystem system;
 		return system;
 	}
 
-	void registerSystem(flecs::world& world, ScriptModule::LuaScriptModule* scriptModule) {
+	void registerSystem(flecs::world& world, ScriptModule::LuaScriptModule* scriptModule,
+	                    ResourceModule::ResourceManager* resourceManager) {
 		m_scriptModule = scriptModule;
-	world.system<ScriptComponent>()
-			.kind(flecs::OnUpdate)
-			.each([](flecs::iter& it, size_t, ScriptComponent& script) {
-			script.update(it.delta_time());
-		});
+		m_resourceManager = resourceManager;
+		world.system<ScriptComponent>()
+		    .kind(flecs::OnUpdate)
+		    .each([this](flecs::iter& it, size_t index, ScriptComponent& script) {
+			    if (!m_scriptModule || !m_resourceManager)
+				    return;
+			    script.scriptModule = m_scriptModule;
+			    script.resourceManager = m_resourceManager;
+			    script.update(it.entity(index), static_cast<float>(it.delta_time()));
+		    });
+
+		world.observer<ScriptComponent>()
+		    .event(flecs::OnRemove)
+		    .each([](flecs::entity, ScriptComponent& script) {
+			    script.end();
+		    });
 	}
 
 	void startSystem(flecs::world& world) 
@@ -88,6 +213,7 @@ public:
 		query.each([this](const flecs::entity& entity, ScriptComponent& script) 
 		{
 				script.scriptModule = m_scriptModule;
+				script.resourceManager = m_resourceManager;
 				script.start(entity);
 		});
 	}
@@ -95,7 +221,7 @@ public:
 	void stopSystem(flecs::world& world) 
 	{
 		auto query = world.query<ScriptComponent>();
-		query.each([](const flecs::entity& entity, ScriptComponent& script) 
+		query.each([](const flecs::entity&, ScriptComponent& script) 
 		{
 				script.end();
 		});

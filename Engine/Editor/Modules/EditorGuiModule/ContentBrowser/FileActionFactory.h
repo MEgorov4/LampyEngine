@@ -5,6 +5,7 @@
 #include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/ProjectModule/ProjectModule.h>
 #include <imgui.h>
+#include <filesystem>
 
 namespace ECSModule
 {
@@ -23,6 +24,18 @@ class IFileAction
 
     virtual void execute(const std::string& filePath) = 0;
     virtual std::string getName() const               = 0;
+    virtual bool requiresArgument() const
+    {
+        return false;
+    }
+    virtual void setArgument(const std::string& argument)
+    {
+        (void)argument;
+    }
+    virtual std::string argumentLabel() const
+    {
+        return "";
+    }
 
     virtual ~IFileAction()
     {
@@ -58,7 +71,8 @@ class CopyPathAction : public IFileAction
 
     void execute(const std::string& filePath) override
     {
-        Fs::copyRelativePathToClipboard(filePath, Fs::currentPath()); // TODO: ������ ��������� ������
+        const std::string projectRoot = m_projectModule->getProjectConfig().getProjectPath();
+        Fs::copyRelativePathToClipboard(filePath, projectRoot);
     }
 
     std::string getName() const override
@@ -87,13 +101,63 @@ class CopyAbsolutePathAction : public IFileAction
 
 class RenameFileAction : public IFileAction
 {
+    std::string m_newName;
+
   public:
     RenameFileAction() : IFileAction()
     {
     }
 
+    bool requiresArgument() const override
+    {
+        return true;
+    }
+
+    void setArgument(const std::string& argument) override
+    {
+        m_newName = argument;
+    }
+
+    std::string argumentLabel() const override
+    {
+        return "New name";
+    }
+
     void execute(const std::string& filePath) override
     {
+        if (m_newName.empty())
+        {
+            LT_LOG(LogVerbosity::Warning, "ContentBrowser", "Rename cancelled: empty name");
+            return;
+        }
+
+        std::filesystem::path oldPath(filePath);
+        std::filesystem::path newPath = oldPath.parent_path() / m_newName;
+
+        if (Fs::exists(newPath.string()))
+        {
+            LT_LOG(LogVerbosity::Error, "ContentBrowser", "Rename failed, target exists: " + newPath.string());
+            Events::EditorUI::FileOperationCompleted evt{"rename", filePath, false};
+            GCEB().emit(evt);
+            return;
+        }
+
+        std::error_code ec;
+        std::filesystem::rename(oldPath, newPath, ec);
+        if (ec)
+        {
+            LT_LOG(LogVerbosity::Error, "ContentBrowser",
+                   "Rename failed for '" + filePath + "': " + ec.message());
+            Events::EditorUI::FileOperationCompleted evt{"rename", filePath, false};
+            GCEB().emit(evt);
+            return;
+        }
+
+        LT_LOG(LogVerbosity::Info, "ContentBrowser",
+               "Renamed file: " + oldPath.filename().string() + " -> " + newPath.filename().string());
+
+        Events::EditorUI::FileOperationCompleted evt{"rename", newPath.string(), true};
+        GCEB().emit(evt);
     }
 
     std::string getName() const override
@@ -154,6 +218,14 @@ class SetWorldFileAsEditorDefaultAction : public IFileAction
         Events::EditorUI::ProjectStartWorldSet evt{};
         evt.worldPath = filePath;
         GCEB().emit(evt);
+
+        m_projectModule->getProjectConfig().setEditorStartWorld(filePath);
+        m_projectModule->saveProjectConfigNow();
+
+        Events::EditorUI::WorldDefaultChanged changed{};
+        changed.worldPath = filePath;
+        changed.target    = Events::EditorUI::WorldDefaultTarget::Editor;
+        GCEB().emit(changed);
     }
 
     std::string getName() const override
@@ -171,6 +243,13 @@ class SetWorldFileAsGameDefaultAction : public IFileAction
 
     void execute(const std::string& filePath) override
     {
+        m_projectModule->getProjectConfig().setGameStartWorld(filePath);
+        m_projectModule->saveProjectConfigNow();
+
+        Events::EditorUI::WorldDefaultChanged changed{};
+        changed.worldPath = filePath;
+        changed.target    = Events::EditorUI::WorldDefaultTarget::Game;
+        GCEB().emit(changed);
     }
 
     std::string getName() const override
@@ -210,6 +289,7 @@ class DefaultFileActionFactory : public IFileActionFactory
         actions.push_back(std::make_unique<DuplicateFileAction>());
         actions.push_back(std::make_unique<CopyPathAction>());
         actions.push_back(std::make_unique<CopyAbsolutePathAction>());
+        actions.push_back(std::make_unique<RenameFileAction>());
         return actions;
     }
 };
@@ -228,6 +308,7 @@ class WorldFileActionFactory : public IFileActionFactory
         actions.push_back(std::make_unique<DuplicateFileAction>());
         actions.push_back(std::make_unique<CopyPathAction>());
         actions.push_back(std::make_unique<CopyAbsolutePathAction>());
+        actions.push_back(std::make_unique<RenameFileAction>());
 
         actions.push_back(std::make_unique<OpenWorldFileAction>());
         actions.push_back(std::make_unique<SetWorldFileAsEditorDefaultAction>());

@@ -22,6 +22,14 @@ void JobSystem::startup()
     ZoneScopedN("JobSystem::startup");
 #endif
 
+    if (kJobSystemDisabled)
+    {
+        LT_LOGW("JobSystem", "Job system disabled (ENGINE_DISABLE_JOB_SYSTEM != 0); running synchronously");
+        m_workers.clear();
+        m_running = false;
+        return;
+    }
+
     LT_LOGI("JobSystem", "Initializing Job System...");
 
     m_running = true;
@@ -53,6 +61,9 @@ void JobSystem::shutdown()
 #ifdef TRACY_ENABLE
     ZoneScopedN("JobSystem::shutdown");
 #endif
+
+    if (kJobSystemDisabled)
+        return;
 
     if (!m_running)
         return;
@@ -94,6 +105,13 @@ void JobSystem::submit(std::function<void()> job, JobHandle& handle)
 
 void JobSystem::submit(std::function<void()> job, JobHandle& handle, const char* jobName)
 {
+    if (kJobSystemDisabled)
+    {
+        (void)jobName;
+        job();
+        return;
+    }
+
     if (m_workers.empty())
     {
         // If not started, execute immediately

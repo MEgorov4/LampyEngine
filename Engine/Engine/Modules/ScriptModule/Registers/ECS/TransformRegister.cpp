@@ -37,6 +37,15 @@ void TransformRegister::registerTypes(sol::state& state, sol::environment& env)
         "z", &ScaleComponent::z,
         "to_vec3", [](const ScaleComponent& self) { return self.toGLMVec(); },
         "from_vec3", [](ScaleComponent& self, const glm::vec3& v) { self.fromGMLVec(v); });
+
+    state.new_usertype<TransformComponent>(
+        "TransformComponent",
+        sol::constructors<TransformComponent()>(),
+        "position", &TransformComponent::position,
+        "rotation", &TransformComponent::rotation,
+        "scale", &TransformComponent::scale,
+        "to_matrix", [](const TransformComponent& self) { return self.toMatrix(); },
+        "to_matrix_no_scale", [](const TransformComponent& self) { return self.toMatrixNoScale(); });
 }
 } // namespace ScriptModule
 

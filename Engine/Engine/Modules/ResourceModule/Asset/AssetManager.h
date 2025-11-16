@@ -8,6 +8,7 @@
 #include "AssetDatabase.h"
 #include "AssetID.h"
 #include "AssetImporterHub.h"
+#include "AssetWriterHub.h"
 
 #include <efsw/efsw.hpp>
 #include <filesystem>
@@ -33,7 +34,18 @@ class AssetManager : public IModule
     EngineCore::Foundation::JobHandle scheduleRescanJob();
 
     void registerDefaultImporters();
+    void registerDefaultWriters();
     void watchDirectory(const std::string& path);
+
+    AssetWriterHub& getWriterHub() noexcept
+    {
+        return m_writers;
+    }
+
+    const AssetWriterHub& getWriterHub() const noexcept
+    {
+        return m_writers;
+    }
 
     AssetDatabase& getDatabase() noexcept
     {
@@ -71,8 +83,10 @@ class AssetManager : public IModule
     std::unique_ptr<std::thread> m_watchThread;
     std::mutex m_queueMutex;
     std::vector<std::string, ResourceAllocator<std::string>> m_changedFiles;
+    std::vector<efsw::WatchID> m_watchIds;
 
     AssetImporterHub m_importers;
+    AssetWriterHub m_writers;
     AssetDatabase m_database;
 
     std::filesystem::path m_engineResourcesRoot;

@@ -88,7 +88,7 @@ TEST_F(SimulationSnapshotTest, SaveSnapshotPreservesPositions)
     // Create entity with initial position
     auto entity = flecsWorld.entity("TestEntity");
     PositionComponent initialPos{10.0f, 20.0f, 30.0f};
-    entity.set<PositionComponent>(initialPos);
+    SetEntityPosition(entity, initialPos);
     
     // Save snapshot
     std::string snapshot = world->serialize();
@@ -96,10 +96,10 @@ TEST_F(SimulationSnapshotTest, SaveSnapshotPreservesPositions)
     
     // Modify position
     PositionComponent modifiedPos{100.0f, 200.0f, 300.0f};
-    entity.set<PositionComponent>(modifiedPos);
+    SetEntityPosition(entity, modifiedPos);
     
     // Verify position was modified
-    const PositionComponent* currentPos = entity.get<PositionComponent>();
+    const PositionComponent* currentPos = GetEntityPosition(entity);
     EXPECT_FLOAT_EQ(currentPos->x, 100.0f);
     EXPECT_FLOAT_EQ(currentPos->y, 200.0f);
     EXPECT_FLOAT_EQ(currentPos->z, 300.0f);
@@ -112,9 +112,9 @@ TEST_F(SimulationSnapshotTest, SaveSnapshotPreservesPositions)
     auto& restoredFlecsWorld = world->get();
     auto restoredEntity = restoredFlecsWorld.lookup("TestEntity");
     EXPECT_TRUE(restoredEntity.is_valid());
-    if (restoredEntity.has<PositionComponent>())
+    if (restoredEntity.has<TransformComponent>())
     {
-        const PositionComponent* restoredPos = restoredEntity.get<PositionComponent>();
+        const PositionComponent* restoredPos = GetEntityPosition(restoredEntity);
         EXPECT_FLOAT_EQ(restoredPos->x, 10.0f);
         EXPECT_FLOAT_EQ(restoredPos->y, 20.0f);
         EXPECT_FLOAT_EQ(restoredPos->z, 30.0f);
@@ -128,14 +128,14 @@ TEST_F(SimulationSnapshotTest, SaveSnapshotPreservesRotations)
     // Create entity with initial rotation
     auto entity = flecsWorld.entity("RotationEntity");
     RotationComponent initialRot{45.0f, 90.0f, 180.0f};
-    entity.set<RotationComponent>(initialRot);
+    SetEntityRotation(entity, initialRot);
     
     // Save snapshot
     std::string snapshot = world->serialize();
     
     // Modify rotation
     RotationComponent modifiedRot{0.0f, 0.0f, 0.0f};
-    entity.set<RotationComponent>(modifiedRot);
+    SetEntityRotation(entity, modifiedRot);
     
     // Restore from snapshot
     world->deserialize(snapshot);
@@ -143,9 +143,9 @@ TEST_F(SimulationSnapshotTest, SaveSnapshotPreservesRotations)
     // Verify rotation was restored
     auto restoredEntity = flecsWorld.lookup("RotationEntity");
     EXPECT_TRUE(restoredEntity.is_valid());
-    if (restoredEntity.has<RotationComponent>())
+    if (restoredEntity.has<TransformComponent>())
     {
-        const RotationComponent* restoredRot = restoredEntity.get<RotationComponent>();
+        const RotationComponent* restoredRot = GetEntityRotation(restoredEntity);
         EXPECT_FLOAT_EQ(restoredRot->x, 45.0f);
         EXPECT_FLOAT_EQ(restoredRot->y, 90.0f);
         EXPECT_FLOAT_EQ(restoredRot->z, 180.0f);
@@ -158,21 +158,21 @@ TEST_F(SimulationSnapshotTest, SaveSnapshotPreservesMultipleEntities)
     
     // Create multiple entities
     auto entity1 = flecsWorld.entity("Entity1");
-    entity1.set<PositionComponent>({1.0f, 2.0f, 3.0f});
+    SetEntityPosition(entity1, {1.0f, 2.0f, 3.0f});
     
     auto entity2 = flecsWorld.entity("Entity2");
-    entity2.set<PositionComponent>({4.0f, 5.0f, 6.0f});
+    SetEntityPosition(entity2, {4.0f, 5.0f, 6.0f});
     
     auto entity3 = flecsWorld.entity("Entity3");
-    entity3.set<PositionComponent>({7.0f, 8.0f, 9.0f});
+    SetEntityPosition(entity3, {7.0f, 8.0f, 9.0f});
     
     // Save snapshot
     std::string snapshot = world->serialize();
     
     // Modify all positions
-    entity1.set<PositionComponent>({100.0f, 200.0f, 300.0f});
-    entity2.set<PositionComponent>({400.0f, 500.0f, 600.0f});
-    entity3.set<PositionComponent>({700.0f, 800.0f, 900.0f});
+    SetEntityPosition(entity1, {100.0f, 200.0f, 300.0f});
+    SetEntityPosition(entity2, {400.0f, 500.0f, 600.0f});
+    SetEntityPosition(entity3, {700.0f, 800.0f, 900.0f});
     
     // Restore from snapshot
     world->deserialize(snapshot);
@@ -186,25 +186,25 @@ TEST_F(SimulationSnapshotTest, SaveSnapshotPreservesMultipleEntities)
     EXPECT_TRUE(restored2.is_valid());
     EXPECT_TRUE(restored3.is_valid());
     
-    if (restored1.has<PositionComponent>())
+    if (restored1.has<TransformComponent>())
     {
-        const PositionComponent* pos = restored1.get<PositionComponent>();
+        const PositionComponent* pos = GetEntityPosition(restored1);
         EXPECT_FLOAT_EQ(pos->x, 1.0f);
         EXPECT_FLOAT_EQ(pos->y, 2.0f);
         EXPECT_FLOAT_EQ(pos->z, 3.0f);
     }
     
-    if (restored2.has<PositionComponent>())
+    if (restored2.has<TransformComponent>())
     {
-        const PositionComponent* pos = restored2.get<PositionComponent>();
+        const PositionComponent* pos = GetEntityPosition(restored2);
         EXPECT_FLOAT_EQ(pos->x, 4.0f);
         EXPECT_FLOAT_EQ(pos->y, 5.0f);
         EXPECT_FLOAT_EQ(pos->z, 6.0f);
     }
     
-    if (restored3.has<PositionComponent>())
+    if (restored3.has<TransformComponent>())
     {
-        const PositionComponent* pos = restored3.get<PositionComponent>();
+        const PositionComponent* pos = GetEntityPosition(restored3);
         EXPECT_FLOAT_EQ(pos->x, 7.0f);
         EXPECT_FLOAT_EQ(pos->y, 8.0f);
         EXPECT_FLOAT_EQ(pos->z, 9.0f);
@@ -235,8 +235,8 @@ TEST_F(SimulationSnapshotTest, SaveSnapshotPreservesPhysicsComponents)
     collider.shapeDesc.size = glm::vec3(1.0f);
     collider.needsCreation = true;
     
-    entity.set<PositionComponent>(pos);
-    entity.set<RotationComponent>(rot);
+    SetEntityPosition(entity, pos);
+    SetEntityRotation(entity, rot);
     entity.set<PhysicsModule::RigidBodyComponent>(rb);
     entity.set<PhysicsModule::ColliderComponent>(collider);
     
@@ -245,7 +245,7 @@ TEST_F(SimulationSnapshotTest, SaveSnapshotPreservesPhysicsComponents)
     
     // Modify position (simulating physics movement)
     PositionComponent modifiedPos{10.0f, 15.0f, 20.0f};
-    entity.set<PositionComponent>(modifiedPos);
+    SetEntityPosition(entity, modifiedPos);
     
     // Restore from snapshot
     world->deserialize(snapshot);
@@ -254,9 +254,9 @@ TEST_F(SimulationSnapshotTest, SaveSnapshotPreservesPhysicsComponents)
     auto restoredEntity = flecsWorld.lookup("PhysicsEntity");
     EXPECT_TRUE(restoredEntity.is_valid());
     
-    if (restoredEntity.has<PositionComponent>())
+    if (restoredEntity.has<TransformComponent>())
     {
-        const PositionComponent* restoredPos = restoredEntity.get<PositionComponent>();
+        const PositionComponent* restoredPos = GetEntityPosition(restoredEntity);
         EXPECT_FLOAT_EQ(restoredPos->x, 0.0f);
         EXPECT_FLOAT_EQ(restoredPos->y, 5.0f);
         EXPECT_FLOAT_EQ(restoredPos->z, 0.0f);
@@ -297,8 +297,8 @@ TEST_F(SimulationSnapshotTest, RestoreSnapshotResetsPhysicsBodyHandles)
     collider.shapeDesc.size = glm::vec3(1.0f);
     collider.needsCreation = true;
     
-    entity.set<PositionComponent>(pos);
-    entity.set<RotationComponent>(rot);
+    SetEntityPosition(entity, pos);
+    SetEntityRotation(entity, rot);
     entity.set<PhysicsModule::RigidBodyComponent>(rb);
     entity.set<PhysicsModule::ColliderComponent>(collider);
     
@@ -353,8 +353,8 @@ TEST_F(SimulationSnapshotTest, SimulateStartStopRoundTrip)
     auto entity = flecsWorld.entity("RoundTripEntity");
     PositionComponent initialPos{5.0f, 10.0f, 15.0f};
     RotationComponent initialRot{30.0f, 60.0f, 90.0f};
-    entity.set<PositionComponent>(initialPos);
-    entity.set<RotationComponent>(initialRot);
+    SetEntityPosition(entity, initialPos);
+    SetEntityRotation(entity, initialRot);
     
     // Save snapshot (simulating simulate(true))
     std::string snapshot = world->serialize();
@@ -363,11 +363,11 @@ TEST_F(SimulationSnapshotTest, SimulateStartStopRoundTrip)
     // Simulate physics movement (modify positions)
     PositionComponent simulatedPos{50.0f, 100.0f, 150.0f};
     RotationComponent simulatedRot{300.0f, 600.0f, 900.0f};
-    entity.set<PositionComponent>(simulatedPos);
-    entity.set<RotationComponent>(simulatedRot);
+    SetEntityPosition(entity, simulatedPos);
+    SetEntityRotation(entity, simulatedRot);
     
     // Verify positions were changed
-    const PositionComponent* currentPos = entity.get<PositionComponent>();
+    const PositionComponent* currentPos = GetEntityPosition(entity);
     EXPECT_FLOAT_EQ(currentPos->x, 50.0f);
     EXPECT_FLOAT_EQ(currentPos->y, 100.0f);
     EXPECT_FLOAT_EQ(currentPos->z, 150.0f);
@@ -403,17 +403,17 @@ TEST_F(SimulationSnapshotTest, SimulateStartStopRoundTrip)
     auto restoredEntity = flecsWorld.lookup("RoundTripEntity");
     EXPECT_TRUE(restoredEntity.is_valid());
     
-    if (restoredEntity.has<PositionComponent>())
+    if (restoredEntity.has<TransformComponent>())
     {
-        const PositionComponent* restoredPos = restoredEntity.get<PositionComponent>();
+        const PositionComponent* restoredPos = GetEntityPosition(restoredEntity);
         EXPECT_FLOAT_EQ(restoredPos->x, 5.0f);
         EXPECT_FLOAT_EQ(restoredPos->y, 10.0f);
         EXPECT_FLOAT_EQ(restoredPos->z, 15.0f);
     }
     
-    if (restoredEntity.has<RotationComponent>())
+    if (restoredEntity.has<TransformComponent>())
     {
-        const RotationComponent* restoredRot = restoredEntity.get<RotationComponent>();
+        const RotationComponent* restoredRot = GetEntityRotation(restoredEntity);
         EXPECT_FLOAT_EQ(restoredRot->x, 30.0f);
         EXPECT_FLOAT_EQ(restoredRot->y, 60.0f);
         EXPECT_FLOAT_EQ(restoredRot->z, 90.0f);
@@ -427,18 +427,18 @@ TEST_F(SimulationSnapshotTest, MultipleSimulationCycles)
     // Create entity
     auto entity = flecsWorld.entity("MultiCycleEntity");
     PositionComponent initialPos{1.0f, 2.0f, 3.0f};
-    entity.set<PositionComponent>(initialPos);
+    SetEntityPosition(entity, initialPos);
     
     // First cycle
     std::string snapshot1 = world->serialize();
-    entity.set<PositionComponent>({10.0f, 20.0f, 30.0f});
+    SetEntityPosition(entity, {10.0f, 20.0f, 30.0f});
     world->deserialize(snapshot1);
     
     auto restored1 = flecsWorld.lookup("MultiCycleEntity");
     EXPECT_TRUE(restored1.is_valid());
-    if (restored1.has<PositionComponent>())
+    if (restored1.has<TransformComponent>())
     {
-        const PositionComponent* pos = restored1.get<PositionComponent>();
+        const PositionComponent* pos = GetEntityPosition(restored1);
         EXPECT_FLOAT_EQ(pos->x, 1.0f);
         EXPECT_FLOAT_EQ(pos->y, 2.0f);
         EXPECT_FLOAT_EQ(pos->z, 3.0f);
@@ -446,14 +446,14 @@ TEST_F(SimulationSnapshotTest, MultipleSimulationCycles)
     
     // Second cycle
     std::string snapshot2 = world->serialize();
-    restored1.set<PositionComponent>({100.0f, 200.0f, 300.0f});
+    SetEntityPosition(restored1, {100.0f, 200.0f, 300.0f});
     world->deserialize(snapshot2);
     
     auto restored2 = flecsWorld.lookup("MultiCycleEntity");
     EXPECT_TRUE(restored2.is_valid());
-    if (restored2.has<PositionComponent>())
+    if (restored2.has<TransformComponent>())
     {
-        const PositionComponent* pos = restored2.get<PositionComponent>();
+        const PositionComponent* pos = GetEntityPosition(restored2);
         EXPECT_FLOAT_EQ(pos->x, 1.0f);
         EXPECT_FLOAT_EQ(pos->y, 2.0f);
         EXPECT_FLOAT_EQ(pos->z, 3.0f);
@@ -482,20 +482,20 @@ TEST_F(SimulationSnapshotTest, SnapshotWithNoPhysicsComponents)
     auto entity = flecsWorld.entity("NoPhysicsEntity");
     PositionComponent pos{1.0f, 2.0f, 3.0f};
     RotationComponent rot{10.0f, 20.0f, 30.0f};
-    entity.set<PositionComponent>(pos);
-    entity.set<RotationComponent>(rot);
+    SetEntityPosition(entity, pos);
+    SetEntityRotation(entity, rot);
     
     // Save and restore
     std::string snapshot = world->serialize();
-    entity.set<PositionComponent>({100.0f, 200.0f, 300.0f});
+    SetEntityPosition(entity, {100.0f, 200.0f, 300.0f});
     world->deserialize(snapshot);
     
     // Verify restoration
     auto restored = flecsWorld.lookup("NoPhysicsEntity");
     EXPECT_TRUE(restored.is_valid());
-    if (restored.has<PositionComponent>())
+    if (restored.has<TransformComponent>())
     {
-        const PositionComponent* restoredPos = restored.get<PositionComponent>();
+        const PositionComponent* restoredPos = GetEntityPosition(restored);
         EXPECT_FLOAT_EQ(restoredPos->x, 1.0f);
         EXPECT_FLOAT_EQ(restoredPos->y, 2.0f);
         EXPECT_FLOAT_EQ(restoredPos->z, 3.0f);

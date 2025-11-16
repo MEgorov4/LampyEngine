@@ -3,12 +3,19 @@
 #include <Modules/ObjectCoreModule/ECS/Components/ECSComponents.h>
 #include <Modules/ObjectCoreModule/ECS/Systems/ECSLuaScriptsSystem.h>
 #include <Modules/ResourceModule/ResourceManager.h>
+#include <Modules/ResourceModule/RWorld.h>
 #include <Modules/ResourceModule/Asset/AssetID.h>
+#include <Modules/ResourceModule/Asset/AssetInfo.h>
+#include <Modules/ResourceModule/Asset/Importers/WorldImporter.h>
 #include <Modules/ScriptModule/LuaScriptModule.h>
 #include <Modules/PhysicsModule/PhysicsModule.h>
 #include <Foundation/Memory/MemorySystem.h>
 #include <Core/Core.h>
 #include <nlohmann/json.hpp>
+#include <filesystem>
+#include <fstream>
+#include <chrono>
+#include <system_error>
 #include <string>
 #include <memory>
 #include <vector>
@@ -16,6 +23,54 @@
 using namespace ECSModule;
 using namespace ResourceModule;
 using namespace ScriptModule;
+
+namespace
+{
+class TempDirGuard
+{
+  public:
+    TempDirGuard()
+    {
+        auto timestamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+        m_path = std::filesystem::temp_directory_path() /
+                 ("EntityWorldSerializationTest_" + std::to_string(timestamp));
+        std::filesystem::create_directories(m_path);
+    }
+
+    ~TempDirGuard()
+    {
+        std::error_code ec;
+        std::filesystem::remove_all(m_path, ec);
+    }
+
+    std::filesystem::path subdir(const std::string& name) const
+    {
+        auto dir = m_path / name;
+        std::filesystem::create_directories(dir);
+        return dir;
+    }
+
+    const std::filesystem::path& path() const
+    {
+        return m_path;
+    }
+
+  private:
+    std::filesystem::path m_path;
+};
+
+bool writeTextFile(const std::filesystem::path& path, const std::string& content)
+{
+    std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
+    if (!ofs.is_open())
+    {
+        return false;
+    }
+
+    ofs.write(content.data(), static_cast<std::streamsize>(content.size()));
+    return !ofs.fail();
+}
+} // namespace
 
 class EntityWorldSerializationTest : public ::testing::Test
 {
@@ -58,6 +113,52 @@ protected:
     std::shared_ptr<PhysicsModule::PhysicsModule> physicsModule;
     std::unique_ptr<EntityWorld> world;
 };
+
+TEST(TransformComponentTest, ToMatrixBuildsTRS)
+{
+    TransformComponent transform{};
+    transform.position = {1.0f, 2.0f, 3.0f};
+    RotationComponent rotation{};
+    rotation.fromEulerDegrees(glm::vec3(45.0f, 30.0f, 10.0f));
+    transform.rotation = rotation;
+    transform.scale = {2.0f, 3.0f, 4.0f};
+
+    glm::mat4 matrix = transform.toMatrix();
+    glm::mat4 expected = glm::translate(glm::mat4(1.0f), transform.position.toGLMVec());
+    expected *= glm::mat4_cast(transform.rotation.toQuat());
+    expected = glm::scale(expected, transform.scale.toGLMVec());
+
+    for (int row = 0; row < 4; ++row)
+    {
+        for (int col = 0; col < 4; ++col)
+        {
+            EXPECT_NEAR(matrix[row][col], expected[row][col], 1e-4f);
+        }
+    }
+}
+
+TEST(TransformComponentTest, ToMatrixNoScaleIgnoresScale)
+{
+    TransformComponent transform{};
+    transform.position = {-5.0f, 0.5f, 8.0f};
+    RotationComponent rotation{};
+    rotation.fromEulerDegrees(glm::vec3(0.0f, 90.0f, 0.0f));
+    transform.rotation = rotation;
+    transform.scale = {10.0f, 10.0f, 10.0f};
+
+    glm::mat4 matrixNoScale = transform.toMatrixNoScale();
+
+    glm::mat4 expected = glm::translate(glm::mat4(1.0f), transform.position.toGLMVec());
+    expected *= glm::mat4_cast(transform.rotation.toQuat());
+
+    for (int row = 0; row < 4; ++row)
+    {
+        for (int col = 0; col < 4; ++col)
+        {
+            EXPECT_NEAR(matrixNoScale[row][col], expected[row][col], 1e-4f);
+        }
+    }
+}
 
 // ============================================================================
 // Basic Serialization Tests
@@ -126,7 +227,7 @@ TEST_F(EntityWorldSerializationTest, SerializeEntityWithPositionComponent)
 {
     auto& flecsWorld = world->get();
     auto entity = flecsWorld.entity("TestEntity");
-    entity.set<PositionComponent>({1.5f, 2.5f, 3.5f});
+    SetEntityPosition(entity, {1.5f, 2.5f, 3.5f});
     
     std::string json = world->serialize();
     
@@ -198,7 +299,7 @@ TEST_F(EntityWorldSerializationTest, RoundTripPositionComponent)
 {
     auto& flecsWorld = world->get();
     auto entity = flecsWorld.entity("PositionEntity");
-    entity.set<PositionComponent>({10.0f, 20.0f, 30.0f});
+    SetEntityPosition(entity, {10.0f, 20.0f, 30.0f});
     
     std::string serialized = world->serialize();
     
@@ -229,9 +330,9 @@ TEST_F(EntityWorldSerializationTest, RoundTripPositionComponent)
     
     EXPECT_TRUE(deserializedEntity.is_valid());
     
-    if (deserializedEntity.has<PositionComponent>())
+    if (deserializedEntity.has<TransformComponent>())
     {
-        const PositionComponent* pos = deserializedEntity.get<PositionComponent>();
+        const PositionComponent* pos = GetEntityPosition(deserializedEntity);
         EXPECT_FLOAT_EQ(pos->x, 10.0f);
         EXPECT_FLOAT_EQ(pos->y, 20.0f);
         EXPECT_FLOAT_EQ(pos->z, 30.0f);
@@ -257,7 +358,7 @@ TEST_F(EntityWorldSerializationTest, SerializeEntityWithRotationComponent)
     rot.x = 45.0f;
     rot.y = 90.0f;
     rot.z = 180.0f;
-    entity.set<RotationComponent>(rot);
+    SetEntityRotation(entity, rot);
     
     std::string json = world->serialize();
     
@@ -273,7 +374,7 @@ TEST_F(EntityWorldSerializationTest, RoundTripRotationComponent)
     
     RotationComponent rot;
     rot.fromEulerDegrees(glm::vec3(30.0f, 60.0f, 90.0f));
-    entity.set<RotationComponent>(rot);
+    SetEntityRotation(entity, rot);
     
     std::string serialized = world->serialize();
     
@@ -303,9 +404,9 @@ TEST_F(EntityWorldSerializationTest, RoundTripRotationComponent)
     
     EXPECT_TRUE(deserializedEntity.is_valid());
     
-    if (deserializedEntity.has<RotationComponent>())
+    if (deserializedEntity.has<TransformComponent>())
     {
-        const RotationComponent* rotComp = deserializedEntity.get<RotationComponent>();
+        const RotationComponent* rotComp = GetEntityRotation(deserializedEntity);
         EXPECT_NEAR(rotComp->x, 30.0f, 0.1f);
         EXPECT_NEAR(rotComp->y, 60.0f, 0.1f);
         EXPECT_NEAR(rotComp->z, 90.0f, 0.1f);
@@ -326,7 +427,7 @@ TEST_F(EntityWorldSerializationTest, SerializeEntityWithScaleComponent)
 {
     auto& flecsWorld = world->get();
     auto entity = flecsWorld.entity("ScaleEntity");
-    entity.set<ScaleComponent>({2.0f, 3.0f, 4.0f});
+    SetEntityScale(entity, {2.0f, 3.0f, 4.0f});
     
     std::string json = world->serialize();
     
@@ -339,7 +440,7 @@ TEST_F(EntityWorldSerializationTest, RoundTripScaleComponent)
 {
     auto& flecsWorld = world->get();
     auto entity = flecsWorld.entity("ScaleRoundTrip");
-    entity.set<ScaleComponent>({5.0f, 6.0f, 7.0f});
+    SetEntityScale(entity, {5.0f, 6.0f, 7.0f});
     
     std::string serialized = world->serialize();
     
@@ -369,9 +470,9 @@ TEST_F(EntityWorldSerializationTest, RoundTripScaleComponent)
     
     EXPECT_TRUE(deserializedEntity.is_valid());
     
-    if (deserializedEntity.has<ScaleComponent>())
+    if (deserializedEntity.has<TransformComponent>())
     {
-        const ScaleComponent* scale = deserializedEntity.get<ScaleComponent>();
+        const ScaleComponent* scale = GetEntityScale(deserializedEntity);
         EXPECT_FLOAT_EQ(scale->x, 5.0f);
         EXPECT_FLOAT_EQ(scale->y, 6.0f);
         EXPECT_FLOAT_EQ(scale->z, 7.0f);
@@ -561,7 +662,7 @@ TEST_F(EntityWorldSerializationTest, SerializeEntityWithScriptComponent)
     auto entity = flecsWorld.entity("ScriptEntity");
     
     ScriptComponent script;
-    script.scriptPath = "test_script.lua";
+    script.scriptID = ResourceModule::AssetID("Scripts/test_script.lua");
     entity.set<ScriptComponent>(script);
     
     std::string json = world->serialize();
@@ -578,7 +679,7 @@ TEST_F(EntityWorldSerializationTest, RoundTripScriptComponent)
     auto entity = flecsWorld.entity("ScriptRoundTrip");
     
     ScriptComponent script;
-    script.scriptPath = "roundtrip_script.lua";
+    script.scriptID = ResourceModule::AssetID("Scripts/roundtrip_script.lua");
     entity.set<ScriptComponent>(script);
     
     std::string serialized = world->serialize();
@@ -612,7 +713,7 @@ TEST_F(EntityWorldSerializationTest, RoundTripScriptComponent)
     if (deserializedEntity.has<ScriptComponent>())
     {
         const ScriptComponent* scriptComp = deserializedEntity.get<ScriptComponent>();
-        EXPECT_EQ(scriptComp->scriptPath, "roundtrip_script.lua");
+        EXPECT_EQ(scriptComp->scriptID.str(), ResourceModule::AssetID("Scripts/roundtrip_script.lua").str());
     }
     else
     {
@@ -631,9 +732,9 @@ TEST_F(EntityWorldSerializationTest, SerializeEntityWithMultipleComponents)
     auto& flecsWorld = world->get();
     auto entity = flecsWorld.entity("MultiComponentEntity");
     
-    entity.set<PositionComponent>({1.0f, 2.0f, 3.0f});
-    entity.set<RotationComponent>({10.0f, 20.0f, 30.0f});
-    entity.set<ScaleComponent>({2.0f, 2.0f, 2.0f});
+    SetEntityPosition(entity, {1.0f, 2.0f, 3.0f});
+    SetEntityRotation(entity, {10.0f, 20.0f, 30.0f});
+    SetEntityScale(entity, {2.0f, 2.0f, 2.0f});
     
     std::string json = world->serialize();
     
@@ -648,13 +749,13 @@ TEST_F(EntityWorldSerializationTest, RoundTripMultipleComponents)
     auto& flecsWorld = world->get();
     auto entity = flecsWorld.entity("MultiRoundTrip");
     
-    entity.set<PositionComponent>({100.0f, 200.0f, 300.0f});
+    SetEntityPosition(entity, {100.0f, 200.0f, 300.0f});
     
     RotationComponent rot;
     rot.fromEulerDegrees(glm::vec3(45.0f, 90.0f, 135.0f));
-    entity.set<RotationComponent>(rot);
+    SetEntityRotation(entity, rot);
     
-    entity.set<ScaleComponent>({3.0f, 4.0f, 5.0f});
+    SetEntityScale(entity, {3.0f, 4.0f, 5.0f});
     
     CameraComponent cam;
     cam.fov = 60.0f;
@@ -691,17 +792,15 @@ TEST_F(EntityWorldSerializationTest, RoundTripMultipleComponents)
     auto deserializedEntity = newFlecsWorld.lookup("MultiRoundTrip");
     
     EXPECT_TRUE(deserializedEntity.is_valid());
-    EXPECT_TRUE(deserializedEntity.has<PositionComponent>());
-    EXPECT_TRUE(deserializedEntity.has<RotationComponent>());
-    EXPECT_TRUE(deserializedEntity.has<ScaleComponent>());
+    EXPECT_TRUE(deserializedEntity.has<TransformComponent>());
     EXPECT_TRUE(deserializedEntity.has<CameraComponent>());
     
-    const PositionComponent* pos = deserializedEntity.get<PositionComponent>();
+    const PositionComponent* pos = GetEntityPosition(deserializedEntity);
     EXPECT_FLOAT_EQ(pos->x, 100.0f);
     EXPECT_FLOAT_EQ(pos->y, 200.0f);
     EXPECT_FLOAT_EQ(pos->z, 300.0f);
     
-    const ScaleComponent* scale = deserializedEntity.get<ScaleComponent>();
+    const ScaleComponent* scale = GetEntityScale(deserializedEntity);
     EXPECT_FLOAT_EQ(scale->x, 3.0f);
     EXPECT_FLOAT_EQ(scale->y, 4.0f);
     EXPECT_FLOAT_EQ(scale->z, 5.0f);
@@ -720,16 +819,16 @@ TEST_F(EntityWorldSerializationTest, SerializeMultipleEntities)
     auto& flecsWorld = world->get();
     
     auto entity1 = flecsWorld.entity("Entity1");
-    entity1.set<PositionComponent>({1.0f, 1.0f, 1.0f});
+    SetEntityPosition(entity1, {1.0f, 1.0f, 1.0f});
     
     auto entity2 = flecsWorld.entity("Entity2");
-    entity2.set<PositionComponent>({2.0f, 2.0f, 2.0f});
-    entity2.set<ScaleComponent>({2.0f, 2.0f, 2.0f});
+    SetEntityPosition(entity2, {2.0f, 2.0f, 2.0f});
+    SetEntityScale(entity2, {2.0f, 2.0f, 2.0f});
     
     auto entity3 = flecsWorld.entity("Entity3");
-    entity3.set<PositionComponent>({3.0f, 3.0f, 3.0f});
-    entity3.set<RotationComponent>({90.0f, 0.0f, 0.0f});
-    entity3.set<ScaleComponent>({1.0f, 1.0f, 1.0f});
+    SetEntityPosition(entity3, {3.0f, 3.0f, 3.0f});
+    SetEntityRotation(entity3, {90.0f, 0.0f, 0.0f});
+    SetEntityScale(entity3, {1.0f, 1.0f, 1.0f});
     
     std::string json = world->serialize();
     
@@ -744,11 +843,11 @@ TEST_F(EntityWorldSerializationTest, RoundTripMultipleEntities)
     auto& flecsWorld = world->get();
     
     auto entity1 = flecsWorld.entity("RoundTripEntity1");
-    entity1.set<PositionComponent>({10.0f, 20.0f, 30.0f});
+    SetEntityPosition(entity1, {10.0f, 20.0f, 30.0f});
     
     auto entity2 = flecsWorld.entity("RoundTripEntity2");
-    entity2.set<PositionComponent>({40.0f, 50.0f, 60.0f});
-    entity2.set<ScaleComponent>({2.0f, 2.0f, 2.0f});
+    SetEntityPosition(entity2, {40.0f, 50.0f, 60.0f});
+    SetEntityScale(entity2, {2.0f, 2.0f, 2.0f});
     
     std::string serialized = world->serialize();
     
@@ -777,19 +876,18 @@ TEST_F(EntityWorldSerializationTest, RoundTripMultipleEntities)
     
     auto deserializedEntity1 = newFlecsWorld.lookup("RoundTripEntity1");
     EXPECT_TRUE(deserializedEntity1.is_valid());
-    EXPECT_TRUE(deserializedEntity1.has<PositionComponent>());
+    EXPECT_TRUE(deserializedEntity1.has<TransformComponent>());
     
     auto deserializedEntity2 = newFlecsWorld.lookup("RoundTripEntity2");
     EXPECT_TRUE(deserializedEntity2.is_valid());
-    EXPECT_TRUE(deserializedEntity2.has<PositionComponent>());
-    EXPECT_TRUE(deserializedEntity2.has<ScaleComponent>());
+    EXPECT_TRUE(deserializedEntity2.has<TransformComponent>());
     
-    const PositionComponent* pos1 = deserializedEntity1.get<PositionComponent>();
+    const PositionComponent* pos1 = GetEntityPosition(deserializedEntity1);
     EXPECT_FLOAT_EQ(pos1->x, 10.0f);
     EXPECT_FLOAT_EQ(pos1->y, 20.0f);
     EXPECT_FLOAT_EQ(pos1->z, 30.0f);
     
-    const PositionComponent* pos2 = deserializedEntity2.get<PositionComponent>();
+    const PositionComponent* pos2 = GetEntityPosition(deserializedEntity2);
     EXPECT_FLOAT_EQ(pos2->x, 40.0f);
     EXPECT_FLOAT_EQ(pos2->y, 50.0f);
     EXPECT_FLOAT_EQ(pos2->z, 60.0f);
@@ -820,9 +918,9 @@ TEST_F(EntityWorldSerializationTest, SerializeEntityWithZeroValues)
     auto& flecsWorld = world->get();
     auto entity = flecsWorld.entity("ZeroEntity");
     
-    entity.set<PositionComponent>({0.0f, 0.0f, 0.0f});
-    entity.set<RotationComponent>({0.0f, 0.0f, 0.0f});
-    entity.set<ScaleComponent>({0.0f, 0.0f, 0.0f});
+    SetEntityPosition(entity, {0.0f, 0.0f, 0.0f});
+    SetEntityRotation(entity, {0.0f, 0.0f, 0.0f});
+    SetEntityScale(entity, {0.0f, 0.0f, 0.0f});
     
     std::string json = world->serialize();
     
@@ -836,8 +934,8 @@ TEST_F(EntityWorldSerializationTest, SerializeEntityWithNegativeValues)
     auto& flecsWorld = world->get();
     auto entity = flecsWorld.entity("NegativeEntity");
     
-    entity.set<PositionComponent>({-1.0f, -2.0f, -3.0f});
-    entity.set<ScaleComponent>({-1.0f, -1.0f, -1.0f});
+    SetEntityPosition(entity, {-1.0f, -2.0f, -3.0f});
+    SetEntityScale(entity, {-1.0f, -1.0f, -1.0f});
     
     std::string json = world->serialize();
     
@@ -851,7 +949,7 @@ TEST_F(EntityWorldSerializationTest, SerializeEntityWithLargeValues)
     auto& flecsWorld = world->get();
     auto entity = flecsWorld.entity("LargeEntity");
     
-    entity.set<PositionComponent>({1000000.0f, 2000000.0f, 3000000.0f});
+    SetEntityPosition(entity, {1000000.0f, 2000000.0f, 3000000.0f});
     
     std::string json = world->serialize();
     
@@ -1033,5 +1131,118 @@ TEST_F(EntityWorldSerializationTest, RoundTripPointLightComponent)
         // For now, just check that entity exists
         EXPECT_TRUE(deserializedEntity.is_valid());
     }
+}
+
+
+// ============================================================================
+// World Resource Integration Tests
+// ============================================================================
+
+TEST_F(EntityWorldSerializationTest, SerializeWorldThroughResourcePipeline)
+{
+    TempDirGuard tempDir;
+    auto resourcesDir = tempDir.subdir("Resources");
+    auto cacheDir = tempDir.subdir("Cache");
+
+    auto& flecsWorld = world->get();
+    auto entity = flecsWorld.entity("ResourceBridgeEntity");
+    SetEntityPosition(entity, {1.0f, 2.0f, 3.0f});
+    SetEntityRotation(entity, {0.0f, 45.0f, 0.0f});
+    SetEntityScale(entity, {1.0f, 1.5f, 2.0f});
+
+    std::string serialized = world->serialize();
+    ASSERT_FALSE(serialized.empty());
+
+    auto sourcePath = resourcesDir / "resource_bridge.lworld";
+    ASSERT_TRUE(writeTextFile(sourcePath, serialized));
+
+    WorldImporter importer;
+    AssetInfo info = importer.import(sourcePath, cacheDir);
+
+    ASSERT_FALSE(info.importedPath.empty());
+    ASSERT_TRUE(std::filesystem::exists(info.importedPath));
+
+    RWorld resource(info.importedPath);
+    EXPECT_FALSE(resource.isEmpty());
+    EXPECT_EQ(resource.getJsonData(), serialized);
+}
+
+TEST_F(EntityWorldSerializationTest, LoadWorldResourceAndWriteBack)
+{
+    TempDirGuard tempDir;
+    auto resourcesDir = tempDir.subdir("Resources");
+    auto cacheDir = tempDir.subdir("Cache");
+
+    auto& flecsWorld = world->get();
+    auto entity = flecsWorld.entity("PersistedWorldEntity");
+    SetEntityPosition(entity, {5.0f, 6.0f, 7.0f});
+    PointLightComponent light{};
+    light.innerRadius = 1.0f;
+    light.outerRadius = 4.0f;
+    light.intencity = 3.5f;
+    light.color = glm::vec3(0.25f, 0.5f, 0.75f);
+    entity.set<PointLightComponent>(light);
+
+    std::string originalJson = world->serialize();
+    ASSERT_FALSE(originalJson.empty());
+
+    auto sourcePath = resourcesDir / "persisted_world.lworld";
+    ASSERT_TRUE(writeTextFile(sourcePath, originalJson));
+
+    WorldImporter importer;
+    AssetInfo info = importer.import(sourcePath, cacheDir);
+    ASSERT_FALSE(info.importedPath.empty());
+
+    RWorld resource(info.importedPath);
+    ASSERT_FALSE(resource.isEmpty());
+
+    world->deserialize(resource.getJsonData());
+
+    auto& deserializedWorld = world->get();
+    auto restoredEntity = deserializedWorld.lookup("PersistedWorldEntity");
+    ASSERT_TRUE(restoredEntity.is_valid());
+    ASSERT_TRUE(restoredEntity.has<TransformComponent>());
+
+    SetEntityPosition(restoredEntity, {42.0f, 43.0f, 44.0f});
+    auto extraEntity = deserializedWorld.entity("NewEntityFromEditor");
+    SetEntityPosition(extraEntity, {10.0f, 0.0f, -3.0f});
+    SetEntityScale(extraEntity, {2.0f, 2.0f, 2.0f});
+
+    std::string updatedJson = world->serialize();
+    ASSERT_FALSE(updatedJson.empty());
+
+    auto updatedSource = resourcesDir / "persisted_world_updated.lworld";
+    ASSERT_TRUE(writeTextFile(updatedSource, updatedJson));
+
+    AssetInfo updatedInfo = importer.import(updatedSource, cacheDir);
+    ASSERT_FALSE(updatedInfo.importedPath.empty());
+
+    RWorld updatedResource(updatedInfo.importedPath);
+    ASSERT_FALSE(updatedResource.isEmpty());
+    EXPECT_EQ(updatedResource.getJsonData(), updatedJson);
+
+    EntityWorld verificationWorld(resourceManager.get(), scriptModule.get(), physicsModule.get());
+    verificationWorld.init();
+    verificationWorld.deserialize(updatedResource.getJsonData());
+
+    auto& verificationFlecs = verificationWorld.get();
+    auto updatedEntity = verificationFlecs.lookup("PersistedWorldEntity");
+    ASSERT_TRUE(updatedEntity.is_valid());
+    ASSERT_TRUE(updatedEntity.has<TransformComponent>());
+
+    const PositionComponent* updatedPos = GetEntityPosition(updatedEntity);
+    ASSERT_NE(updatedPos, nullptr);
+    EXPECT_FLOAT_EQ(updatedPos->x, 42.0f);
+    EXPECT_FLOAT_EQ(updatedPos->y, 43.0f);
+    EXPECT_FLOAT_EQ(updatedPos->z, 44.0f);
+
+    auto newEntity = verificationFlecs.lookup("NewEntityFromEditor");
+    ASSERT_TRUE(newEntity.is_valid());
+    ASSERT_TRUE(newEntity.has<TransformComponent>());
+    const ScaleComponent* scale = GetEntityScale(newEntity);
+    ASSERT_NE(scale, nullptr);
+    EXPECT_FLOAT_EQ(scale->x, 2.0f);
+    EXPECT_FLOAT_EQ(scale->y, 2.0f);
+    EXPECT_FLOAT_EQ(scale->z, 2.0f);
 }
 

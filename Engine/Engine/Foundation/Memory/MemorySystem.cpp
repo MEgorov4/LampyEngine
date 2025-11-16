@@ -79,6 +79,24 @@ void MemorySystem::shutdown() noexcept
         std::format("Final stats - Allocated: {} bytes, Peak: {} bytes, Allocs: {}, Deallocs: {}",
             stats.allocatedBytes, stats.peakBytes, stats.allocCount, stats.deallocCount));
 
+    if (stats.allocatedBytes != 0)
+    {
+        LT_LOG(LogVerbosity::Error, "MemorySystem",
+               std::format("Memory leak detected: {} bytes still allocated", stats.allocatedBytes));
+
+        for (uint8_t tag = 0; tag < static_cast<uint8_t>(MemoryTag::Count); ++tag)
+        {
+            auto tagStats = getStatistics(static_cast<MemoryTag>(tag));
+            if (tagStats.allocatedBytes == 0)
+                continue;
+
+            LT_LOG(LogVerbosity::Warning, "MemorySystem",
+                   std::format("Tag [{}] still allocated {} bytes",
+                               getMemoryTagName(static_cast<MemoryTag>(tag)),
+                               tagStats.allocatedBytes));
+        }
+    }
+
     s_allocators.clear();
     s_frameAllocator = nullptr;
     s_persistentAllocator = nullptr;

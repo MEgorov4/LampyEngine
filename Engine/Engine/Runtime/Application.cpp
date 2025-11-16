@@ -24,6 +24,7 @@
 #include <Modules/TimeModule/TimeModule.h>
 #include <Modules/WindowModule/Window.h>
 #include <Modules/WindowModule/WindowModule.h>
+#include <Foundation/Diagnostics/ThreadDiagnostics.h>
 
 void Application::run()
 {
@@ -114,9 +115,11 @@ void Application::startupMajor()
 
     auto resourceManager = std::make_shared<ResourceModule::ResourceManager>();
     resourceManager->setDatabase(&assetMgr->getDatabase());
+    resourceManager->setWriterHub(&assetMgr->getWriterHub());
     ResourceModule::AssetRegistryAccessor::Set(&assetMgr->getDatabase());
     resourceManager->setEngineResourcesRoot(engineResources.string());
     resourceManager->setProjectResourcesRoot(projectResources);
+    resourceManager->setCacheRoot(projectCache);
 
     Core::Register(std::make_shared<ShaderCompiler::ShaderCompiler>(), 10);
     Core::Register(resourceManager, 15);
@@ -143,6 +146,7 @@ void Application::shutdown()
     LT_LOG(LogVerbosity::Info, "Engine", "Shutdown");
     m_contextLocator->shutdownAll();
     Core::ShutdownAll();
+    EngineCore::Foundation::Diagnostics::LogActiveThreads("After Core::ShutdownAll");
     
     // Shutdown memory system last
     using namespace EngineCore::Foundation;

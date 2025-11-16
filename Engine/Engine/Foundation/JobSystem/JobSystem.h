@@ -15,6 +15,10 @@
 // Don't include EngineMinimal.h here to avoid circular dependency
 // (Foundation.h includes JobSystem.h)
 
+#ifndef ENGINE_DISABLE_JOB_SYSTEM
+#define ENGINE_DISABLE_JOB_SYSTEM 1
+#endif
+
 namespace EngineCore::Foundation
 {
     struct JobHandle
@@ -72,6 +76,8 @@ namespace EngineCore::Foundation
     public:
         JobSystem() = default;
         ~JobSystem() override;
+
+        static constexpr bool kJobSystemDisabled = ENGINE_DISABLE_JOB_SYSTEM != 0;
 
         void startup() override;
         void shutdown() override;

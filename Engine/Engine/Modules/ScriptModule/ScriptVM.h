@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <format>
 
 namespace ScriptModule
 {
@@ -33,14 +34,32 @@ class ScriptVM
     template <typename... Args>
     bool call(const std::string& functionName, Args&&... args)
     {
-        sol::protected_function fn = findFunction(functionName);
-        if (!fn.valid())
+        try
         {
-            logError(std::string("Function not found: ") + functionName);
+            sol::protected_function fn = findFunction(functionName);
+            if (!fn.valid())
+            {
+                logError(std::string("Function not found: ") + functionName);
+                return false;
+            }
+            sol::protected_function_result result = fn(std::forward<Args>(args)...);
+            return handleResult(result, functionName);
+        }
+        catch (const sol::error& err)
+        {
+            logError(std::format("Exception in call({}): {}", functionName, err.what()));
             return false;
         }
-        sol::protected_function_result result = fn(std::forward<Args>(args)...);
-        return handleResult(result, functionName);
+        catch (const std::exception& ex)
+        {
+            logError(std::format("Exception in call({}): {}", functionName, ex.what()));
+            return false;
+        }
+        catch (...)
+        {
+            logError(std::format("Unknown exception in call({})", functionName));
+            return false;
+        }
     }
 
   private:

@@ -1,5 +1,6 @@
 #include "OutputLog.h"
 #include "Foundation/Log/Logger.h"
+#include <Modules/ScriptModule/LuaScriptModule.h>
 #include <algorithm>
 #include <ctime>
 #include <imgui.h>
@@ -19,7 +20,7 @@ void GUILogSink::write(LogVerbosity level, const std::string &category, const st
 }
 
 // GUIOutputLog implementation
-GUIOutputLog::GUIOutputLog() : GUIObject()
+GUIOutputLog::GUIOutputLog() : GUIObject(), m_luaScriptModule(GCM(ScriptModule::LuaScriptModule))
 {
     // Create and register the log sink
     m_logSink = std::make_shared<GUILogSink>(this);
@@ -97,7 +98,10 @@ void GUIOutputLog::render(float deltaTime)
         ImGui::Separator();
 
         // Log message region
-        ImGui::BeginChild("LogRegion", ImVec2(0, 0), true,
+        ImVec2 logAvail = ImGui::GetContentRegionAvail();
+        const float inputHeight = ImGui::GetFrameHeightWithSpacing() * 2.0f;
+        float logHeight = std::max(0.f, logAvail.y - inputHeight);
+        ImGui::BeginChild("LogRegion", ImVec2(0, logHeight), true,
                           ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
         // Lock messages for reading
@@ -152,6 +156,15 @@ void GUIOutputLog::render(float deltaTime)
         }
 
         ImGui::EndChild();
+
+        // Console input
+        ImGui::PushItemWidth(-1);
+        if (ImGui::InputTextWithHint("##ConsoleCommand", "Enter command...", m_commandBuffer.data(),
+                                     m_commandBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            processCommand(m_commandBuffer.data());
+        }
+        ImGui::PopItemWidth();
     }
 
     // Handle window close button
@@ -228,4 +241,22 @@ ImVec4 GUIOutputLog::getColorForVerbosity(LogVerbosity verbosity) const
     default:
         return ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // White
     }
+}
+
+void GUIOutputLog::processCommand(const std::string &command)
+{
+    if (command.empty())
+        return;
+
+    if (m_luaScriptModule)
+    {
+        m_luaScriptModule->processCommand(command);
+        LT_LOG(LogVerbosity::Info, "Console", "Executed command: " + command);
+    }
+    else
+    {
+        LT_LOG(LogVerbosity::Warning, "Console", "LuaScriptModule unavailable");
+    }
+
+    m_commandBuffer.fill('\0');
 }

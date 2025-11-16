@@ -89,6 +89,11 @@ void ProjectConfig::setEditorStartWorld(const std::string &path)
     editorStartWorld = path;
 }
 
+void ProjectConfig::setGameStartWorld(const std::string &path)
+{
+    gameStartWorld = path;
+}
+
 ProjectConfig &ProjectModule::getProjectConfig()
 {
     return m_projectConfig;
@@ -114,6 +119,11 @@ void ProjectModule::setProjectFileOverride(const std::string &projectFile)
         LT_LOG(LogVerbosity::Info, "ProjectModule",
                "Project override file set to: " + projectFile);
     }
+}
+
+void ProjectModule::saveProjectConfigNow()
+{
+    saveProjectConfig();
 }
 
 void ProjectModule::setupProjectEnvironment()

@@ -2,6 +2,7 @@
 
 #include <Foundation/Log/LoggerMacro.h>
 
+#include <exception>
 #include <format>
 
 namespace ScriptModule
@@ -57,42 +58,58 @@ void ScriptVM::shutdown()
 
 bool ScriptVM::runString(const std::string& source)
 {
-    if (!m_initialized && !init())
-        return false;
-
-    sol::load_result chunk = m_state.load(source);
-    if (!chunk.valid())
+    try
     {
-        sol::error err = chunk;
-        logError(std::format("Failed to load chunk in {}: {}", m_name, err.what()));
+        if (!m_initialized && !init())
+            return false;
+
+        sol::protected_function_result result =
+            m_state.safe_script(source, m_environment, sol::script_pass_on_error);
+        return handleResult(result, "runString");
+    }
+    catch (const sol::error& err)
+    {
+        logError(std::format("Exception in runString: {}", err.what()));
         return false;
     }
-
-    sol::function func = chunk;
-    sol::set_environment(m_environment, func);
-    sol::protected_function protectedFunc = func;
-    sol::protected_function_result result = protectedFunc();
-    return handleResult(result, "runString");
+    catch (const std::exception& ex)
+    {
+        logError(std::format("Exception in runString: {}", ex.what()));
+        return false;
+    }
+    catch (...)
+    {
+        logError("Unknown exception in runString");
+        return false;
+    }
 }
 
 bool ScriptVM::runFile(const std::string& path)
 {
-    if (!m_initialized && !init())
-        return false;
-
-    sol::load_result chunk = m_state.load_file(path);
-    if (!chunk.valid())
+    try
     {
-        sol::error err = chunk;
-        logError(std::format("Failed to load file {} in {}: {}", path, m_name, err.what()));
+        if (!m_initialized && !init())
+            return false;
+
+        sol::protected_function_result result =
+            m_state.safe_script_file(path, m_environment, sol::script_pass_on_error);
+        return handleResult(result, path);
+    }
+    catch (const sol::error& err)
+    {
+        logError(std::format("Exception in runFile: {}", err.what()));
         return false;
     }
-
-    sol::function func = chunk;
-    sol::set_environment(m_environment, func);
-    sol::protected_function protectedFunc = func;
-    sol::protected_function_result result = protectedFunc();
-    return handleResult(result, path);
+    catch (const std::exception& ex)
+    {
+        logError(std::format("Exception in runFile: {}", ex.what()));
+        return false;
+    }
+    catch (...)
+    {
+        logError("Unknown exception in runFile");
+        return false;
+    }
 }
 
 void ScriptVM::openLibraries()

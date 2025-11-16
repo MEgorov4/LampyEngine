@@ -2,17 +2,26 @@
 
 #include "Asset/AssetDatabase.h"
 #include "Asset/AssetID.h"
+#include "Material.h"
 #include "Mesh.h"
 #include "Pak/PakReader.h"
+#include "RWorld.h"
 #include "ResourceCache.h"
 #include "ResourceRegistry.h"
+#include "Script.h"
+#include "Shader.h"
+#include "Texture.h"
+#include "Asset/AssetWriterHub.h"
 #include "Foundation/Assert/Assert.h"
 #include "Foundation/Memory/MemoryMacros.h"
 #include "../../Core/CoreGlobal.h"
 #include "../../Foundation/JobSystem/JobSystem.h"
+#include "../TimeModule/TimeModule.h"
 
 #include <EngineMinimal.h>
+#include <optional>
 #include <functional>
+#include <type_traits>
 
 namespace ResourceModule
 {
@@ -37,18 +46,66 @@ class AssetRegistryAccessor
 
 class ResourceManager : public IModule
 {
+  public:
+    struct ResourceSaveParams
+    {
+        std::filesystem::path targetPathOverride;
+        std::filesystem::path sourcePathOverride;
+        std::optional<AssetID> explicitGuid;
+        std::optional<AssetOrigin> originOverride;
+        bool updateDatabase    = true;
+        bool createDirectories = true;
+    };
+
+  private:
+    template <typename> struct always_false : std::false_type
+    {
+    };
+
     std::unique_ptr<PakReader, std::function<void(PakReader*)>> m_pakReader;
     ResourceRegistry m_registry;
     AssetDatabase *m_assetDatabase = nullptr;
+    AssetWriterHub *m_writerHub = nullptr;
     std::filesystem::path m_engineResourcesRoot;
     std::filesystem::path m_projectResourcesRoot;
+    std::filesystem::path m_cacheRoot;
     bool m_usePak = false;
     bool m_periodicCleanupEnabled = false;
+    TimeModule::TimeScheduler::TaskId m_cleanupTaskId = TimeModule::TimeScheduler::InvalidTaskId;
+
+    ResourceCache<RMaterial> m_materialCache;
+    ResourceCache<RMesh> m_meshCache;
+    ResourceCache<RTexture> m_textureCache;
+    ResourceCache<RShader> m_shaderCache;
+    ResourceCache<RScript> m_scriptCache;
+    ResourceCache<RWorld> m_worldCache;
+
+    WriterContext buildWriterContext();
+    std::filesystem::path resolveTargetPath(const AssetInfo &info, const ResourceSaveParams &params) const;
+    std::filesystem::path resolveSourcePath(const AssetInfo &info, const ResourceSaveParams &params) const;
+    AssetInfo composeAssetInfo(AssetInfo base, const std::filesystem::path &targetPath,
+                               const std::filesystem::path &sourcePathOverride) const;
+    bool updateDatabaseEntry(const AssetInfo &existing, const std::filesystem::path &targetPath,
+                             const std::filesystem::path &sourcePathOverride);
+    std::string relativeToKnownRoots(const std::filesystem::path &path, AssetOrigin &origin) const;
+    std::shared_ptr<BaseResource> findLoadedResource(const AssetID &id) const;
 
     template <typename T> ResourceCache<T> &getCache()
     {
-        static ResourceCache<T> cache;
-        return cache;
+        if constexpr (std::is_same_v<T, RMaterial>)
+            return m_materialCache;
+        else if constexpr (std::is_same_v<T, RMesh>)
+            return m_meshCache;
+        else if constexpr (std::is_same_v<T, RTexture>)
+            return m_textureCache;
+        else if constexpr (std::is_same_v<T, RShader>)
+            return m_shaderCache;
+        else if constexpr (std::is_same_v<T, RScript>)
+            return m_scriptCache;
+        else if constexpr (std::is_same_v<T, RWorld>)
+            return m_worldCache;
+        else
+            static_assert(always_false<T>::value, "Unsupported resource cache type");
     }
 
   public:
@@ -73,6 +130,17 @@ class ResourceManager : public IModule
         return m_assetDatabase;
     }
 
+    void setWriterHub(AssetWriterHub *hub) noexcept
+    {
+        LT_ASSERT_MSG(hub, "Cannot set null AssetWriterHub");
+        m_writerHub = hub;
+        LT_LOGI("ResourceManager", "AssetWriterHub connected");
+    }
+    AssetWriterHub *getWriterHub() const noexcept
+    {
+        return m_writerHub;
+    }
+
     void setEngineResourcesRoot(const std::filesystem::path &path) noexcept
     {
         LT_ASSERT_MSG(!path.empty(), "Engine resources root path cannot be empty");
@@ -85,10 +153,24 @@ class ResourceManager : public IModule
         m_projectResourcesRoot = path;
         LT_LOGI("ResourceManager", "Project resources root set: " + path.string());
     }
+    void setCacheRoot(const std::filesystem::path &path) noexcept
+    {
+        LT_ASSERT_MSG(!path.empty(), "Cache root path cannot be empty");
+        m_cacheRoot = path;
+        LT_LOGI("ResourceManager", "Cache root set: " + path.string());
+    }
 
     template <typename T> std::shared_ptr<T> load(const AssetID &id);
     template <typename T> std::shared_ptr<T> loadBySource(const std::string &path);
+
+    bool save(const AssetID &id, const ResourceSaveParams &params = {});
+    std::optional<AssetID> saveAs(const AssetID &id, const std::filesystem::path &targetPath,
+                                  const ResourceSaveParams &params = {});
+    std::optional<AssetID> saveAs(const BaseResource &resource, AssetType type,
+                                  const std::filesystem::path &targetPath, const ResourceSaveParams &params = {});
 };
+
+using ResourceSaveParams = ResourceManager::ResourceSaveParams;
 
 } // namespace ResourceModule
 

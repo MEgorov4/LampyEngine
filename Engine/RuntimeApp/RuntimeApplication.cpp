@@ -1,6 +1,7 @@
 #include "RuntimeApplication.h"
 
 #include <Modules/RenderModule/RenderModule.h>
+#include <Modules/ObjectCoreModule/ECS/ECSModule.h>
 #include <Modules/ProjectModule/ProjectModule.h>
 
 void RuntimeApplication::startup()
@@ -30,6 +31,10 @@ void RuntimeApplication::onStartupMinor(ContextLocator *locator)
 void RuntimeApplication::onStartupMajor(ContextLocator *locator)
 {
     locator->startupMajor();
+    if (auto *ecsModule = GCM(ECSModule::ECSModule))
+    {
+        ecsModule->simulate(true);
+    }
 }
 
 void RuntimeApplication::onShutdown()
@@ -51,6 +56,8 @@ void RuntimeApplication::configureModules(ModuleConfigRegistry &registry)
 {
     RenderModule::RenderModuleConfig renderCfg;
     renderCfg.outputMode = RenderModule::RenderOutputMode::WindowSwapchain;
+    renderCfg.debugPassEnabled = false;
+    renderCfg.gridPassEnabled = false;
     registry.setConfig<RenderModule::RenderModule>(renderCfg);
 }
 

@@ -27,7 +27,7 @@ void ResourceManager::startup()
     if (timeModule)
     {
         m_periodicCleanupEnabled = true;
-        timeModule->getScheduler().scheduleRepeating([this]() {
+        m_cleanupTaskId = timeModule->getScheduler().scheduleRepeating([this]() {
             if (m_periodicCleanupEnabled)
             {
                 scheduleCleanupExpiredJob();
@@ -47,6 +47,15 @@ void ResourceManager::shutdown()
     
     // Disable periodic cleanup (the scheduled task will check the flag and skip execution)
     m_periodicCleanupEnabled = false;
+
+    if (m_cleanupTaskId != TimeModule::TimeScheduler::InvalidTaskId)
+    {
+        if (auto timeModule = Core::Locator().tryGet<TimeModule::TimeModule>())
+        {
+            timeModule->getScheduler().cancel(m_cleanupTaskId);
+        }
+        m_cleanupTaskId = TimeModule::TimeScheduler::InvalidTaskId;
+    }
     
     clearAll();
 }
@@ -158,18 +167,315 @@ void ResourceManager::cleanupExpiredCacheEntries()
 EngineCore::Foundation::JobHandle ResourceManager::scheduleCleanupExpiredJob()
 {
     using namespace EngineCore::Foundation;
-    
-    auto* jobSystem = GCM(JobSystem);
-    if (!jobSystem)
+
+    cleanupExpiredCacheEntries();
+    return JobHandle();
+}
+
+WriterContext ResourceManager::buildWriterContext()
+{
+    WriterContext ctx;
+    ctx.database             = m_assetDatabase;
+    ctx.registry             = &m_registry;
+    ctx.engineResourcesRoot  = m_engineResourcesRoot;
+    ctx.projectResourcesRoot = m_projectResourcesRoot;
+    ctx.cacheRoot            = m_cacheRoot;
+    ctx.usePak               = m_usePak;
+    return ctx;
+}
+
+std::shared_ptr<BaseResource> ResourceManager::findLoadedResource(const AssetID &id) const
+{
+    return m_registry.get(id);
+}
+
+std::filesystem::path ResourceManager::resolveTargetPath(const AssetInfo &info,
+                                                         const ResourceSaveParams &params) const
+{
+    if (!params.targetPathOverride.empty())
+        return params.targetPathOverride;
+    if (!info.importedPath.empty())
+        return std::filesystem::path(info.importedPath);
+    return {};
+}
+
+std::filesystem::path ResourceManager::resolveSourcePath(const AssetInfo &info,
+                                                         const ResourceSaveParams &params) const
+{
+    if (!params.sourcePathOverride.empty())
+        return params.sourcePathOverride;
+    if (!info.sourcePath.empty())
+        return std::filesystem::path(info.sourcePath);
+    return {};
+}
+
+std::string ResourceManager::relativeToKnownRoots(const std::filesystem::path &path, AssetOrigin &origin) const
+{
+    std::error_code ec;
+    if (!m_projectResourcesRoot.empty())
     {
-        // Fallback to synchronous execution if JobSystem is not available
-        cleanupExpiredCacheEntries();
-        return JobHandle();
+        auto rel = std::filesystem::relative(path, m_projectResourcesRoot, ec);
+        if (!ec)
+        {
+            origin = AssetOrigin::Project;
+            return rel.generic_string();
+        }
     }
-    
-    // Schedule cleanup job in background thread
-    // No logging here as this is called frequently (every second)
-    return jobSystem->submit([this]() {
-        cleanupExpiredCacheEntries();
-    }, "ResourceManager::CleanupExpiredCache");
+
+    ec.clear();
+    if (!m_engineResourcesRoot.empty())
+    {
+        auto rel = std::filesystem::relative(path, m_engineResourcesRoot, ec);
+        if (!ec)
+        {
+            origin = AssetOrigin::Engine;
+            return rel.generic_string();
+        }
+    }
+
+    origin = AssetOrigin::Project;
+    return path.generic_string();
+}
+
+AssetInfo ResourceManager::composeAssetInfo(AssetInfo base, const std::filesystem::path &targetPath,
+                                            const std::filesystem::path &sourcePathOverride) const
+{
+    std::filesystem::path normalizedTarget = targetPath;
+    std::error_code ec;
+    normalizedTarget = std::filesystem::weakly_canonical(normalizedTarget, ec);
+    if (ec)
+        normalizedTarget = std::filesystem::path(targetPath);
+
+    if (!sourcePathOverride.empty())
+    {
+        base.sourcePath = sourcePathOverride.generic_string();
+    }
+    else if (base.sourcePath.empty())
+    {
+        AssetOrigin inferredOrigin = base.origin;
+        base.sourcePath            = relativeToKnownRoots(normalizedTarget, inferredOrigin);
+        base.origin                = inferredOrigin;
+    }
+
+    base.importedPath = normalizedTarget.generic_string();
+
+    ec.clear();
+    if (std::filesystem::exists(normalizedTarget, ec) && !ec)
+    {
+        std::error_code sizeEc;
+        auto size = std::filesystem::file_size(normalizedTarget, sizeEc);
+        if (!sizeEc)
+            base.importedFileSize = static_cast<uint64_t>(size);
+
+        std::error_code timeEc;
+        auto ts = std::filesystem::last_write_time(normalizedTarget, timeEc);
+        if (!timeEc)
+            base.importedTimestamp = static_cast<uint64_t>(ts.time_since_epoch().count());
+    }
+
+    return base;
+}
+
+bool ResourceManager::updateDatabaseEntry(const AssetInfo &existing, const std::filesystem::path &targetPath,
+                                          const std::filesystem::path &sourcePathOverride)
+{
+    if (!m_assetDatabase)
+    {
+        LT_LOGE("ResourceManager", "AssetDatabase not available while updating entry");
+        return false;
+    }
+
+    AssetInfo updated = composeAssetInfo(existing, targetPath, sourcePathOverride);
+    m_assetDatabase->upsert(updated);
+    return true;
+}
+
+bool ResourceManager::save(const AssetID &id, const ResourceSaveParams &params)
+{
+    if (id.empty())
+        return false;
+    if (!m_assetDatabase)
+    {
+        LT_LOGE("ResourceManager", "Cannot save resource without AssetDatabase");
+        return false;
+    }
+    if (!m_writerHub)
+    {
+        LT_LOGE("ResourceManager", "Cannot save resource without AssetWriterHub");
+        return false;
+    }
+
+    auto infoOpt = m_assetDatabase->get(id);
+    if (!infoOpt)
+    {
+        LT_LOGW("ResourceManager", "AssetInfo not found for GUID: " + id.str());
+        return false;
+    }
+
+    const auto &info = *infoOpt;
+    auto writer      = m_writerHub->findWriter(info.type);
+    if (!writer)
+    {
+        LT_LOGW("ResourceManager", "No writer registered for asset type");
+        return false;
+    }
+
+    auto resource = findLoadedResource(id);
+    if (!resource)
+    {
+        LT_LOGW("ResourceManager", "Resource not loaded, cannot save: " + id.str());
+        return false;
+    }
+
+    auto targetPath = resolveTargetPath(info, params);
+    if (targetPath.empty())
+    {
+        LT_LOGE("ResourceManager", "Target path is empty for save operation");
+        return false;
+    }
+
+    if (params.createDirectories)
+    {
+        std::error_code dirEc;
+        auto parent = targetPath.parent_path();
+        if (!parent.empty())
+        {
+            std::filesystem::create_directories(parent, dirEc);
+            if (dirEc)
+            {
+                LT_LOGE("ResourceManager", "Failed to create directories for save: " + dirEc.message());
+                return false;
+            }
+        }
+    }
+
+    auto ctx = buildWriterContext();
+    if (!ctx.isValid())
+    {
+        LT_LOGE("ResourceManager", "WriterContext is invalid (missing database)");
+        return false;
+    }
+
+    if (!writer->write(*resource, targetPath, ctx))
+        return false;
+
+    if (params.updateDatabase)
+    {
+        auto sourceOverride = resolveSourcePath(info, params);
+        updateDatabaseEntry(info, targetPath, sourceOverride);
+    }
+
+    return true;
+}
+
+std::optional<AssetID> ResourceManager::saveAs(const AssetID &id, const std::filesystem::path &targetPath,
+                                               const ResourceSaveParams &params)
+{
+    if (id.empty())
+        return std::nullopt;
+    if (!m_assetDatabase)
+    {
+        LT_LOGE("ResourceManager", "Cannot save-as without AssetDatabase");
+        return std::nullopt;
+    }
+
+    auto infoOpt = m_assetDatabase->get(id);
+    if (!infoOpt)
+    {
+        LT_LOGW("ResourceManager", "AssetInfo not found for save-as GUID: " + id.str());
+        return std::nullopt;
+    }
+
+    auto resource = findLoadedResource(id);
+    if (!resource)
+    {
+        LT_LOGW("ResourceManager", "Resource not loaded for save-as: " + id.str());
+        return std::nullopt;
+    }
+
+    ResourceSaveParams derivedParams = params;
+    if (!derivedParams.originOverride)
+        derivedParams.originOverride = infoOpt->origin;
+
+    if (derivedParams.sourcePathOverride.empty())
+    {
+        derivedParams.sourcePathOverride = targetPath;
+    }
+
+    return saveAs(*resource, infoOpt->type, targetPath, derivedParams);
+}
+
+std::optional<AssetID> ResourceManager::saveAs(const BaseResource &resource, AssetType type,
+                                               const std::filesystem::path &targetPath,
+                                               const ResourceSaveParams &params)
+{
+    if (!m_writerHub)
+    {
+        LT_LOGE("ResourceManager", "Cannot save-as without AssetWriterHub");
+        return std::nullopt;
+    }
+
+    auto writer = m_writerHub->findWriter(type);
+    if (!writer)
+    {
+        LT_LOGW("ResourceManager", "No writer registered for asset type");
+        return std::nullopt;
+    }
+
+    if (params.createDirectories)
+    {
+        std::error_code dirEc;
+        auto parent = targetPath.parent_path();
+        if (!parent.empty())
+        {
+            std::filesystem::create_directories(parent, dirEc);
+            if (dirEc)
+            {
+                LT_LOGE("ResourceManager", "Failed to create directories for save-as: " + dirEc.message());
+                return std::nullopt;
+            }
+        }
+    }
+
+    auto ctx = buildWriterContext();
+    if (!ctx.isValid())
+    {
+        LT_LOGE("ResourceManager", "WriterContext is invalid (missing database)");
+        return std::nullopt;
+    }
+
+    if (!writer->write(resource, targetPath, ctx))
+        return std::nullopt;
+
+    AssetID newGuid = params.explicitGuid ? *params.explicitGuid : MakeRandomAssetID();
+    AssetInfo newInfo;
+    newInfo.guid  = newGuid;
+    newInfo.type  = type;
+    newInfo.origin = params.originOverride.value_or(AssetOrigin::Project);
+
+    std::filesystem::path resolvedSource =
+        params.sourcePathOverride.empty() ? targetPath : params.sourcePathOverride;
+
+    std::string sourceString;
+    if (params.sourcePathOverride.empty())
+    {
+        auto origin = newInfo.origin;
+        sourceString = relativeToKnownRoots(resolvedSource, origin);
+        newInfo.origin = origin;
+    }
+    else
+    {
+        sourceString = params.sourcePathOverride.generic_string();
+    }
+    newInfo.sourcePath = sourceString;
+
+    if (params.updateDatabase && m_assetDatabase)
+    {
+        std::filesystem::path overridePath =
+            params.sourcePathOverride.empty() ? std::filesystem::path{} : std::filesystem::path(sourceString);
+        AssetInfo updated = composeAssetInfo(newInfo, targetPath, overridePath);
+        m_assetDatabase->upsert(updated);
+    }
+
+    return newGuid;
 }

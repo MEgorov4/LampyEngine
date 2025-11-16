@@ -14,6 +14,11 @@ EntityWorld::EntityWorld(ResourceModule::ResourceManager* r, ScriptModule::LuaSc
 {
 }
 
+EntityWorld::~EntityWorld()
+{
+    ECSluaScriptsSystem::getInstance().stopSystem(m_world);
+}
+
 void EntityWorld::init()
 {
     m_world.import <flecs::stats>();
@@ -21,7 +26,7 @@ void EntityWorld::init()
     registerComponents();
     registerObservers();
 
-    ECSluaScriptsSystem::getInstance().registerSystem(m_world, m_scripts);
+    ECSluaScriptsSystem::getInstance().registerSystem(m_world, m_scripts, m_resources);
     ECSPhysicsSystem::getInstance().registerSystem(m_world);
     
     // Register PhysicsModule systems
@@ -32,14 +37,19 @@ void EntityWorld::init()
     // PhysicsStepSystem is not needed - step is called from PhysicsModule::tick()
        
     using namespace ResourceModule;
+    TransformComponent viewportTransform{};
+    viewportTransform.position = {0.f, 2.f, 5.f};
+    viewportTransform.rotation = {-15.f, 0.f, 0.f};
+    viewportTransform.scale = {1.f, 1.f, 1.f};
+
     auto& viewport_camera = m_world.entity("ViewportCamera")
-                                .set<PositionComponent>({0.f, 2.f, 5.f})
-                                .set<RotationComponent>({-15.f, 0.f, 0.f})
+                                .set<TransformComponent>(viewportTransform)
                                 .set<CameraComponent>({75.0f, 16.0f / 9.0f, 0.1f, 100.0f, true});
 }
 
 void EntityWorld::reset()
 {
+    ECSluaScriptsSystem::getInstance().stopSystem(m_world);
     m_world.reset();
     init();
 }
@@ -59,9 +69,9 @@ std::string EntityWorld::serialize()
     std::string result = "{\"results\":[";
     bool first = true;
     
-    // Query for entities with PositionComponent (most common)
-    auto queryPos = m_world.query<PositionComponent>();
-    queryPos.each([&result, &first](flecs::entity e, PositionComponent&) {
+    // Query for entities with TransformComponent (most common)
+    auto queryTransform = m_world.query<TransformComponent>();
+    queryTransform.each([&result, &first](flecs::entity e, TransformComponent&) {
         if (e.is_valid())
         {
             const char* name = e.name();
@@ -74,28 +84,6 @@ std::string EntityWorld::serialize()
                     result += ",";
                 first = false;
                 // Use flecs built-in entity serialization
-                result += e.to_json().c_str();
-            }
-        }
-    });
-    
-    // Also query for entities with RotationComponent but no PositionComponent
-    auto queryRot = m_world.query<RotationComponent>();
-    queryRot.each([&result, &first](flecs::entity e, RotationComponent&) {
-        if (e.has<PositionComponent>())
-            return; // Already serialized
-        
-        if (e.is_valid())
-        {
-            const char* name = e.name();
-            bool isSystemEntity = e.has(flecs::System);
-            bool isFlecsInternal = (name && std::strncmp(name, "flecs.", 6) == 0);
-            
-            if (!isSystemEntity && !isFlecsInternal)
-            {
-                if (!first)
-                    result += ",";
-                first = false;
                 result += e.to_json().c_str();
             }
         }
@@ -165,13 +153,13 @@ void EntityWorld::registerComponents()
     // Register all ECS components with reflection data for serialization
     // This is required for flecs to properly serialize/deserialize components
     
-    // PositionComponent
+    // PositionComponent (used as part of TransformComponent)
     m_world.component<PositionComponent>()
         .member<float>("x")
         .member<float>("y")
         .member<float>("z");
     
-    // RotationComponent
+    // RotationComponent (used as part of TransformComponent)
     m_world.component<RotationComponent>()
         .member<float>("x")
         .member<float>("y")
@@ -181,11 +169,17 @@ void EntityWorld::registerComponents()
         .member<float>("qz")
         .member<float>("qw");
     
-    // ScaleComponent
+    // ScaleComponent (used as part of TransformComponent)
     m_world.component<ScaleComponent>()
         .member<float>("x")
         .member<float>("y")
         .member<float>("z");
+
+    // TransformComponent
+    m_world.component<TransformComponent>()
+        .member<PositionComponent>("position")
+        .member<RotationComponent>("rotation")
+        .member<ScaleComponent>("scale");
     
     // CameraComponent
     m_world.component<CameraComponent>()

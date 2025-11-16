@@ -43,39 +43,62 @@ void IRenderer::postInit()
         m_cameraUpdater = std::make_unique<CameraUpdater>(ctxPtr);
     }
 
+    const bool debugPassEnabled = RenderConfig::getInstance().getDebugPassEnabled();
+    const bool gridPassEnabled = RenderConfig::getInstance().getGridPassEnabled();
+
     RenderGraphBuilder builder(m_renderGraph);
 
-    builder        .addResource("shadow_pass_depth", 1920, 1080)
-        .addResource("texture_pass_color", 1920, 1080)
-        .addResource("grid_pass_color", 1920, 1080)
-        .addResource("debug_pass_color", 1920, 1080)
-        .addResource("final", 1920, 1080)
+    builder.addResource("shadow_pass_depth", 1920, 1080)
+        .addResource("texture_pass_color", 1920, 1080);
 
-        .addPass("Shadow")
+    if (gridPassEnabled)
+    {
+        builder.addResource("grid_pass_color", 1920, 1080);
+    }
+
+    if (debugPassEnabled)
+    {
+        builder.addResource("debug_pass_color", 1920, 1080);
+    }
+
+    builder.addResource("final", 1920, 1080);
+
+    builder.addPass("Shadow")
         .write("shadow_pass_depth")
         .exec(RenderNodes::ShadowPass)
-        .end()
+        .end();
 
-        .addPass("PBR")
+    builder.addPass("PBR")
         .read("shadow_pass_depth")
         .write("texture_pass_color")
         .exec(RenderNodes::PBRPass)
-        .end()
+        .end();
 
-        .addPass("Grid")
-        .read("texture_pass_color")
-        .write("grid_pass_color")
-        .exec(RenderNodes::GridPass)
-        .end()
+    const char *finalInputResource = "texture_pass_color";
+    if (gridPassEnabled)
+    {
+        builder.addPass("Grid")
+            .read("texture_pass_color")
+            .write("grid_pass_color")
+            .exec(RenderNodes::GridPass)
+            .end();
 
-        .addPass("Debug")
-        .read("grid_pass_color")
-        .write("debug_pass_color")
-        .exec(RenderNodes::DebugPass)
-        .end()
+        finalInputResource = "grid_pass_color";
+    }
 
-        .addPass("Final")
-        .read("debug_pass_color")
+    if (debugPassEnabled)
+    {
+        builder.addPass("Debug")
+            .read(finalInputResource)
+            .write("debug_pass_color")
+            .exec(RenderNodes::DebugPass)
+            .end();
+
+        finalInputResource = "debug_pass_color";
+    }
+
+    builder.addPass("Final")
+        .read(finalInputResource)
         .write("final")
         .exec(RenderNodes::FinalCompose)
         .end()
@@ -168,14 +191,12 @@ void IRenderer::onComponentChanged(const Events::ECS::ComponentChanged &event)
         if (!mesh)
             return;
 
-        bool hasPos = entity.has<PositionComponent>();
-        bool hasRot = entity.has<RotationComponent>();
-        bool hasScale = entity.has<ScaleComponent>();
+        bool hasTransform = entity.has<TransformComponent>();
         bool hasMesh = entity.has<MeshComponent>();
 
         LT_LOGI("Renderer", "ComponentChanged: MeshComponent for entity " + std::to_string(event.entityId) +
-                                " - pos:" + std::to_string(hasPos) + " rot:" + std::to_string(hasRot) +
-                                " scale:" + std::to_string(hasScale) + " mesh:" + std::to_string(hasMesh));
+                                " - transform:" + std::to_string(hasTransform) +
+                                " mesh:" + std::to_string(hasMesh));
 
         auto *state = m_entityTracker.getState(event.entityId);
         if (state)
@@ -188,16 +209,14 @@ void IRenderer::onComponentChanged(const Events::ECS::ComponentChanged &event)
                 change.entityId = event.entityId;
                 change.newState = std::make_unique<EntityRenderState>();
 
-                const PositionComponent *pos = entity.get<PositionComponent>();
-                const RotationComponent *rot = entity.get<RotationComponent>();
-                const ScaleComponent *scale = entity.get<ScaleComponent>();
+                const TransformComponent *transform = entity.get<TransformComponent>();
 
-                if (pos)
-                    change.newState->position = *pos;
-                if (rot)
-                    change.newState->rotation = *rot;
-                if (scale)
-                    change.newState->scale = *scale;
+                if (transform)
+                {
+                    change.newState->position = transform->position;
+                    change.newState->rotation = transform->rotation;
+                    change.newState->scale = transform->scale;
+                }
                 change.newState->mesh = *mesh;
                 const MaterialComponent* material = entity.get<MaterialComponent>();
                 if (material)
@@ -213,7 +232,7 @@ void IRenderer::onComponentChanged(const Events::ECS::ComponentChanged &event)
                         "ComponentChanged: MeshComponent updated for entity " + std::to_string(event.entityId));
             }
         }
-        else if (hasPos && hasRot && hasScale && hasMesh)
+        else if (hasTransform && hasMesh)
         {
             RenderDiff diff;
             RenderDiff::EntityChange change;
@@ -221,16 +240,14 @@ void IRenderer::onComponentChanged(const Events::ECS::ComponentChanged &event)
             change.entityId = event.entityId;
             change.newState = std::make_unique<EntityRenderState>();
 
-            const PositionComponent *pos = entity.get<PositionComponent>();
-            const RotationComponent *rot = entity.get<RotationComponent>();
-            const ScaleComponent *scale = entity.get<ScaleComponent>();
+            const TransformComponent *transform = entity.get<TransformComponent>();
 
-            if (pos)
-                change.newState->position = *pos;
-            if (rot)
-                change.newState->rotation = *rot;
-            if (scale)
-                change.newState->scale = *scale;
+            if (transform)
+            {
+                change.newState->position = transform->position;
+                change.newState->rotation = transform->rotation;
+                change.newState->scale = transform->scale;
+            }
             change.newState->mesh = *mesh;
             const MaterialComponent* material = entity.get<MaterialComponent>();
             if (material)
@@ -615,15 +632,15 @@ void IRenderer::updateLightsFromECS()
     {
         if (world.component<DirectionalLightComponent>().is_valid())
         {
-            auto qDirLight = world.query<DirectionalLightComponent, PositionComponent, RotationComponent>();
+            auto qDirLight = world.query<DirectionalLightComponent, TransformComponent>();
             bool foundLight = false;
             
             qDirLight.each(
-                [&](flecs::entity e, const DirectionalLightComponent& light, const PositionComponent& pos, const RotationComponent& rot)
+                [&](flecs::entity e, const DirectionalLightComponent& light, const TransformComponent& transform)
                 {
                     foundLight = true;
                     
-                    glm::quat rotation = rot.toQuat();
+                    glm::quat rotation = transform.rotation.toQuat();
                     glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);
                     glm::vec3 direction = rotation * forward;
                     
@@ -631,7 +648,7 @@ void IRenderer::updateLightsFromECS()
                     scene.sun.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // Default white
                     scene.sun.intensity = light.intencity;
                     
-                    glm::vec3 lightPos = pos.toGLMVec();
+                    glm::vec3 lightPos = transform.position.toGLMVec();
                     
                     glm::vec3 lightDir = glm::normalize(direction);
                     glm::vec3 target = lightPos + lightDir * 100.0f;
@@ -642,7 +659,7 @@ void IRenderer::updateLightsFromECS()
                     
                     if (ctxPtr)
                     {
-                        glm::vec3 lightPos = pos.toGLMVec();
+                        glm::vec3 lightPos = transform.position.toGLMVec();
                         glm::vec3 lightDir = -glm::normalize(direction);
                         float arrowLength = 10.0f;
                         glm::vec3 arrowEnd = lightPos + lightDir * arrowLength;
@@ -711,12 +728,12 @@ void IRenderer::updateLightsFromECS()
     {
         if (world.component<PointLightComponent>().is_valid())
         {
-            auto qPoint = world.query<PointLightComponent, PositionComponent>();
+            auto qPoint = world.query<PointLightComponent, TransformComponent>();
             qPoint.each(
-                [&](flecs::entity e, const PointLightComponent& light, const PositionComponent& pos)
+                [&](flecs::entity e, const PointLightComponent& light, const TransformComponent& transform)
                 {
                     PointLightRenderData pointLight;
-                    pointLight.position = glm::vec4(pos.toGLMVec(), 1.0f);
+                    pointLight.position = glm::vec4(transform.position.toGLMVec(), 1.0f);
                     pointLight.color = glm::vec4(light.color, 1.0f);
                     pointLight.intensity = (light.intencity > 0.0f) ? light.intencity : 1.0f;
                     pointLight.innerRadius = light.innerRadius;
@@ -726,7 +743,7 @@ void IRenderer::updateLightsFromECS()
                     
                     if (ctxPtr)
                     {
-                        glm::vec3 lightPos = pos.toGLMVec();
+                        glm::vec3 lightPos = transform.position.toGLMVec();
                         float outerRadius = light.outerRadius;
                         
                         DebugSphere sphere;
@@ -783,15 +800,14 @@ void IRenderer::rebuildRenderList()
     m_listManager.clear();
     m_entityTracker.clear();
 
-    auto qMesh = world.query<PositionComponent, RotationComponent, ScaleComponent, MeshComponent>();
-    qMesh.each([&](flecs::entity e, const PositionComponent &pos, const RotationComponent &rot,
-                   const ScaleComponent &scale, const MeshComponent &mesh) {
+    auto qMesh = world.query<TransformComponent, MeshComponent>();
+    qMesh.each([&](flecs::entity e, const TransformComponent &transform, const MeshComponent &mesh) {
         auto &state = m_entityTracker.getOrCreateState(e.id());
         state.entityId = e.id();
         state.isValid = true;
-        state.position = pos;
-        state.rotation = rot;
-        state.scale = scale;
+        state.position = transform.position;
+        state.rotation = transform.rotation;
+        state.scale = transform.scale;
         state.mesh = mesh;
         
         const MaterialComponent* material = e.get<MaterialComponent>();

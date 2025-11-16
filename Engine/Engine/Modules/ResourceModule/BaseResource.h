@@ -9,6 +9,8 @@ namespace ResourceModule
 class BaseResource
 {
   public:
+    virtual ~BaseResource() = default;
+
     BaseResource(const std::string &path)
     {
         GUID = path;

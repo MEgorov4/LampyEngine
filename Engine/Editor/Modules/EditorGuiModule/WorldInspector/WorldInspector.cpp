@@ -18,17 +18,9 @@ GUIWorldInspector::GUIWorldInspector() :
     m_world(m_ecsModule->getCurrentWorld()->get())
 {
     ComponentRendererFactory& factory = ComponentRendererFactory::getInstance();
-    factory.registerRenderer("PositionComponent", [this]()
+    factory.registerRenderer("TransformComponent", [this]()
     {
-        return std::make_unique<PositionRenderer>();
-    });
-    factory.registerRenderer("RotationComponent", [this]()
-    {
-        return std::make_unique<RotationRenderer>();
-    });
-    factory.registerRenderer("ScaleComponent", [this]()
-    {
-        return std::make_unique<ScaleRenderer>();
+        return std::make_unique<TransformRenderer>();
     });
     factory.registerRenderer("ScriptComponent", [this]()
     {
@@ -158,8 +150,8 @@ void GUIWorldInspector::renderEntityTreePopup()
 
 void GUIWorldInspector::renderEntityTree()
 {
-    auto query = m_world.query<PositionComponent>();
-    query.each([&](flecs::entity e, PositionComponent pos)
+    auto query = m_world.query<TransformComponent>();
+    query.each([&](flecs::entity e, TransformComponent)
     {
         if (!e.has<InvisibleTag>())
         {
@@ -192,6 +184,9 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
         auto& factory = ComponentRendererFactory::getInstance();
         auto& registry = ECSModule::ComponentRegistry::getInstance();
         
+        // Ensure component panels have unique ImGui IDs per entity/type to avoid collisions
+        ImGui::PushID(static_cast<int>(m_selectedEntity.id()));
+        
         // Dynamically render all components that entity has
         auto availableComponents = registry.getAvailableComponents();
         for (const auto& [typeName, displayName] : availableComponents)
@@ -200,10 +195,14 @@ void GUIWorldInspector::renderSelectedEntityDefaults()
             {
                 if (auto renderer = factory.createRenderer(typeName))
                 {
+                    ImGui::PushID(typeName.c_str());
                     renderer->render(m_selectedEntity, typeName, displayName);
+                    ImGui::PopID();
                 }
             }
         }
+        
+        ImGui::PopID();
 
         ImGui::Spacing();
         ImGui::Separator();

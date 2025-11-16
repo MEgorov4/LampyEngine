@@ -7,6 +7,7 @@
 #include <imgui.h>
 
 #include <EngineMinimal.h>
+#include <array>
 #include <chrono>
 #include <memory>
 #include <mutex>
@@ -16,6 +17,11 @@
 namespace EngineCore::Foundation
 {
 class LTLogger;
+}
+
+namespace ScriptModule
+{
+class LuaScriptModule;
 }
 
 /// <summary>
@@ -74,6 +80,11 @@ class GUIOutputLog : public ImGUIModule::GUIObject
     // Sink registration
     std::shared_ptr<GUILogSink> m_logSink; ///< Log sink registered with the logger
 
+    // Console support
+    ScriptModule::LuaScriptModule* m_luaScriptModule = nullptr;
+    std::array<char, 256> m_commandBuffer{};
+    bool m_focusCommandInput = false;
+
   public:
     /// <summary>
     /// Constructs a GUI log output panel and subscribes to the Logger event.
@@ -111,4 +122,6 @@ class GUIOutputLog : public ImGUIModule::GUIObject
     /// Gets ImGui color for a verbosity level
     /// </summary>
     ImVec4 getColorForVerbosity(EngineCore::Foundation::LogVerbosity verbosity) const;
+
+    void processCommand(const std::string &command);
 };

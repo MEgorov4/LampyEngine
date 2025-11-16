@@ -75,6 +75,41 @@ std::string DirectoryIterator::currentDirAppend(const std::string &appendName) c
     return (m_currentPath / fs::path(appendName)).string();
 }
 
+FsResult DirectoryIterator::navigateTo(const std::string &absolutePath)
+{
+    if (absolutePath.empty())
+        return FsResult::InvalidPath;
+
+    fs::path target = fs::path(absolutePath);
+    if (!Fs::exists(target.string()) || !Fs::isDirectory(target.string()))
+    {
+        LT_LOG(LogVerbosity::Error, "Filesystem", "DirectoryIterator: navigateTo invalid '{}'", absolutePath);
+        return FsResult::InvalidPath;
+    }
+
+    fs::path canonicalRoot   = fs::weakly_canonical(m_rootPath);
+    fs::path canonicalTarget = fs::weakly_canonical(target);
+
+    auto canonicalRootStr   = canonicalRoot.generic_string();
+    auto canonicalTargetStr = canonicalTarget.generic_string();
+
+    if (canonicalTargetStr.rfind(canonicalRootStr, 0) != 0)
+    {
+        LT_LOG(LogVerbosity::Error, "Filesystem",
+               "DirectoryIterator: navigateTo '{}' is outside of root '{}'", canonicalTargetStr, canonicalRootStr);
+        return FsResult::InvalidPath;
+    }
+
+    m_currentPath     = canonicalTarget;
+    m_dirLastEditTime = std::nullopt;
+    return FsResult::Success;
+}
+
+std::string DirectoryIterator::rootDir() const
+{
+    return m_rootPath.string();
+}
+
 std::vector<std::string, ProfileAllocator<std::string>> DirectoryIterator::list(const SearchFilter &filter) const
 {
     return Fs::getDirectoryContents(m_currentPath.string(), filter);

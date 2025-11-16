@@ -19,10 +19,12 @@ class DirectoryIterator final
     FsResult stepIntoRoot();
     FsResult stepIntoParent();
     FsResult stepIntoFolder(const std::string &folderName);
+    FsResult navigateTo(const std::string &absolutePath);
 
     std::string currentDirName() const;
     std::string currentDir() const;
     std::string currentDirAppend(const std::string &appendName) const;
+    std::string rootDir() const;
     std::vector<std::string, ProfileAllocator<std::string>> list(const SearchFilter &filter) const;
 
     bool isRoot() const;

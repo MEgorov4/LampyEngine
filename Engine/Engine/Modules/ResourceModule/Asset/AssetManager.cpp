@@ -11,6 +11,8 @@
 #include "Importers/WorldImporter.h"
 #include "Importers/MaterialImporter.h"
 #include "Importers/ScriptImporter.h"
+#include "Writers/WorldWriter.h"
+#include "Writers/MaterialWriter.h"
 
 using namespace ResourceModule;
 
@@ -77,6 +79,7 @@ void AssetManager::startup()
     LT_ASSERT_MSG(m_listener, "Failed to create AssetFileListener");
 
     registerDefaultImporters();
+    registerDefaultWriters();
 
     LT_ASSERT_MSG(std::filesystem::exists(m_engineResourcesRoot), "Engine resources root does not exist");
     LT_ASSERT_MSG(std::filesystem::exists(m_projectResourcesRoot), "Project resources root does not exist");
@@ -107,19 +110,21 @@ void AssetManager::shutdown()
     // Stop file watcher before joining thread
     if (m_watcher)
     {
-        // Remove all watches to allow watch() to exit
-        // Note: efsw doesn't have explicit stop method, but removing watches should help
-        m_watcher.reset();
+        for (auto watchId : m_watchIds)
+        {
+            m_watcher->removeWatch(watchId);
+        }
+        m_watchIds.clear();
     }
 
     // Wait for watch thread to finish
     if (m_watchThread && m_watchThread->joinable())
     {
-        // Give the thread a moment to exit after watcher is destroyed
-        // If it doesn't exit, we'll timeout and detach (not ideal but prevents hang)
         m_watchThread->join();
+        m_watchThread.reset();
     }
     
+    m_watcher.reset();
     m_listener.reset();
 }
 
@@ -186,6 +191,25 @@ namespace
         if (p)
         {
             static_cast<ScriptImporter*>(p)->~ScriptImporter();
+            DeallocateMemory(p, MemoryTag::Resource);
+        }
+    }
+
+    // Helper deleter for WorldWriter
+    void deleteWorldWriter(IAssetWriter* p)
+    {
+        if (p)
+        {
+            static_cast<WorldWriter*>(p)->~WorldWriter();
+            DeallocateMemory(p, MemoryTag::Resource);
+        }
+    }
+
+    void deleteMaterialWriter(IAssetWriter* p)
+    {
+        if (p)
+        {
+            static_cast<MaterialWriter*>(p)->~MaterialWriter();
             DeallocateMemory(p, MemoryTag::Resource);
         }
     }
@@ -351,6 +375,62 @@ void AssetManager::registerDefaultImporters()
     LT_LOGI("AssetManager", "All default importers registered");
 }
 
+void AssetManager::registerDefaultWriters()
+{
+    ZoneScopedN("AssetManager::registerDefaultWriters");
+    LT_LOGI("AssetManager", "Registering default asset writers...");
+
+    using namespace EngineCore::Foundation;
+
+    void *worldWriterMemory = AllocateMemory(sizeof(WorldWriter), alignof(WorldWriter), MemoryTag::Resource);
+    if (worldWriterMemory)
+    {
+        WorldWriter *worldWriter = nullptr;
+        try
+        {
+            worldWriter = new (worldWriterMemory) WorldWriter();
+            using DeleterType = void (*)(IAssetWriter *);
+            DeleterType deleter = deleteWorldWriter;
+            std::unique_ptr<IAssetWriter, DeleterType> writer(worldWriter, deleter);
+            m_writers.registerWriter(std::move(writer));
+            LT_LOGI("AssetManager", "Registered WorldWriter");
+        }
+        catch (...)
+        {
+            DeallocateMemory(worldWriterMemory, MemoryTag::Resource);
+            LT_LOGE("AssetManager", "Failed to create WorldWriter: constructor threw exception");
+        }
+    }
+    else
+    {
+        LT_LOGE("AssetManager", "Failed to allocate memory for WorldWriter");
+    }
+
+    void *materialWriterMemory = AllocateMemory(sizeof(MaterialWriter), alignof(MaterialWriter), MemoryTag::Resource);
+    if (materialWriterMemory)
+    {
+        MaterialWriter *materialWriter = nullptr;
+        try
+        {
+            materialWriter = new (materialWriterMemory) MaterialWriter();
+            using DeleterType = void (*)(IAssetWriter *);
+            DeleterType deleter = deleteMaterialWriter;
+            std::unique_ptr<IAssetWriter, DeleterType> writer(materialWriter, deleter);
+            m_writers.registerWriter(std::move(writer));
+            LT_LOGI("AssetManager", "Registered MaterialWriter");
+        }
+        catch (...)
+        {
+            DeallocateMemory(materialWriterMemory, MemoryTag::Resource);
+            LT_LOGE("AssetManager", "Failed to create MaterialWriter: constructor threw exception");
+        }
+    }
+    else
+    {
+        LT_LOGE("AssetManager", "Failed to allocate memory for MaterialWriter");
+    }
+}
+
 // --------------------------------------------------------
 
 void AssetManager::watchDirectory(const std::string& path)
@@ -360,7 +440,8 @@ void AssetManager::watchDirectory(const std::string& path)
     LT_ASSERT_MSG(m_listener, "FileWatchListener is null");
     LT_ASSERT_MSG(std::filesystem::exists(path), "Watch directory does not exist: " + path);
     
-    m_watcher->addWatch(path, m_listener.get(), true);
+    auto watchId = m_watcher->addWatch(path, m_listener.get(), true);
+    m_watchIds.push_back(watchId);
     if (!m_watchThread)
         m_watchThread = std::make_unique<std::thread>(
             [this]()
@@ -405,6 +486,12 @@ void AssetManager::processFileChanges()
         LT_ASSERT_MSG(!f.empty(), "Changed file path is empty");
         
         std::string ext = std::filesystem::path(f).extension().string();
+        if (ext.empty())
+        {
+            LT_LOGW("AssetManager", "Skipping file with no extension: " + f);
+            continue;
+        }
+
         if (auto* importer = m_importers.findImporter(ext))
         {
             LT_ASSERT_MSG(importer, "Found importer is null");
@@ -473,6 +560,9 @@ void AssetManager::scanAndImportAllIn(const std::filesystem::path& root)
             continue;
             
         auto ext = entry.path().extension().string();
+        if (ext.empty())
+            continue;
+
         auto importer = m_importers.findImporter(ext);
         if (!importer)
             continue;
@@ -607,20 +697,10 @@ void AssetManager::saveDatabase()
 EngineCore::Foundation::JobHandle AssetManager::scheduleRescanJob()
 {
     using namespace EngineCore::Foundation;
-    
-    auto* jobSystem = GCM(JobSystem);
-    if (!jobSystem)
-    {
-        LT_LOGW("AssetManager", "JobSystem not available, running rescan synchronously");
-        scanAndImportAll();
-        return JobHandle();
-    }
-    
-    LT_LOGI("AssetManager", "Scheduling rescan job");
-    return jobSystem->submit([this]() {
-        LT_LOGI("AssetManager", "Running rescan job");
-        scanAndImportAll();
-        saveDatabase();
-        LT_LOGI("AssetManager", "Rescan job completed");
-    }, "AssetManager::Rescan");
+
+    LT_LOGI("AssetManager", "Running rescan synchronously (JobSystem disabled)");
+    scanAndImportAll();
+    saveDatabase();
+    LT_LOGI("AssetManager", "Rescan completed");
+    return JobHandle();
 }

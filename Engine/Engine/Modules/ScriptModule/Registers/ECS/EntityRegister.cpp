@@ -26,73 +26,75 @@ void EntityRegister::registerTypes(sol::state& state, sol::environment& env)
         },
         "set_name", [](flecs::entity& e, const std::string& name) { e.set_name(name.c_str()); },
         "destruct", [](flecs::entity& e) { e.destruct(); },
+        "has_transform", [](const flecs::entity& e) { return e.has<TransformComponent>(); },
+        "get_transform",
+        [](flecs::entity& e) -> sol::optional<TransformComponent>
+        {
+            if (const TransformComponent* transform = e.get<TransformComponent>())
+                return *transform;
+            return sol::nullopt;
+        },
+        "set_transform",
+        [](flecs::entity& e, const TransformComponent& transform)
+        {
+            e.set<TransformComponent>(transform);
+        },
+        "remove_transform", [](flecs::entity& e) { RemoveComponentIfPresent<TransformComponent>(e); },
         "add_position",
         [](flecs::entity& e, const glm::vec3& value)
         {
-            PositionComponent pos{};
-            pos.fromGLMVec(value);
-            e.set<PositionComponent>(pos);
+            auto& transform = EnsureTransformComponent(e);
+            transform.position.fromGLMVec(value);
+            e.modified<TransformComponent>();
         },
-        "remove_position", [](flecs::entity& e) { RemoveComponentIfPresent<PositionComponent>(e); },
-        "has_position", [](const flecs::entity& e) { return e.has<PositionComponent>(); },
+        "remove_position", [](flecs::entity& e) { RemoveComponentIfPresent<TransformComponent>(e); },
+        "has_position", [](const flecs::entity& e) { return e.has<TransformComponent>(); },
         "get_position",
         [](flecs::entity& e) -> sol::optional<glm::vec3>
         {
-            if (const PositionComponent* pos = e.get<PositionComponent>())
-                return pos->toGLMVec();
+            if (const TransformComponent* transform = e.get<TransformComponent>())
+                return transform->position.toGLMVec();
             return sol::nullopt;
         },
         "set_position",
         [](flecs::entity& e, const glm::vec3& value)
         {
-            if (auto* pos = e.get_mut<PositionComponent>())
-            {
-                pos->fromGLMVec(value);
-            }
-            else
-            {
-                PositionComponent newPos{};
-                newPos.fromGLMVec(value);
-                e.set<PositionComponent>(newPos);
-            }
+            auto& transform = EnsureTransformComponent(e);
+            transform.position.fromGLMVec(value);
+            e.modified<TransformComponent>();
         },
-        "has_rotation", [](const flecs::entity& e) { return e.has<RotationComponent>(); },
+        "has_rotation", [](const flecs::entity& e) { return e.has<TransformComponent>(); },
         "get_rotation",
         [](flecs::entity& e) -> sol::optional<RotationComponent>
         {
-            if (const RotationComponent* rot = e.get<RotationComponent>())
-                return *rot;
+            if (const TransformComponent* transform = e.get<TransformComponent>())
+                return transform->rotation;
             return sol::nullopt;
         },
         "set_rotation",
         [](flecs::entity& e, const RotationComponent& value)
         {
-            e.set<RotationComponent>(value);
+            auto& transform = EnsureTransformComponent(e);
+            transform.rotation = value;
+            e.modified<TransformComponent>();
         },
-        "remove_rotation", [](flecs::entity& e) { RemoveComponentIfPresent<RotationComponent>(e); },
-        "has_scale", [](const flecs::entity& e) { return e.has<ScaleComponent>(); },
+        "remove_rotation", [](flecs::entity& e) { RemoveComponentIfPresent<TransformComponent>(e); },
+        "has_scale", [](const flecs::entity& e) { return e.has<TransformComponent>(); },
         "get_scale",
         [](flecs::entity& e) -> sol::optional<glm::vec3>
         {
-            if (const ScaleComponent* scale = e.get<ScaleComponent>())
-                return scale->toGLMVec();
+            if (const TransformComponent* transform = e.get<TransformComponent>())
+                return transform->scale.toGLMVec();
             return sol::nullopt;
         },
         "set_scale",
         [](flecs::entity& e, const glm::vec3& value)
         {
-            if (auto* scale = e.get_mut<ScaleComponent>())
-            {
-                scale->fromGMLVec(value);
-            }
-            else
-            {
-                ScaleComponent sc{};
-                sc.fromGMLVec(value);
-                e.set<ScaleComponent>(sc);
-            }
+            auto& transform = EnsureTransformComponent(e);
+            transform.scale.fromGMLVec(value);
+            e.modified<TransformComponent>();
         },
-        "remove_scale", [](flecs::entity& e) { RemoveComponentIfPresent<ScaleComponent>(e); },
+        "remove_scale", [](flecs::entity& e) { RemoveComponentIfPresent<TransformComponent>(e); },
         "has_camera", [](const flecs::entity& e) { return e.has<CameraComponent>(); },
         "get_camera",
         [](flecs::entity& e) -> sol::optional<CameraComponent>
